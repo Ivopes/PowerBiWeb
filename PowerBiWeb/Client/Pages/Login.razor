@@ -1,0 +1,46 @@
+﻿@page "/login"
+@layout EmptyLayout
+@using Blazored.LocalStorage
+@inject ILocalStorageService _localStorage
+@inject NavigationManager navigation
+@inject AuthenticationStateProvider authProvider
+@inject ILogger<Login> _logger
+@inject HttpClient httpClient
+@attribute [AllowAnonymous]
+<h3>Login</h3>
+
+<EditForm Model="@userData" OnValidSubmit="@HandleLogin">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="username">Username</label>
+        <InputText id="username" @bind-Value="userData.Username" class="form-control"/>
+        <ValidationMessage For="@(() => userData.Username)" />
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText required id="password" @bind-Value="userData.Password" class="form-control"/>
+        <ValidationMessage For="@(() => userData.Password)" />
+
+    </div>
+    <br/>
+    <button onclick="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@code {
+    private User userData = new();
+
+    private async Task HandleLogin()
+    {
+        var response = await httpClient.PostAsJsonAsync("auth", userData);
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadFromJsonAsync<User>();
+            _logger.LogWarning(content.ToString());
+            await _localStorage.SetItemAsync("logged", content);
+            await authProvider.GetAuthenticationStateAsync();
+            navigation.NavigateTo("/");
+        }
+    }
+    
+}
