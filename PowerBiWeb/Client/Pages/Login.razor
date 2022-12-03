@@ -35,9 +35,9 @@
         var response = await httpClient.PostAsJsonAsync("auth", userData);
         if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadFromJsonAsync<User>();
-            _logger.LogWarning(content.ToString());
-            await _localStorage.SetItemAsync("logged", content);
+            var content = await response.Content.ReadAsStringAsync();
+            
+            await _localStorage.SetItemAsync("accessToken", content);
             await authProvider.GetAuthenticationStateAsync();
             navigation.NavigateTo("/");
         }

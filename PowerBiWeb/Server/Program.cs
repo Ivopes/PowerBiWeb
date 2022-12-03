@@ -1,4 +1,8 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Interfaces.Services;
+using PowerBiWeb.Server.Repositories;
+using PowerBiWeb.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IAuthRepository, AuthRepository>();
 
 var app = builder.Build();
 

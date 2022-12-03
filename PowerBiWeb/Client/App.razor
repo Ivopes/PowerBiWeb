@@ -4,8 +4,8 @@
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
                     
-                        <PowerBiWeb.Client.Pages.LoginRedirect/>
-                    
+                        <PowerBiWeb.Client.Pages.AuthRedirect/>
+
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />

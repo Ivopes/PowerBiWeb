@@ -18,6 +18,6 @@ builder.Services.AddBlazoredLocalStorage(opt =>
 {
     //opt.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 });
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 
 await builder.Build().RunAsync();

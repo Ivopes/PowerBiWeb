@@ -4,15 +4,17 @@ using Blazored.LocalStorage;
 using PowerBiWeb.Shared;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace PowerBiWeb.Client.Utilities.Auth
 {
-    public class CustomAuthStateProvider : AuthenticationStateProvider
+    public class JwtAuthStateProvider : AuthenticationStateProvider
     {
+        private const string AuthType = "JwtAuth";
         private readonly AuthenticationState _anonymousState = new AuthenticationState(new ClaimsPrincipal());
         private readonly ILocalStorageService _localStorage;
-        private readonly ILogger<CustomAuthStateProvider> _logger;
-        public CustomAuthStateProvider(ILocalStorageService localStorage, ILogger<CustomAuthStateProvider> logger)
+        private readonly ILogger<JwtAuthStateProvider> _logger;
+        public JwtAuthStateProvider(ILocalStorageService localStorage, ILogger<JwtAuthStateProvider> logger)
         {
             _localStorage = localStorage;
             _logger = logger;
@@ -21,30 +23,24 @@ namespace PowerBiWeb.Client.Utilities.Auth
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
 
-            /*if (!await _localStorage.ContainKeyAsync("logged"))
-            {
-                NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
-                return _anonymousState;
-            }*/
-            //var s = await _localStorage.GetItemAsync<string>("logged");
-            var user = await _localStorage.GetItemAsync<User>("logged");
-            //var user = JsonSerializer.Deserialize<User>(s);
-            if (user is null)
+            var token = await _localStorage.GetItemAsync<string>("accessToken");
+            
+            if (token is null)
             {
                 NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
                 return _anonymousState;
             }
 
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role),
-            }, "Fake authentication type");
+            var securityToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+            var identity = new ClaimsIdentity(new List<Claim>(securityToken.Claims), AuthType);
 
             var userPrincipal = new ClaimsPrincipal(identity);
 
             var state = new AuthenticationState(userPrincipal);
+
             NotifyAuthenticationStateChanged(Task.FromResult(state));
+
             return state;
         }
        

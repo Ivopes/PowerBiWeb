@@ -1,0 +1,15 @@
+﻿@inject NavigationManager Navigation
+@inject AuthenticationStateProvider authProvider
+
+
+@code {
+    protected override async void OnInitialized()
+    {
+        var state = await authProvider.GetAuthenticationStateAsync();
+        if (state.User.Claims.Count() == 0)
+            Navigation.NavigateTo("login");
+        else
+            Navigation.NavigateTo("notFound");
+
+    }
+}
