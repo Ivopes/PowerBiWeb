@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PowerBiWeb.Client;
 using PowerBiWeb.Client.Utilities.Auth;
+using System.Runtime.InteropServices.JavaScript;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

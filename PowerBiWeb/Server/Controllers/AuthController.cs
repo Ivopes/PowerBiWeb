@@ -17,9 +17,9 @@ namespace PowerBiWeb.Server.Controllers
         }
 
         [HttpPost]
-        public ActionResult<User> Login([FromBody] User user)
+        public async Task<ActionResult<User>> Login([FromBody] User user)
         {
-            var result = _authService.Login(user);
+            var result = await _authService.LoginAsync(user);
 
             return Ok(result);
         }

@@ -13,9 +13,9 @@ namespace PowerBiWeb.Server.Services
             _authRepository = authRepository;
         }
 
-        public string Login(User user)
+        public async Task<string> LoginAsync(User user)
         {
-            return _authRepository.Login(user);
+            return await _authRepository.LoginAsync(user);
         }
     }
 }

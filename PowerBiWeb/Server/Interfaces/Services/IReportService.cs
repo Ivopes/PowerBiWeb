@@ -2,8 +2,8 @@
 
 namespace PowerBiWeb.Server.Interfaces.Services
 {
-    public interface IAuthService
+    public interface IReportService
     {
-        Task<string> LoginAsync(User user);
+        Task<EmbedParams> GetAsync();
     }
 }

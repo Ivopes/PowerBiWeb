@@ -9,7 +9,7 @@ namespace PowerBiWeb.Server.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-        public string Login(User user)
+        public Task<string> LoginAsync(User user)
         {
             const string key = "123456123123456123";
 
@@ -29,7 +29,7 @@ namespace PowerBiWeb.Server.Repositories
                 signingCredentials: credentials);
 
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
     }
 }
