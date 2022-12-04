@@ -1,0 +1,103 @@
+﻿@page "/projects"
+@using System.Text.Json;
+@inject HttpClient httpClient
+@inject IJSRuntime JS
+@inject ILogger<Projects> _logger;
+@inject IToastService toastService;
+
+<h3 id="p">Projects</h3>
+
+<button type="button" class="btn btn-primary" @onclick="@ModalShow">Create new</button>
+
+<div>
+    @{
+        int x = 0;
+    }
+    @foreach (var p in _projects)
+    {
+        string link = $"/projects/{x++}"; 
+    
+        <NavLink href=@link>
+            <span>@p.Name</span>
+        </NavLink>
+        <br/>
+    
+    }
+</div>
+
+@if (showModal)
+{
+    <AddProject OnClose="@ModalOk"></AddProject>
+}
+
+
+@*
+
+<div @ref="@PowerBIElement" style="width:100%;height:600px;max-width: 2000px" />
+*@
+
+@code {
+    private IJSObjectReference? module;
+    private ElementReference PowerBIElement;
+    private AddProject ModalWindow { get; set; }
+    private bool showModal;
+    void ModalShow() => showModal = true;
+    private List<Project> _projects = new();
+
+    async Task LoadProjects()
+    {
+        _projects = new();
+
+        var response = await httpClient.GetAsync("api/project");
+        if (response.IsSuccessStatusCode)
+        {
+            _projects = await response.Content.ReadFromJsonAsync<List<Project>>();
+        }
+        else
+        {
+            _logger.LogError("Could not load projects");
+        }
+    }
+    async Task ModalOk(Project? project)
+    {
+        showModal = false;
+        if (project is not null)
+        {
+            var response = await httpClient.PostAsJsonAsync("api/project", project);
+            if (response.IsSuccessStatusCode)
+            {
+                var p = await response.Content.ReadFromJsonAsync<Project>();
+                toastService.ShowSuccess("Project added");
+                await LoadProjects();
+
+            }
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "/js/powerBiUtils.js");
+
+            if (module is null)
+            {
+                _logger.LogError("Could not load JS file");
+            }
+            _logger.LogInformation("Js loaded");
+        }
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadProjects();
+        /*
+        var response = await httpClient.GetAsync("api/report");
+        if (response.IsSuccessStatusCode)
+        {
+            var text = await response.Content.ReadFromJsonAsync<EmbedParams>();
+
+            await module.InvokeVoidAsync("showReport", PowerBIElement, text.EmbedToken.Token, text.EmbedReport[0].EmbedUrl, text.EmbedReport[0].ReportId);
+        }
+        */
+    }
+}

@@ -1,0 +1,35 @@
+﻿@page "/projects/{Id:int}"
+@inject HttpClient httpClient
+
+<h3>ProjectDetail</h3>
+
+<p>
+    <NavLink href="/projects">
+        <button type="button" class="btn btn-primary">Back</button>
+    </NavLink><br />
+</p>
+
+
+@if (project is not null)
+{
+    <h3>@project.Name</h3>
+    <h3>@project.MetricUrl</h3>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Project? project;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await httpClient.GetAsync($"api/project/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            project = await response.Content.ReadFromJsonAsync<Project>();
+        }
+
+    }
+}

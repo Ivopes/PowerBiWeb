@@ -18,6 +18,8 @@ builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
 builder.Services.AddTransient(typeof(AadService));
 builder.Services.Configure<PowerBiOptions>(builder.Configuration.GetSection("PowerBiOptions"));
+builder.Services.AddTransient<IProjectService, ProjectService>();
+builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
 
 var app = builder.Build();
 
