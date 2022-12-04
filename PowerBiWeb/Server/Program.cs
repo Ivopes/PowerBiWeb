@@ -1,4 +1,10 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Configuration;
+using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Interfaces.Services;
+using PowerBiWeb.Server.Repositories;
+using PowerBiWeb.Server.Services;
+using PowerBiWeb.Server.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +12,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IAuthRepository, AuthRepository>();
+builder.Services.AddTransient<IReportService, ReportService>();
+builder.Services.AddTransient<IReportRepository, ReportRepository>();
+builder.Services.AddTransient(typeof(AadService));
+builder.Services.Configure<PowerBiOptions>(builder.Configuration.GetSection("PowerBiOptions"));
+builder.Services.AddTransient<IProjectService, ProjectService>();
+builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
 
 var app = builder.Build();
 

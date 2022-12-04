@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Shared;
 
 namespace PowerBiWeb.Server.Controllers
@@ -8,12 +9,19 @@ namespace PowerBiWeb.Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        [HttpPost]
-        public ActionResult<User> Login([FromBody] User user)
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
         {
-            user.Password = "";
-            user.Role = "Mama, Admin";
-            return Ok(user);
+            _authService = authService;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<User>> Login([FromBody] User user)
+        {
+            var result = await _authService.LoginAsync(user);
+
+            return Ok(result);
         }
     }
 }

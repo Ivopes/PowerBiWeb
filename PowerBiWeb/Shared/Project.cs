@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace PowerBiWeb.Shared
 {
-    public class User
+    public class Project
     {
         [Required]
-        public string Username { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         [Required]
-        public string Password { get; set; } = string.Empty;
+        public string MetricUrl { get; set; } = string.Empty;
     }
 }

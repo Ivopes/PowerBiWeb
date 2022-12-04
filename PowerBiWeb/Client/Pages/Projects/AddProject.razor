@@ -1,0 +1,45 @@
+﻿<EditForm Model="@project" OnValidSubmit="@HandleAdd">
+    <DataAnnotationsValidator />
+    <div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Project</h4>
+                </div>
+                <div class="modal-body">
+                        <div class="form-group">
+                        <label for="name">Name</label>
+                            <InputText id="name" @bind-Value="project.Name" class="form-control" />
+                            <ValidationMessage For="@(() => project.Name)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="url">Metric url</label>
+                            <InputText id="url" @bind-Value="project.MetricUrl" class="form-control" />
+                            <ValidationMessage For="@(() => project.MetricUrl)" />
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        Add
+                    </button>
+                    <button type="button" class="btn btn-light" @onclick=@Cancel>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback<Project?> OnClose { get; set; }
+    private Project project = new();
+    private Task Cancel()
+    {
+        return OnClose.InvokeAsync(null);
+    }
+    private void HandleAdd()
+    {
+        OnClose.InvokeAsync(project);
+    }
+}
