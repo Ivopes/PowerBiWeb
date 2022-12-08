@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
+using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Server.Services;
 using PowerBiWeb.Server.Utilities;
+using PowerBiWeb.Server.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,14 @@ builder.Services.AddTransient(typeof(AadService));
 builder.Services.Configure<PowerBiOptions>(builder.Configuration.GetSection("PowerBiOptions"));
 builder.Services.AddTransient<IProjectService, ProjectService>();
 builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
+builder.Services.AddTransient<IAppUserService, AppUserService>();
+builder.Services.AddTransient<IAppUserRepository, AppUserRepository>();
+
+builder.Services.AddDbContext<PowerBiContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("powerBiDb"));
+});
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 var app = builder.Build();
 
