@@ -10,7 +10,7 @@ namespace PowerBiWeb.Server.Models.Entities
         [Key, Column(Order = 1)]
         public int ProjectId { get; set; }
 
-        public virtual AppUser AppUser { get; set; } = new();
+        public virtual ApplUser AppUser { get; set; } = new();
         public virtual Project Project { get; set; } = new();
         public ProjectRoles Role { get; set; }
     }

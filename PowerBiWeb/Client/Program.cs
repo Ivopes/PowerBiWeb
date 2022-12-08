@@ -3,10 +3,11 @@ using Blazored.Toast;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using PowerBiWeb.Client;
 using PowerBiWeb.Client.Utilities.Auth;
-using System.Runtime.InteropServices.JavaScript;
+using Blazorise;
+using Blazorise.Icons.FontAwesome;
+using Blazorise.Bootstrap5;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -22,5 +23,12 @@ builder.Services.AddBlazoredLocalStorage(opt =>
 });
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddBlazoredToast();
+builder.Services
+    .AddBlazorise(options =>
+    {
+        options.Immediate = true;
+    })
+    .AddBootstrap5Providers()
+    .AddFontAwesomeIcons();
 
 await builder.Build().RunAsync();

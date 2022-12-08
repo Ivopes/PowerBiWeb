@@ -1,5 +1,9 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Models.Contexts;
+using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Shared;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,27 +13,27 @@ namespace PowerBiWeb.Server.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-        public Task<string> LoginAsync(User user)
+        private readonly PowerBiContext _dbContext;
+
+        public AuthRepository(PowerBiContext dbContext)
         {
-            const string key = "123456123123456123";
+            _dbContext = dbContext;
+        }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier,user.Username),
-                new Claim(ClaimTypes.Role, "Admin"),
-                new Claim(ClaimTypes.Role, "User")
-            };
+        public async Task<ApplUser?> LoginAsync(UserLoginInformation user)
+        {
+            string token = string.Empty;
 
-            var token = new JwtSecurityToken(key,
-                key,
-                claims,
-                expires: DateTime.Now.AddMinutes(15),
-                signingCredentials: credentials);
+            var entity = await _dbContext.AppUsers.SingleOrDefaultAsync(u => u.Username == user.Username);
 
+            if (entity is null) return null;
 
-            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
+            
+            byte[] passHash = PasswordUtility.HashPassword(user.Password, entity.PasswordSalt);
+
+            if (!Enumerable.SequenceEqual(entity.PasswordHash, passHash)) return null;
+
+            return entity;
         }
     }
 }

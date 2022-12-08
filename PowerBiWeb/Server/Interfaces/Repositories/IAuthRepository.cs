@@ -1,9 +1,10 @@
-﻿using PowerBiWeb.Shared;
+﻿using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Shared;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
     public interface IAuthRepository
     {
-        Task<string> LoginAsync(User user);
+        Task<ApplUser?> LoginAsync(UserLoginInformation user);
     }
 }

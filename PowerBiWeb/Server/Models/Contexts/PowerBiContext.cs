@@ -5,7 +5,7 @@ namespace PowerBiWeb.Server.Models.Contexts
 {
     public class PowerBiContext : DbContext
     {
-        public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<ApplUser> AppUsers { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<AppUserProject> AppUserProjects { get; set; }
 

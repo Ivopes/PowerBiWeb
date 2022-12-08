@@ -19,11 +19,14 @@ namespace PowerBiWeb.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>> Login([FromBody] User user)
+        public async Task<ActionResult<UserLoginInformation>> Login([FromBody] UserLoginInformation user)
         {
             var result = await _authService.LoginAsync(user);
 
-            return Ok(result);
+            if (!string.IsNullOrEmpty(result)) return Ok(result);
+
+             
+            return Unauthorized();
         }
     }
 }

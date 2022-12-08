@@ -2,7 +2,7 @@
 
 namespace PowerBiWeb.Server.Models.Entities
 {
-    public class AppUser
+    public class ApplUser
     {
         public int Id { get; set; }
         public string Firstname { get; set; } = string.Empty;

@@ -6,41 +6,99 @@
 @inject AuthenticationStateProvider authProvider
 @inject ILogger<Login> _logger
 @inject HttpClient httpClient
+@inject IToastService toastService
 @attribute [AllowAnonymous]
 <h3>Login</h3>
 
-<EditForm Model="@userData" OnValidSubmit="@HandleLogin">
-    <DataAnnotationsValidator />
+@if (login)
+{
+    <EditForm Model="@userLoginData" OnValidSubmit="@HandleLogin">
+        <DataAnnotationsValidator />
 
+        <div class="form-group">
+            <label for="username">Username</label>
+            <InputText id="username" @bind-Value="userLoginData.Username" class="form-control" />
+            <ValidationMessage For="@(() => userLoginData.Username)" />
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <InputText type="password" id="password" @bind-Value="userLoginData.Password" class="form-control" />
+            <ValidationMessage For="@(() => userLoginData.Password)" />
+        </div>
+        <br/>
+        <button onclick="submit" class="btn btn-primary">Login</button>
+    </EditForm>
+    <button @onclick="() => login = false" class="btn btn-primary">Register</button>
+}
+else 
+{
+    <EditForm Model="@userRegisterData" OnValidSubmit="@HandleRegister">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label for="firstname">First name</label>
+            <InputText id="firstname" @bind-Value="userRegisterData.Firstname" class="form-control" />
+            <ValidationMessage For="@(() => userRegisterData.Firstname)" />
+    </div>
+    <div class="form-group">
+        <label for="lastname">Last name</label>
+            <InputText id="lastname" @bind-Value="userRegisterData.Lastname" class="form-control" />
+            <ValidationMessage For="@(() => userRegisterData.Lastname)" />
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+            <InputText id="email" @bind-Value="userRegisterData.Email" class="form-control" />
+            <ValidationMessage For="@(() => userRegisterData.Email)" />
+    </div>
     <div class="form-group">
         <label for="username">Username</label>
-        <InputText id="username" @bind-Value="userData.Username" class="form-control"/>
-        <ValidationMessage For="@(() => userData.Username)" />
+            <InputText id="username" @bind-Value="userRegisterData.Username" class="form-control" />
+            <ValidationMessage For="@(() => userRegisterData.Username)" />
     </div>
     <div class="form-group">
         <label for="password">Password</label>
-        <InputText required id="password" @bind-Value="userData.Password" class="form-control"/>
-        <ValidationMessage For="@(() => userData.Password)" />
+            <InputText type="password" id="password" @bind-Value="userRegisterData.Password" class="form-control" />
+            <ValidationMessage For="@(() => userRegisterData.Password)" />
 
     </div>
-    <br/>
+    <br />
     <button onclick="submit" class="btn btn-primary">Login</button>
 </EditForm>
+    <button @onclick="() => login = true" class="btn btn-primary">Login</button>
+
+}
+
 
 @code {
-    private User userData = new();
+    private bool login = true;
+    private UserLoginInformation userLoginData = new();
+    private UserRegisterInformation userRegisterData = new();
 
     private async Task HandleLogin()
     {
-        var response = await httpClient.PostAsJsonAsync("auth", userData);
+        var response = await httpClient.PostAsJsonAsync("api/auth", userLoginData);
         if (response.IsSuccessStatusCode)
         {
             var content = await response.Content.ReadAsStringAsync();
-            
+
             await _localStorage.SetItemAsync("accessToken", content);
             await authProvider.GetAuthenticationStateAsync();
             navigation.NavigateTo("/");
         }
+        else
+        {
+            toastService.ShowError("Wrong username/password");
+        }
     }
-    
+    private async Task HandleRegister()
+    {
+        var response = await httpClient.PostAsJsonAsync("api/appuser", userRegisterData);
+        if (response.IsSuccessStatusCode)
+        {
+            response = await httpClient.PostAsJsonAsync("api/auth", userRegisterData);
+
+            await _localStorage.SetItemAsync("accessToken", await response.Content.ReadAsStringAsync());
+            await authProvider.GetAuthenticationStateAsync();
+            navigation.NavigateTo("/");
+        }
+    }
 }

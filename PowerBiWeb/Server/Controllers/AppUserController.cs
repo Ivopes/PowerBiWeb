@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Shared;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -19,7 +20,7 @@ namespace PowerBiWeb.Server.Controllers
 
         // GET: api/<AppUserController>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AppUser>>> GetAsync()
+        public async Task<ActionResult<IEnumerable<ApplUser>>> GetAsync()
         {
             return Ok(await _appUserService.GetAsync());
         }
@@ -33,8 +34,12 @@ namespace PowerBiWeb.Server.Controllers
 
         // POST api/<AppUserController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<ActionResult> PostAsync([FromBody] UserRegisterInformation user)
         {
+            var response = await _appUserService.PostAsync(user);
+            if (string.IsNullOrEmpty(response)) return Ok();
+
+            return BadRequest(response);
         }
 
         // PUT api/<AppUserController>/5

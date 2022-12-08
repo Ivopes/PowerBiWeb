@@ -4,6 +4,6 @@ namespace PowerBiWeb.Server.Interfaces.Services
 {
     public interface IAuthService
     {
-        Task<string> LoginAsync(User user);
+        Task<string> LoginAsync(UserLoginInformation user);
     }
 }

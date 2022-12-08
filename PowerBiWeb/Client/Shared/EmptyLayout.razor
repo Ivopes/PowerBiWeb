@@ -1,7 +1,15 @@
-﻿@inherits LayoutComponentBase
+﻿@using Blazored.Toast.Configuration;
+@inherits LayoutComponentBase
 
 <div class="main">
     <div class="content px-4">
         @Body
     </div>
 </div>
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="3"
+                IconType="IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                RemoveToastsOnNavigation=true
+                MaxToastCount="3" />
