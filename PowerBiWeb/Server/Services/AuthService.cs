@@ -35,7 +35,7 @@ namespace PowerBiWeb.Server.Services
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim(ClaimTypes.NameIdentifier, entity.Id.ToString()),
             };
 
             claims.AddRange(CreateRoleClaims(entity.AppRole));

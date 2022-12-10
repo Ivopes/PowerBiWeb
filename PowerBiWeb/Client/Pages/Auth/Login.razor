@@ -1,6 +1,7 @@
 ﻿@page "/login"
 @layout EmptyLayout
 @using Blazored.LocalStorage
+@using PowerBiWeb.Client.Utilities.Auth;
 @inject ILocalStorageService _localStorage
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider authProvider
@@ -12,6 +13,7 @@
 
 @if (login)
 {
+    @*
     <EditForm Model="@userLoginData" OnValidSubmit="@HandleLogin">
         <DataAnnotationsValidator />
 
@@ -29,9 +31,47 @@
         <button onclick="submit" class="btn btn-primary">Login</button>
     </EditForm>
     <button @onclick="() => login = false" class="btn btn-primary">Register</button>
+    *@
+
+
+    <Validations ValidateOnLoad="false" @ref="loginForm">
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Username</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit @bind-Text="userLoginData.Username">
+                        <Feedback>
+                            <ValidationError>Username is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel>Password</FieldLabel>
+                <FieldBody>
+                    <TextEdit Role="TextRole.Password" @bind-Text="userLoginData.Password">
+                        <Feedback>
+                            <ValidationError>Password is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+    </Validations>
+
+    <Button Color="Color.Primary" Clicked="@HandleLogin">
+        Login
+    </Button>
+
+    <Button Color="Color.Primary" Clicked="() => login = false">
+        Register
+    </Button>
 }
 else 
 {
+    @*
     <EditForm Model="@userRegisterData" OnValidSubmit="@HandleRegister">
     <DataAnnotationsValidator />
     <div class="form-group">
@@ -64,6 +104,79 @@ else
     <button onclick="submit" class="btn btn-primary">Login</button>
 </EditForm>
     <button @onclick="() => login = true" class="btn btn-primary">Login</button>
+     *@
+
+
+     <Validations ValidateOnLoad="false" Model="userRegisterData" @ref="registerForm">
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Firstname</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit @bind-Text="@userRegisterData.Firstname">
+                        <Feedback>
+                            <ValidationError>Firstname is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Lastname</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit @bind-Text="@userRegisterData.Lastname">
+                        <Feedback>
+                            <ValidationError>Lastname is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+        <Validation Validator="ValidationRule.IsEmail">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Email</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit Role="TextRole.Email" @bind-Text="@userRegisterData.Email">
+                        <Feedback>
+                            <ValidationError>Email is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Username</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit @bind-Text="@userRegisterData.Username">
+                        <Feedback>
+                            <ValidationError>Username is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+        <Validation Validator="ValidationRule.IsNotEmpty">
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Password</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is5">
+                    <TextEdit Role="TextRole.Password" @bind-Text="@userRegisterData.Password">
+                        <Feedback>
+                            <ValidationError>Password is required</ValidationError>
+                        </Feedback>
+                    </TextEdit>
+                </FieldBody>
+            </Field>
+        </Validation>
+    </Validations>
+
+    <Button Color="Color.Primary" Clicked="@HandleRegister">
+        Create Account
+    </Button>
+
+    <Button Color="Color.Primary" Clicked="() => login = true">
+        Login
+    </Button>
 
 }
 
@@ -72,15 +185,23 @@ else
     private bool login = true;
     private UserLoginInformation userLoginData = new();
     private UserRegisterInformation userRegisterData = new();
+    private Validations? loginForm;
+    private Validations? registerForm;
 
     private async Task HandleLogin()
     {
+        if (!await loginForm.ValidateAll()) return;
+
         var response = await httpClient.PostAsJsonAsync("api/auth", userLoginData);
         if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadAsStringAsync();
+            var token = await response.Content.ReadAsStringAsync();
 
-            await _localStorage.SetItemAsync("accessToken", content);
+            if (authProvider is TokenAuthStateProvider aProvider)
+            {
+                await aProvider.SaveToken(token);
+            }
+
             await authProvider.GetAuthenticationStateAsync();
             navigation.NavigateTo("/");
         }
@@ -91,14 +212,25 @@ else
     }
     private async Task HandleRegister()
     {
+        if (!await registerForm.ValidateAll()) return;
+
         var response = await httpClient.PostAsJsonAsync("api/appuser", userRegisterData);
         if (response.IsSuccessStatusCode)
         {
             response = await httpClient.PostAsJsonAsync("api/auth", userRegisterData);
 
-            await _localStorage.SetItemAsync("accessToken", await response.Content.ReadAsStringAsync());
+            if (authProvider is TokenAuthStateProvider aProvider)
+            {
+                await aProvider.SaveToken(await response.Content.ReadAsStringAsync());
+            }
+
             await authProvider.GetAuthenticationStateAsync();
             navigation.NavigateTo("/");
+            TextEdit a;
+        }
+        else
+        {
+            toastService.ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 }

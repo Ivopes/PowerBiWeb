@@ -8,9 +8,10 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace PowerBiWeb.Client.Utilities.Auth
 {
-    public class JwtAuthStateProvider : AuthenticationStateProvider
+    public class JwtAuthStateProvider : TokenAuthStateProvider
     {
         private const string AuthType = "JwtAuth";
+        public const string TokenKey = "AccessToken";
         private readonly AuthenticationState _anonymousState = new AuthenticationState(new ClaimsPrincipal());
         private readonly ILocalStorageService _localStorage;
         private readonly ILogger<JwtAuthStateProvider> _logger;
@@ -22,8 +23,7 @@ namespace PowerBiWeb.Client.Utilities.Auth
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-
-            var token = await _localStorage.GetItemAsync<string>("accessToken");
+            var token = await _localStorage.GetItemAsync<string>(TokenKey);
             
             if (token is null)
             {
@@ -43,6 +43,24 @@ namespace PowerBiWeb.Client.Utilities.Auth
 
             return state;
         }
-       
+
+        public override async Task SaveToken(string token)
+        {
+            await _localStorage.SetItemAsStringAsync(TokenKey, token);
+        }
+        public override async Task RemoveToken()
+        {
+            await _localStorage.RemoveItemAsync(TokenKey);
+        }
+        public override async Task<string> GetToken()
+        {
+            return await _localStorage.GetItemAsStringAsync(TokenKey);
+        }
+    }
+    public abstract class TokenAuthStateProvider : AuthenticationStateProvider
+    {
+        public abstract Task SaveToken(string token);
+        public abstract Task RemoveToken();
+        public abstract Task<string> GetToken();
     }
 }

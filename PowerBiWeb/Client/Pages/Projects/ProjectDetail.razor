@@ -1,5 +1,6 @@
 ﻿@page "/projects/{Id:int}"
 @inject HttpClient httpClient
+@inject IToastService toastService
 
 <h3>ProjectDetail</h3>
 
@@ -8,6 +9,48 @@
         <button type="button" class="btn btn-primary">Back</button>
     </NavLink><br />
 </p>
+<Button Color="Color.Primary" Clicked="@ShowModal">Add user to project</Button>
+
+@*
+    Modal add user window
+*@
+<Modal @ref="modalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add user to project</ModalTitle>
+            <CloseButton />
+    </ModalHeader>
+    <ModalBody>
+            <Validations ValidateOnLoad="false">
+
+                  <Validation Validator="ValidationRule.IsEmail" >
+                    <Field Horizontal>
+                        <FieldLabel>Email</FieldLabel>
+                        <FieldBody>
+                            <TextEdit Role="TextRole.Email" @bind-Text="@addEmail">
+                                <Feedback>
+                                    <ValidationError>Email is required</ValidationError>
+                                </Feedback>
+                            </TextEdit>
+                        </FieldBody>
+                    </Field>
+                </Validation>
+            </Validations>
+            <Field>
+                <FieldLabel>Role</FieldLabel>
+                <Select TValue="int" @bind-SelectedValue="addRole">
+                    <SelectItem Value="2">Viewer</SelectItem>
+                    <SelectItem Value="1">Editor</SelectItem>
+                    <SelectItem Value="0">Creator</SelectItem>
+                </Select>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@AddUserToProject">Add user</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 
 @if (project is not null)
@@ -20,16 +63,59 @@
     [Parameter]
     public int Id { get; set; }
 
-    private Project? project;
+    private ProjectDTO? project;
 
+    // reference to the modal component
+    private Modal? modalRef;
+    private string addEmail = string.Empty;
+    private int addRole = 2;
+
+    private Task ShowModal()
+    {
+        ClearModalForm();
+        return modalRef!.Show();
+    }
+
+    private Task HideModal()
+    {
+        ClearModalForm();
+        return modalRef!.Hide();
+    }
+    private void ClearModalForm()
+    {
+        addEmail = string.Empty;
+        addRole = 2;
+    }
     protected override async Task OnInitializedAsync()
     {
         var response = await httpClient.GetAsync($"api/project/{Id}");
 
         if (response.IsSuccessStatusCode)
         {
-            project = await response.Content.ReadFromJsonAsync<Project>();
+            project = await response.Content.ReadFromJsonAsync<ProjectDTO>();
         }
+    }
+    private async Task AddUserToProject()
+    {
+        var dto = new AddUserToObjectDTO
+        {
+            ProjectId = Id,
+            Role = addRole,
+            UserEmail = addEmail
+        };
 
+        var response = await httpClient.PostAsJsonAsync($"api/project/adduser", dto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            toastService.ShowSuccess("User added");
+            ClearModalForm();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
     }
 }

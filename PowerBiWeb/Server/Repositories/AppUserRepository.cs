@@ -17,7 +17,7 @@ namespace PowerBiWeb.Server.Repositories
         {
             _dbContext = dbContext;
         }
-        public async Task<IEnumerable<ApplUser>> GetAsync()
+        public async Task<IEnumerable<ApplUser>> GetAllAsync()
         {
             return await _dbContext.AppUsers.Include(a => a.AppUserProjects).ToListAsync();
         }

@@ -32,8 +32,8 @@
 </EditForm>
 
 @code {
-    [Parameter] public EventCallback<Project?> OnClose { get; set; }
-    private Project project = new();
+    [Parameter] public EventCallback<ProjectDTO?> OnClose { get; set; }
+    private ProjectDTO project = new();
     private Task Cancel()
     {
         return OnClose.InvokeAsync(null);

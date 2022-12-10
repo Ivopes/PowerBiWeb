@@ -16,7 +16,7 @@ namespace PowerBiWeb.Server.Services
 
         public async Task<IEnumerable<ApplUser>> GetAsync()
         {
-            return await _appUserRepository.GetAsync();
+            return await _appUserRepository.GetAllAsync();
         }
 
         public async Task<string> PostAsync(UserRegisterInformation user)

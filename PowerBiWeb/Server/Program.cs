@@ -8,6 +8,10 @@ using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Server.Services;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Controllers;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using EntityFramework.Exceptions.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +33,23 @@ builder.Services.AddTransient<IAppUserRepository, AppUserRepository>();
 builder.Services.AddDbContext<PowerBiContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("powerBiDb"));
+    options.UseExceptionProcessor();
 });
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSecretKey"]))
+    };
+});
+
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -53,6 +72,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();

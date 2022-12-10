@@ -5,7 +5,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
 {
     public interface IAppUserRepository
     {
-        Task<IEnumerable<ApplUser>> GetAsync();
+        Task<IEnumerable<ApplUser>> GetAllAsync();
         Task<string> PostAsync(ApplUser user);
     }
 }

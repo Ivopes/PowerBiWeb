@@ -1,4 +1,5 @@
 ﻿@using Blazored.LocalStorage;
+@using PowerBiWeb.Client.Utilities.Auth;
 @inject ILocalStorageService _localStorage
 @inject AuthenticationStateProvider authProvider
 
@@ -56,7 +57,10 @@
     }
     private async Task Logout()
     {
-        await _localStorage.RemoveItemAsync("accessToken");
+        if (authProvider is TokenAuthStateProvider aProvider)
+        {
+            await aProvider.RemoveToken();
+        }
         await authProvider.GetAuthenticationStateAsync();
     }
 }

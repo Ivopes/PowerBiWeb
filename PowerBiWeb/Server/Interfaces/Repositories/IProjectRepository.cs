@@ -1,11 +1,18 @@
-﻿using PowerBiWeb.Shared;
+﻿using PowerBiWeb.Server.Models.Entities;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
     public interface IProjectRepository
     {
-        Task<List<Project>> GetAsync();
-        Task<Project> GetAsync(int id);
-        Task<Project> Post(Project project);
+        Task<List<Project>> GetAllAsync(int userId);
+        Task<Project?> GetAsync(int projectId);
+        /// <summary>
+        /// Create new project and add it to the creator
+        /// </summary>
+        Task<Project> Post(int userId, Project project);
+        /// <summary>
+        /// Add project to user
+        /// </summary>
+        Task<string> AddToUser(string userEmail, int projectId, ProjectRoles role);
     }
 }

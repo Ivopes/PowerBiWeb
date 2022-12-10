@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace PowerBiWeb.Shared
 {
-    public class Project
+    public class ProjectDTO
     {
+        [Required]
+        public int Id { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]

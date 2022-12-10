@@ -10,12 +10,9 @@
 <button type="button" class="btn btn-primary" @onclick="@ModalShow">Create new</button>
 
 <div>
-    @{
-        int x = 0;
-    }
     @foreach (var p in _projects)
     {
-        string link = $"/projects/{x++}"; 
+        string link = $"/projects/{p.Id}"; 
     
         <NavLink href=@link>
             <span>@p.Name</span>
@@ -42,7 +39,7 @@
     private AddProject ModalWindow { get; set; }
     private bool showModal;
     void ModalShow() => showModal = true;
-    private List<Project> _projects = new();
+    private List<ProjectDTO> _projects = new();
 
     async Task LoadProjects()
     {
@@ -51,14 +48,14 @@
         var response = await httpClient.GetAsync("api/project");
         if (response.IsSuccessStatusCode)
         {
-            _projects = await response.Content.ReadFromJsonAsync<List<Project>>();
+            _projects = await response.Content.ReadFromJsonAsync<List<ProjectDTO>>();
         }
         else
         {
             _logger.LogError("Could not load projects");
         }
     }
-    async Task ModalOk(Project? project)
+    async Task ModalOk(ProjectDTO? project)
     {
         showModal = false;
         if (project is not null)
@@ -66,10 +63,9 @@
             var response = await httpClient.PostAsJsonAsync("api/project", project);
             if (response.IsSuccessStatusCode)
             {
-                var p = await response.Content.ReadFromJsonAsync<Project>();
+                var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
                 toastService.ShowSuccess("Project added");
                 await LoadProjects();
-
             }
         }
     }

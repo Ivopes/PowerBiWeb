@@ -1,27 +1,82 @@
-﻿using PowerBiWeb.Server.Interfaces.Repositories;
-using PowerBiWeb.Shared;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api.Models;
+using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Models.Contexts;
+using PowerBiWeb.Server.Models.Entities;
 
 namespace PowerBiWeb.Server.Repositories
 {
     public class ProjectRepository : IProjectRepository
     {
-        private static readonly List<Project> _projects = new();
+        private readonly PowerBiContext _dbContext;
 
-        public Task<List<Project>> GetAsync()
+        public ProjectRepository(PowerBiContext dbContext)
         {
-            return Task.FromResult(_projects);
+            _dbContext = dbContext;
         }
 
-        public Task<Project> GetAsync(int id)
+        public async Task<List<Project>> GetAllAsync(int userId)
         {
-            return Task.FromResult(_projects[id]);
+            var result = await _dbContext.Projects
+                .Where(p => p.AppUserProject.Any(aup => aup.AppUser.Id == userId))
+                .Include(p => p.AppUserProject)
+                .ToListAsync();
+
+            return result;
         }
 
-        public Task<Project> Post(Project project)
+        public async Task<Project?> GetAsync(int id)
         {
-            _projects.Add(project);
+            return await _dbContext.Projects.FindAsync(id);
+        }
 
-            return Task.FromResult(project);
+        public async Task<Project> Post(int userId, Project project)
+        {
+            var user = await _dbContext.AppUsers.FindAsync(userId);
+
+            user!.AppUserProjects.Add(new() 
+            { 
+                Project = project,
+                Role = ProjectRoles.Creator
+            });
+
+            //await _dbContext.Projects.AddAsync(project);
+            await SaveContextAsync();
+
+            return project;
+        }
+        public async Task<string> AddToUser(string userEmail, int projectId, ProjectRoles role)
+        {
+            var user = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
+            
+            if (user is null) return "Email not found";
+
+            var project = await _dbContext.Projects.FindAsync(projectId);
+
+            if (project is null) return "Project not found";
+
+            user.AppUserProjects.Add(new()
+            {
+                Project = project,
+                Role = role
+            });
+
+            try
+            {
+                await SaveContextAsync();
+            } 
+            catch (UniqueConstraintException)
+            {
+                return "User is already assigned";
+            
+            }
+
+            return string.Empty;
+        }
+        private async Task SaveContextAsync()
+        {
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
