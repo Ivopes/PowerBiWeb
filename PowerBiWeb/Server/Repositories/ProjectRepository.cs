@@ -28,7 +28,7 @@ namespace PowerBiWeb.Server.Repositories
 
         public async Task<Project?> GetAsync(int id)
         {
-            return await _dbContext.Projects.FindAsync(id);
+            return await _dbContext.Projects.Include(p => p.AppUserProject).ThenInclude(aup => aup.AppUser).SingleAsync(p => p.Id == id);
         }
 
         public async Task<Project> Post(int userId, Project project)

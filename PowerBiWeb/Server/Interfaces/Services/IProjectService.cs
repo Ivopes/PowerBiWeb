@@ -1,5 +1,5 @@
 ﻿using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Interfaces.Services
 {
@@ -7,7 +7,7 @@ namespace PowerBiWeb.Server.Interfaces.Services
     {
         Task<string> AddToUser(AddUserToObjectDTO dto);
         Task<List<ProjectDTO>> GetAllAsync();
-        Task<ProjectDTO?> GetAsync(int id);
+        Task<ProjectDTO?> GetAsync(int projectId);
         /// <summary>
         /// Create new project and add it to the creator
         /// </summary>

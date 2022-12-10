@@ -3,7 +3,7 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Extentions;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 using System.Security.Claims;
 
 namespace PowerBiWeb.Server.Services
@@ -38,9 +38,9 @@ namespace PowerBiWeb.Server.Services
             return result;
         }
 
-        public async Task<ProjectDTO?> GetAsync(int id)
+        public async Task<ProjectDTO?> GetAsync(int projectId)
         {
-            var p = await _projectRepository.GetAsync(id);
+            var p = await _projectRepository.GetAsync(projectId);
 
             if (p is null) return null;
 

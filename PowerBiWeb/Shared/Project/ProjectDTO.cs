@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PowerBiWeb.Shared
+namespace PowerBiWeb.Shared.Project
 {
     public class ProjectDTO
     {
@@ -15,5 +15,6 @@ namespace PowerBiWeb.Shared
         public string Name { get; set; } = string.Empty;
         [Required]
         public string MetricUrl { get; set; } = string.Empty;
+        public ICollection<UserProject> Users { get; set; } = Array.Empty<UserProject>();
     }
 }

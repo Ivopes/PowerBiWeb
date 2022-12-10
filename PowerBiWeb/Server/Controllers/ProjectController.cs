@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Controllers
 {

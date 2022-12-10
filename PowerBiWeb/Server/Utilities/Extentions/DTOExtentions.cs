@@ -1,5 +1,5 @@
 ﻿using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Utilities.Extentions
 {
@@ -7,11 +7,25 @@ namespace PowerBiWeb.Server.Utilities.Extentions
     {
         public static ProjectDTO ToDTO(this Project p)
         {
-            return new ProjectDTO
+            var dto = new ProjectDTO
             {
                 Id = p.Id,
                 Name = p.Name
             };
+
+            dto.Users = new List<UserProject>();
+
+            foreach (var user in p.AppUserProject)
+            {
+                dto.Users.Add(new()
+                {
+                    Email = user.AppUser.Email,
+                    Username = user.AppUser.Username,
+                    Role = (ProjectRoleDTO)user.Role,
+                });
+            }
+
+            return dto;
         }
         public static Project ToBO(this ProjectDTO p)
         {

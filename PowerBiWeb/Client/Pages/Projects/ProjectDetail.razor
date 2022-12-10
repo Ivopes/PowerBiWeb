@@ -1,6 +1,9 @@
 ﻿@page "/projects/{Id:int}"
+@using PowerBiWeb.Shared.Project;
+@using System.Security.Claims;
 @inject HttpClient httpClient
 @inject IToastService toastService
+@inject AuthenticationStateProvider AuthState
 
 <h3>ProjectDetail</h3>
 
@@ -9,12 +12,50 @@
         <button type="button" class="btn btn-primary">Back</button>
     </NavLink><br />
 </p>
-<Button Color="Color.Primary" Clicked="@ShowModal">Add user to project</Button>
 
+@if (project is not null)
+{
+    <h3>@project.Name</h3>
+    <h3>@project.MetricUrl</h3>
+
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHeaderCell>Username</TableHeaderCell>
+                <TableHeaderCell>Email</TableHeaderCell>
+                <TableHeaderCell>Role</TableHeaderCell>
+                @if(myRole <= ProjectRoleDTO.Creator)
+                {
+                    <TableHeaderCell></TableHeaderCell>
+                }
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @for (int i = 0; i < project.Users.Count; i++)
+            {
+                var user = project.Users.ElementAt(i);
+                int j = i;
+                <TableRow>
+                    <TableRowCell>@user.Username</TableRowCell>
+                    <TableRowCell>@user.Email</TableRowCell>
+                    <TableRowCell>@user.Role</TableRowCell>
+                    @if(myRole <= ProjectRoleDTO.Creator)
+                    {
+                    <TableRowCell>
+                        <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
+                    </TableRowCell>
+                    }
+                </TableRow>
+            }
+        </TableBody>
+    </Table>
+}
+
+<Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
 @*
     Modal add user window
 *@
-<Modal @ref="modalRef">
+<Modal @ref="modalAddRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Add user to project</ModalTitle>
@@ -46,45 +87,81 @@
             </Field>
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+            <Button Color="Color.Secondary" Clicked="@HideAddModal">Close</Button>
             <Button Color="Color.Primary" Clicked="@AddUserToProject">Add user</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
 
-
-@if (project is not null)
-{
-    <h3>@project.Name</h3>
-    <h3>@project.MetricUrl</h3>
-}
+<Modal @ref="modalEditRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Edit user</ModalTitle>
+            <CloseButton />
+    </ModalHeader>
+    <ModalBody>
+            <Field>
+                <FieldLabel>Email</FieldLabel>
+                <TextEdit @bind-Text="editEmail" ReadOnly="true"></TextEdit>
+            </Field>
+            <Field>
+                <FieldLabel>Role</FieldLabel>
+                <Select TValue="int" @bind-SelectedValue="editRole">
+                    <SelectItem Value="2">Viewer</SelectItem>
+                    <SelectItem Value="1">Editor</SelectItem>
+                    <SelectItem Value="0">Creator</SelectItem>
+                </Select>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
+            <Button Color="Color.Primary" >Save</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
     private ProjectDTO? project;
-
+    private ProjectRoleDTO myRole;
     // reference to the modal component
-    private Modal? modalRef;
+    private Modal? modalAddRef;
+    private Modal? modalEditRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
+    private int editRole;
+    private string editEmail;
 
-    private Task ShowModal()
+    private Task ShowAddModal()
     {
-        ClearModalForm();
-        return modalRef!.Show();
+        ClearAddModalForm();
+        return modalAddRef!.Show();
     }
-
-    private Task HideModal()
+    private Task HideAddModal()
     {
-        ClearModalForm();
-        return modalRef!.Hide();
+        ClearAddModalForm();
+        return modalAddRef!.Hide();
     }
-    private void ClearModalForm()
+    private Task ShowEditModal(int index)
+    {
+        SetEditModalForm(index);
+        return modalEditRef!.Show();
+    }
+    private Task HideEditModal()
+    {
+        return modalEditRef!.Hide();
+    }
+    private void ClearAddModalForm()
     {
         addEmail = string.Empty;
         addRole = 2;
+    }
+    private void SetEditModalForm(int index)
+    {
+        editRole = (int) project!.Users.ElementAt(index).Role;
+        editEmail = project!.Users.ElementAt(index).Email;
     }
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +170,12 @@
         if (response.IsSuccessStatusCode)
         {
             project = await response.Content.ReadFromJsonAsync<ProjectDTO>();
+
+            var state = await AuthState.GetAuthenticationStateAsync();
+
+            var username = state.User.Identity!.Name;
+
+            myRole = project!.Users.Single(u => u.Username == username).Role;
         }
     }
     private async Task AddUserToProject()
@@ -100,7 +183,7 @@
         var dto = new AddUserToObjectDTO
         {
             ProjectId = Id,
-            Role = addRole,
+            Role = (ProjectRoleDTO) addRole,
             UserEmail = addEmail
         };
 
@@ -109,7 +192,7 @@
         if (response.IsSuccessStatusCode)
         {
             toastService.ShowSuccess("User added");
-            ClearModalForm();
+            ClearAddModalForm();
         }
         else
         {
