@@ -13,6 +13,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         /// <summary>
         /// Add project to user
         /// </summary>
-        Task<string> AddToUser(string userEmail, int projectId, ProjectRoles role);
+        Task<string> AddToUserAsync(string userEmail, int projectId, ProjectRoles role);
+        Task<string> EditUserAsync(string userEmail, int projectId, ProjectRoles newRole);
     }
 }

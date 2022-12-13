@@ -4,7 +4,7 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PowerBiWeb.Shared
+namespace PowerBiWeb.Shared.User
 {
     public class UserRegisterInformation : UserLoginInformation
     {

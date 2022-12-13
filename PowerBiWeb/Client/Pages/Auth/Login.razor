@@ -1,7 +1,9 @@
 ﻿@page "/login"
+@using PowerBiWeb.Shared.User;
 @layout EmptyLayout
 @using Blazored.LocalStorage
 @using PowerBiWeb.Client.Utilities.Auth;
+@using PowerBiWeb.Shared.User;
 @inject ILocalStorageService _localStorage
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider authProvider

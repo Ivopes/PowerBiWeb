@@ -7,11 +7,11 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ReportController : ControllerBase
+    public class ReportsController : ControllerBase
     {
         private readonly IReportService _reportService;
 
-        public ReportController(IReportService reportService)
+        public ReportsController(IReportService reportService)
         {
             _reportService = reportService;
         }

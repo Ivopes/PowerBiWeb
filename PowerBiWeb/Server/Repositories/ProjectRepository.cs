@@ -15,7 +15,6 @@ namespace PowerBiWeb.Server.Repositories
         {
             _dbContext = dbContext;
         }
-
         public async Task<List<Project>> GetAllAsync(int userId)
         {
             var result = await _dbContext.Projects
@@ -25,12 +24,10 @@ namespace PowerBiWeb.Server.Repositories
 
             return result;
         }
-
         public async Task<Project?> GetAsync(int id)
         {
             return await _dbContext.Projects.Include(p => p.AppUserProject).ThenInclude(aup => aup.AppUser).SingleAsync(p => p.Id == id);
         }
-
         public async Task<Project> Post(int userId, Project project)
         {
             var user = await _dbContext.AppUsers.FindAsync(userId);
@@ -46,7 +43,7 @@ namespace PowerBiWeb.Server.Repositories
 
             return project;
         }
-        public async Task<string> AddToUser(string userEmail, int projectId, ProjectRoles role)
+        public async Task<string> AddToUserAsync(string userEmail, int projectId, ProjectRoles role)
         {
             var user = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
             
@@ -71,6 +68,23 @@ namespace PowerBiWeb.Server.Repositories
                 return "User is already assigned";
             
             }
+
+            return string.Empty;
+        }
+        public async Task<string> EditUserAsync(string userEmail, int projectId, ProjectRoles newRole)
+        {
+            var entity = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
+            //var entity = await _dbContext.AppUsers.FindAsync(user.em);
+
+            if (entity is null) return "User was not found";
+
+            var aup = await _dbContext.AppUserProjects.Include(aup => aup.AppUser).SingleAsync(aup => aup.ProjectId == projectId && aup.AppUser.Email == userEmail);
+
+            if (aup is null) return "User is not in specified project";
+
+            aup.Role = newRole;
+
+            await SaveContextAsync();
 
             return string.Empty;
         }

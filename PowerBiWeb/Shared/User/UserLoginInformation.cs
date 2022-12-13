@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PowerBiWeb.Shared
+namespace PowerBiWeb.Shared.User
 {
     public class UserLoginInformation
     {
-        
+
         [Required]
         public string Username { get; set; } = string.Empty;
 

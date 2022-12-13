@@ -13,7 +13,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 Name = p.Name
             };
 
-            dto.Users = new List<UserProject>();
+            dto.Users = new List<UserProjectDTO>();
 
             foreach (var user in p.AppUserProject)
             {

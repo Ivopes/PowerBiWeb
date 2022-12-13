@@ -5,7 +5,7 @@ namespace PowerBiWeb.Server.Interfaces.Services
 {
     public interface IProjectService
     {
-        Task<string> AddToUser(AddUserToObjectDTO dto);
+        Task<string> AddToUserAsync(UserToProjectDTO dto);
         Task<List<ProjectDTO>> GetAllAsync();
         Task<ProjectDTO?> GetAsync(int projectId);
         /// <summary>
@@ -16,5 +16,6 @@ namespace PowerBiWeb.Server.Interfaces.Services
         /// Does user have atleast Editor privilege
         /// </summary>
         Task<bool> IsMinEditor(int projectId);
+        Task<string> EditUserAsync(UserToProjectDTO dto);
     }
 }

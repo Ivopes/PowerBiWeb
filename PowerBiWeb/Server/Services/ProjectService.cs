@@ -61,15 +61,22 @@ namespace PowerBiWeb.Server.Services
 
             return project;
         }
-        public async Task<string> AddToUser(AddUserToObjectDTO dto)
+        public async Task<string> AddToUserAsync(UserToProjectDTO dto)
         {
-            if (!Enum.IsDefined(typeof(ProjectRoles), dto.Role)) return "Role value does not exist";
+            if (!Enum.IsDefined(typeof(ProjectRoles), (int)dto.Role)) return "Role value does not exist";
 
             ProjectRoles role = (ProjectRoles)dto.Role;
 
-            return await _projectRepository.AddToUser(dto.UserEmail, dto.ProjectId, role);
+            return await _projectRepository.AddToUserAsync(dto.UserEmail, dto.ProjectId, role);
         }
+        public async Task<string> EditUserAsync(UserToProjectDTO dto)
+        {
+            if (!Enum.IsDefined(typeof(ProjectRoles), (int)dto.Role)) return "Role value does not exist";
 
+            ProjectRoles role = (ProjectRoles)dto.Role;
+
+            return await _projectRepository.EditUserAsync(dto.UserEmail, dto.ProjectId, role);
+        }
         public async Task<bool> IsMinEditor(int projectId)
         {
             var userId = GetUserId();

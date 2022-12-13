@@ -22,6 +22,11 @@ namespace PowerBiWeb.Server.Repositories
             return await _dbContext.AppUsers.Include(a => a.AppUserProjects).ToListAsync();
         }
 
+        public async Task<ApplUser?> GetByIdAsync(int id)
+        {
+            return await _dbContext.AppUsers.FindAsync(id);
+        }
+
         public async Task<string> PostAsync(ApplUser user)
         {
             string response = string.Empty;

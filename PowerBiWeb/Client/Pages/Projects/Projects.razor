@@ -46,7 +46,7 @@
     {
         _projects = new();
 
-        var response = await httpClient.GetAsync("api/project");
+        var response = await httpClient.GetAsync("api/projects");
         if (response.IsSuccessStatusCode)
         {
             _projects = await response.Content.ReadFromJsonAsync<List<ProjectDTO>>();
@@ -61,7 +61,7 @@
         showModal = false;
         if (project is not null)
         {
-            var response = await httpClient.PostAsJsonAsync("api/project", project);
+            var response = await httpClient.PostAsJsonAsync("api/projects", project);
             if (response.IsSuccessStatusCode)
             {
                 var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();

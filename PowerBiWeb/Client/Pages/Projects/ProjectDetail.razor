@@ -24,7 +24,7 @@
                 <TableHeaderCell>Username</TableHeaderCell>
                 <TableHeaderCell>Email</TableHeaderCell>
                 <TableHeaderCell>Role</TableHeaderCell>
-                @if(myRole <= ProjectRoleDTO.Creator)
+                @if(myRole <= ProjectRoleDTO.Editor)
                 {
                     <TableHeaderCell></TableHeaderCell>
                 }
@@ -39,7 +39,7 @@
                     <TableRowCell>@user.Username</TableRowCell>
                     <TableRowCell>@user.Email</TableRowCell>
                     <TableRowCell>@user.Role</TableRowCell>
-                    @if(myRole <= ProjectRoleDTO.Creator)
+                    @if(myRole <= ProjectRoleDTO.Editor)
                     {
                     <TableRowCell>
                         <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
@@ -115,7 +115,7 @@
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
-            <Button Color="Color.Primary" >Save</Button>
+            <Button Color="Color.Primary" Clicked="@EditUser">Save</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -165,7 +165,11 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        var response = await httpClient.GetAsync($"api/project/{Id}");
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        var response = await httpClient.GetAsync($"api/projects/{Id}");
 
         if (response.IsSuccessStatusCode)
         {
@@ -180,19 +184,43 @@
     }
     private async Task AddUserToProject()
     {
-        var dto = new AddUserToObjectDTO
+        var dto = new UserToProjectDTO
         {
             ProjectId = Id,
-            Role = (ProjectRoleDTO) addRole,
-            UserEmail = addEmail
+            Role = (ProjectRoleDTO)editRole,
+            UserEmail = editEmail
         };
 
-        var response = await httpClient.PostAsJsonAsync($"api/project/adduser", dto);
+        var response = await httpClient.PostAsJsonAsync($"api/projects/user", dto);
 
         if (response.IsSuccessStatusCode)
         {
             toastService.ShowSuccess("User added");
             ClearAddModalForm();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+    }
+    private async Task EditUser()
+    {
+        var dto = new UserToProjectDTO
+            {
+                ProjectId = Id,
+                Role = (ProjectRoleDTO)editRole,
+                UserEmail = editEmail
+            };
+
+        var response = await httpClient.PutAsJsonAsync($"api/projects/user", dto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            toastService.ShowSuccess("User role changed");
+            await HideEditModal();
+            await LoadData();
         }
         else
         {

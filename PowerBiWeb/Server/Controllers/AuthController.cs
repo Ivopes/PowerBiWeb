@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
-using PowerBiWeb.Shared;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.OpenApi;
+using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Controllers
 {

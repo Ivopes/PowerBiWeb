@@ -1,0 +1,55 @@
+﻿@page "/account"
+@using PowerBiWeb.Client.Utilities.Auth;
+@using System.Security.Claims;
+@using PowerBiWeb.Shared.User;
+@inject HttpClient httpClient
+@inject AuthenticationStateProvider authProvider
+@inject IToastService toastService;
+
+<h3>AccDetail</h3>
+
+@if (detail is not null)
+{
+  
+        <Field>
+            <FieldLabel>First name</FieldLabel>
+            <TextEdit ReadOnly @bind-Text="detail.Firstname" />
+        </Field>
+        <Field >
+            <FieldLabel>Last name</FieldLabel>
+            <TextEdit ReadOnly @bind-Text="detail.Lastname" />
+ 
+        </Field>
+        <Field>
+            <FieldLabel>Username</FieldLabel>
+            <TextEdit ReadOnly @bind-Text="detail.Username" />
+        </Field>
+        <Field >
+            <FieldLabel>Email</FieldLabel>
+            <TextEdit ReadOnly @bind-Text="detail.Email" />
+        </Field>
+  
+}
+
+
+@code {
+    UserDetail? detail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await authProvider.GetAuthenticationStateAsync();
+
+        int id = int.Parse(state.User.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
+
+        var response = await httpClient.GetAsync($"api/appusers/{id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            detail = (await response.Content.ReadFromJsonAsync<UserDetail>())!;
+        }
+        else
+        {
+            toastService.ShowError("Could not load account detail information");
+        }
+    }
+}

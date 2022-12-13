@@ -1,7 +1,7 @@
 ﻿using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Services
 {
@@ -17,6 +17,26 @@ namespace PowerBiWeb.Server.Services
         public async Task<IEnumerable<ApplUser>> GetAsync()
         {
             return await _appUserRepository.GetAllAsync();
+        }
+
+        public async Task<UserDetail?> GetByIdAsync(int id)
+        {
+            var entity = await _appUserRepository.GetByIdAsync(id);
+
+            if (entity is null) 
+            {
+                return null;
+            }
+
+            var result = new UserDetail
+            {
+                Email= entity.Email,
+                Firstname= entity.Firstname,
+                Lastname= entity.Lastname,
+                Username= entity.Username,
+            };
+
+            return result;
         }
 
         public async Task<string> PostAsync(UserRegisterInformation user)

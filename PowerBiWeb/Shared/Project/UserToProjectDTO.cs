@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PowerBiWeb.Shared.Project
 {
-    public class AddUserToObjectDTO
+    public class UserToProjectDTO
     {
         public string UserEmail { get; set; } = string.Empty;
         public int ProjectId { get; set; }

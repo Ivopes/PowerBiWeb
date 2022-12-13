@@ -9,11 +9,11 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+    public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
 
-        public ProjectController(IProjectService projectService)
+        public ProjectsController(IProjectService projectService)
         {
             _projectService = projectService;
         }
@@ -34,12 +34,23 @@ namespace PowerBiWeb.Server.Controllers
         {
             return Ok(await _projectService.PostAsync(project));
         }
-        [HttpPost("adduser")]
-        public async Task<ActionResult<string>> AddToUser([FromBody] AddUserToObjectDTO dto)
+        [HttpPost("user")]
+        public async Task<ActionResult<string>> AddToUser([FromBody] UserToProjectDTO dto)
         {
-            if (await _projectService.IsMinEditor(dto.ProjectId)) return Forbid("You dont have permision");
+            if (!await _projectService.IsMinEditor(dto.ProjectId)) return Forbid();
 
-            var result = await _projectService.AddToUser(dto);
+            var result = await _projectService.AddToUserAsync(dto);
+
+            if (string.IsNullOrEmpty(result)) return Ok(result);
+
+            return BadRequest(result);
+        }
+        [HttpPut("user")]
+        public async Task<ActionResult<string>> EditUser([FromBody] UserToProjectDTO dto)
+        {
+            if (!await _projectService.IsMinEditor(dto.ProjectId)) return Forbid();
+
+            var result = await _projectService.EditUserAsync(dto);
 
             if (string.IsNullOrEmpty(result)) return Ok(result);
 
