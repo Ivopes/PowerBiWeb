@@ -4,6 +4,7 @@ using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -53,6 +54,8 @@ namespace PowerBiWeb.Server.Repositories
 
             if (project is null) return "Project not found";
 
+            if (user.AppUserProjects.Any(aup => aup.ProjectId == projectId)) return "User is already assigned";
+
             user.AppUserProjects.Add(new()
             {
                 Project = project,
@@ -88,9 +91,26 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
+        public async Task<string> RemoveUserAsync(int userId, int projectId)
+        {
+            var entity = await _dbContext.AppUsers.Include(u => u.AppUserProjects).SingleAsync(u => u.Id == userId);
+
+            if (entity is null) return "User was not found";
+
+            var aup = entity.AppUserProjects.Single(aup => aup.ProjectId == projectId);
+
+            if (aup is null) return "User is not in specified project";
+
+            _dbContext.AppUserProjects.Remove(aup);
+
+            await SaveContextAsync();
+
+            return string.Empty;
+        }
         private async Task SaveContextAsync()
         {
             await _dbContext.SaveChangesAsync();
         }
+
     }
 }

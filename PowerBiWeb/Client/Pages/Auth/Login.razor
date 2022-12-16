@@ -216,7 +216,7 @@ else
     {
         if (!await registerForm.ValidateAll()) return;
 
-        var response = await httpClient.PostAsJsonAsync("api/appuser", userRegisterData);
+        var response = await httpClient.PostAsJsonAsync("api/appusers", userRegisterData);
         if (response.IsSuccessStatusCode)
         {
             response = await httpClient.PostAsJsonAsync("api/auth", userRegisterData);

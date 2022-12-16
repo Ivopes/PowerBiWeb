@@ -89,9 +89,14 @@ namespace PowerBiWeb.Server.Services
 
             return join.Role <= ProjectRoles.Editor;
         }
+        public async Task<string> RemoveUserAsync(int userId, int projectId)
+        {
+            return await _projectRepository.RemoveUserAsync(userId, projectId);
+        }
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
         }
+
     }
 }

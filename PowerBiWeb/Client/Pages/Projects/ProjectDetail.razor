@@ -5,8 +5,10 @@
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthState
 
-<h3>ProjectDetail</h3>
-
+@if (project is not null)
+{
+    <h3>@project.Name</h3>
+}
 <p>
     <NavLink href="/projects">
         <button type="button" class="btn btn-primary">Back</button>
@@ -15,9 +17,6 @@
 
 @if (project is not null)
 {
-    <h3>@project.Name</h3>
-    <h3>@project.MetricUrl</h3>
-
     <Table>
         <TableHeader>
             <TableRow>
@@ -26,6 +25,7 @@
                 <TableHeaderCell>Role</TableHeaderCell>
                 @if(myRole <= ProjectRoleDTO.Editor)
                 {
+                    <TableHeaderCell></TableHeaderCell>
                     <TableHeaderCell></TableHeaderCell>
                 }
             </TableRow>
@@ -44,14 +44,19 @@
                     <TableRowCell>
                         <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
                     </TableRowCell>
+                        <TableRowCell>
+                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
+                        </TableRowCell>
                     }
                 </TableRow>
             }
         </TableBody>
     </Table>
 }
-
-<Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
+ @if(myRole <= ProjectRoleDTO.Editor)
+{
+    <Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
+}
 @*
     Modal add user window
 *@
@@ -119,6 +124,18 @@
         </ModalFooter>
     </ModalContent>
 </Modal>
+<Modal @ref="modalRemoveRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete user</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveModal">Close</Button>
+            <Button Color="Color.Danger" Clicked="@RemoveUser">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
     [Parameter]
@@ -129,10 +146,12 @@
     // reference to the modal component
     private Modal? modalAddRef;
     private Modal? modalEditRef;
+    private Modal? modalRemoveRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
     private string editEmail;
+    private int deleteIndex;
 
     private Task ShowAddModal()
     {
@@ -149,9 +168,18 @@
         SetEditModalForm(index);
         return modalEditRef!.Show();
     }
+    private Task ShowRemoveModal(int index)
+    {
+        deleteIndex = index;
+        return modalRemoveRef!.Show();
+    }
     private Task HideEditModal()
     {
         return modalEditRef!.Hide();
+    }
+    private Task HideRemoveModal()
+    {
+        return modalRemoveRef!.Hide();
     }
     private void ClearAddModalForm()
     {
@@ -187,8 +215,8 @@
         var dto = new UserToProjectDTO
         {
             ProjectId = Id,
-            Role = (ProjectRoleDTO)editRole,
-            UserEmail = editEmail
+            Role = (ProjectRoleDTO)addRole,
+            UserEmail = addEmail,
         };
 
         var response = await httpClient.PostAsJsonAsync($"api/projects/user", dto);
@@ -210,8 +238,8 @@
         var dto = new UserToProjectDTO
             {
                 ProjectId = Id,
+                UserEmail = editEmail,
                 Role = (ProjectRoleDTO)editRole,
-                UserEmail = editEmail
             };
 
         var response = await httpClient.PutAsJsonAsync($"api/projects/user", dto);
@@ -220,6 +248,25 @@
         {
             toastService.ShowSuccess("User role changed");
             await HideEditModal();
+            await LoadData();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+    }
+    private async Task RemoveUser()
+    {
+        int userId = project!.Users.ElementAt(deleteIndex).Id;
+
+        var response = await httpClient.DeleteAsync($"api/projects/{Id}/{userId}");
+     
+        if (response.IsSuccessStatusCode)
+        {
+            toastService.ShowSuccess("User was removed");
+            await HideRemoveModal();
             await LoadData();
         }
         else

@@ -56,5 +56,16 @@ namespace PowerBiWeb.Server.Controllers
 
             return BadRequest(result);
         }
+        [HttpDelete("{projectId}/{userId}")]
+        public async Task<ActionResult<string>> DeleteUser(int projectId, int userId)
+        {
+            if (!await _projectService.IsMinEditor(projectId)) return Forbid();
+
+            var result = await _projectService.RemoveUserAsync(userId, projectId);
+
+            if (string.IsNullOrEmpty(result)) return Ok(result);
+
+            return BadRequest(result);
+        }
     }
 }

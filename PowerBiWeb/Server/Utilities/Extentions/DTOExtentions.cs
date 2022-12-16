@@ -13,12 +13,13 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 Name = p.Name
             };
 
-            dto.Users = new List<UserProjectDTO>();
+            dto.Users = new List<UserDTO>();
 
             foreach (var user in p.AppUserProject)
             {
                 dto.Users.Add(new()
                 {
+                    Id = user.AppUserId,
                     Email = user.AppUser.Email,
                     Username = user.AppUser.Username,
                     Role = (ProjectRoleDTO)user.Role,

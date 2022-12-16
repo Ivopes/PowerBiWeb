@@ -17,5 +17,6 @@ namespace PowerBiWeb.Server.Interfaces.Services
         /// </summary>
         Task<bool> IsMinEditor(int projectId);
         Task<string> EditUserAsync(UserToProjectDTO dto);
+        Task<string> RemoveUserAsync(int userId, int projectId);
     }
 }
