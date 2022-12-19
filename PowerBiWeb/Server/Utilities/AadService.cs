@@ -1,12 +1,8 @@
-﻿// ----------------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-// ----------------------------------------------------------------------------
-
-namespace PowerBiWeb.Server.Utilities
+﻿namespace PowerBiWeb.Server.Utilities
 {
     using Microsoft.Extensions.Options;
     using Microsoft.Identity.Client;
+    using PowerBiWeb.Server.Utilities.ConfigOptions;
     using System;
     using System.Linq;
     using System.Security;
@@ -15,6 +11,7 @@ namespace PowerBiWeb.Server.Utilities
     {
         private readonly IOptions<PowerBiOptions> azureAd;
         public string WorkspaceId => azureAd.Value.WorkspaceId;
+        public string PowerBiUrl => azureAd.Value.PowerBiApiUrl;
 
         public AadService(IOptions<PowerBiOptions> azureAd)  
         {

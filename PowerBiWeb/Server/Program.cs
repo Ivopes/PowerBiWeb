@@ -12,6 +12,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using EntityFramework.Exceptions.SqlServer;
+using PowerBiWeb.Server.Utilities.ConfigOptions;
+using Microsoft.Extensions.DependencyInjection;
+using PowerBiWeb.Server.Utilities.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +32,14 @@ builder.Services.AddTransient<IProjectService, ProjectService>();
 builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
 builder.Services.AddTransient<IAppUserService, AppUserService>();
 builder.Services.AddTransient<IAppUserRepository, AppUserRepository>();
+builder.Services.AddHttpClient(HttpClientTypes.MetricsApi, c => c.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PowerBiMetricsUrl")!));
+builder.Services.AddTransient<IMetricsApiLoaderRepository, MetricsApiRepository>();
+builder.Services.AddTransient<IMetricsSaverRepository, PowerBiRepository>();
+
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 
 builder.Services.AddDbContext<PowerBiContext>(options =>
 {

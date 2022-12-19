@@ -1,9 +1,4 @@
-﻿// ----------------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-// ----------------------------------------------------------------------------
-
-namespace PowerBiWeb.Server.Utilities
+﻿namespace PowerBiWeb.Server.Utilities.ConfigOptions
 {
     public class PowerBiOptions
     {
@@ -33,5 +28,7 @@ namespace PowerBiWeb.Server.Utilities
 
         // Client Secret (App Secret) of the AAD app. Required only for ServicePrincipal authentication mode.
         public string ClientSecret { get; set; }
+
+        public string PowerBiApiUrl { get; set; }
     }
 }

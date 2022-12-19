@@ -1,9 +1,13 @@
 ﻿using EntityFramework.Exceptions.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Utilities;
+using PowerBiWeb.Server.Utilities.Constants;
+using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Repositories
@@ -11,10 +15,15 @@ namespace PowerBiWeb.Server.Repositories
     public class ProjectRepository : IProjectRepository
     {
         private readonly PowerBiContext _dbContext;
-
-        public ProjectRepository(PowerBiContext dbContext)
+        private readonly AadService _aadService;
+        private readonly IMetricsApiLoaderRepository _metricsApiRepository;
+        private readonly IMetricsSaverRepository _metricsSaverRepository;
+        public ProjectRepository(PowerBiContext dbContext, AadService aadService, IMetricsApiLoaderRepository metricsApiRepository, IMetricsSaverRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
+            _aadService = aadService;
+            _metricsApiRepository = metricsApiRepository;
+            _metricsSaverRepository = metricsSaverRepository;
         }
         public async Task<List<Project>> GetAllAsync(int userId)
         {
@@ -107,10 +116,25 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
+        public async Task LoadProjectMetricsAll(int projectId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            Guid workspaceId = Guid.Parse(_aadService.WorkspaceId);
+
+            var project = await _dbContext.Projects.FindAsync(projectId);
+
+            var metrics = await _metricsApiRepository.GetMetricAll(project.Name, true);
+
+            await _metricsSaverRepository.UploadMetric(metrics[0]);
+
+        }
+
+        #region Private Methods
         private async Task SaveContextAsync()
         {
             await _dbContext.SaveChangesAsync();
         }
-
+        #endregion
     }
 }

@@ -93,10 +93,15 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);
         }
+        public async Task LoadProjectMetrics(int projectId)
+        {
+            await _projectRepository.LoadProjectMetricsAll(projectId);
+        }
+        #region Private Methods
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
         }
-
+        #endregion
     }
 }

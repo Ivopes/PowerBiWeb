@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared.Project;
@@ -12,10 +13,11 @@ namespace PowerBiWeb.Server.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
-
-        public ProjectsController(IProjectService projectService)
+        private readonly IMetricsApiLoaderRepository metricsApiRepository;
+        public ProjectsController(IProjectService projectService, IMetricsApiLoaderRepository metricsApiRepository)
         {
             _projectService = projectService;
+            this.metricsApiRepository = metricsApiRepository;
         }
         [HttpGet]
         public async Task<ActionResult<List<ProjectDTO>>> Get()
@@ -66,6 +68,15 @@ namespace PowerBiWeb.Server.Controllers
             if (string.IsNullOrEmpty(result)) return Ok(result);
 
             return BadRequest(result);
+        }
+        [HttpGet("metrics/{projectName}/{metricName}")]
+        public async Task<ActionResult<string>> LoadData(string projectName, string metricName)
+        {
+
+            //await metricsApiRepository.GetMetric(projectName, metricName);
+            await _projectService.LoadProjectMetrics(5);
+
+            return Ok();
         }
     }
 }

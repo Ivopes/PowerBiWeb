@@ -3,6 +3,7 @@ using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Utilities;
+using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
 using System.Runtime.InteropServices;
 
@@ -20,7 +21,7 @@ namespace PowerBiWeb.Server.Repositories
 
         public Task<EmbedParams> GetAsync()
         {
-            PowerBIClient pbiClient = GetPowerBIClient();
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             Guid workspaceId = Guid.Parse(_aadService.WorkspaceId);
 
@@ -88,7 +89,7 @@ namespace PowerBiWeb.Server.Repositories
         /// <remarks>This function is not supported for RDL Report</remakrs>
         private EmbedToken GetEmbedToken(Guid reportId, IList<Guid> datasetIds, [Optional] Guid targetWorkspaceId)
         {
-            PowerBIClient pbiClient = this.GetPowerBIClient();
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             // Create a request for getting Embed token 
             // This method works only with new Power BI V2 workspace experience
@@ -105,11 +106,6 @@ namespace PowerBiWeb.Server.Repositories
             var embedToken = pbiClient.EmbedToken.GenerateToken(tokenRequest);
 
             return embedToken;
-        }
-        private PowerBIClient GetPowerBIClient()
-        {
-            var tokenCredentials = new TokenCredentials(_aadService.GetAccessToken(), "Bearer");
-            return new PowerBIClient(new Uri(powerBiApiUrl), tokenCredentials);
         }
     }
 }

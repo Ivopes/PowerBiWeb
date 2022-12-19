@@ -16,5 +16,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<string> AddToUserAsync(string userEmail, int projectId, ProjectRoles role);
         Task<string> EditUserAsync(string userEmail, int projectId, ProjectRoles newRole);
         Task<string> RemoveUserAsync(int userId, int projectId);
+        Task LoadProjectMetricsAll(int projectId);
     }
 }
