@@ -8,6 +8,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     public interface IMetricsSaverRepository
     {
         Task UploadMetric(MetricPortion metric);
-        Task UploadMetric(List<MetricPortion> metric);
+        Task UploadMetric(List<MetricPortion> metrics);
     }
 }

@@ -61,6 +61,7 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHostedService<BackgroundUpdateMetricsAPIService>();
 
 var app = builder.Build();
 

@@ -9,5 +9,13 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     {
         Task<MetricPortion?> GetMetric(string projectName, string metricName, bool isTotal);
         Task<List<MetricPortion>> GetMetricAll(string projectName, bool isTotal);
+        /// <summary>
+        /// Download all latest increment metric for specific project
+        /// </summary>
+        Task<List<MetricPortion>> GetMetricLatestAll(string projectName);
+        /// <summary>
+        /// Download specific latest increment metric for specific project
+        /// </summary>
+        Task<MetricPortion?> GetMetricLatest(string projectName, string metricName);
     }
 }

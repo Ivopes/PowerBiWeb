@@ -59,5 +59,39 @@ namespace PowerBiWeb.Server.Repositories
             }
             return result;
         }
+
+        public async Task<List<MetricPortion>> GetMetricLatestAll(string projectName)
+        {
+            var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
+
+            List<MetricPortion> result = Enumerable.Empty<MetricPortion>().ToList();
+
+            string path = $"/metrics/{projectName}/latest";
+
+            var httpResult = await httpClient.GetAsync(path);
+
+            if (httpResult.IsSuccessStatusCode)
+            {
+                result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
+            }
+            return result;
+        }
+
+        public async Task<MetricPortion?> GetMetricLatest(string projectName, string metricName)
+        {
+            var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
+
+            MetricPortion? result = null;
+
+            string path = $"/metrics/{projectName}/latest/{metricName}";
+
+            var httpResult = await httpClient.GetAsync(path);
+
+            if (httpResult.IsSuccessStatusCode)
+            {
+                result = await httpResult.Content.ReadFromJsonAsync<MetricPortion>();
+            }
+            return result;
+        }
     }
 }

@@ -100,9 +100,12 @@ namespace PowerBiWeb.Server.Repositories
             }
             //return stringData;
         }
-        public Task UploadMetric(List<MetricPortion> metric)
+        public async Task UploadMetric(List<MetricPortion> metrics)
         {
-            throw new NotImplementedException();
+            foreach (var metric in metrics)
+            {
+                await UploadMetric(metric);
+            }
         }
         private async Task<Dataset?> CreateMetricDataset(MetricPortion metric)
         {
