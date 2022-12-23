@@ -4,16 +4,24 @@
 @inject HttpClient httpClient
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthState
+@inject NavigationManager Navigation
+
 
 @if (project is not null)
 {
     <h3>@project.Name</h3>
 }
-<p>
+<div class="d-flex flex-row">
     <NavLink href="/projects">
         <button type="button" class="btn btn-primary">Back</button>
     </NavLink><br />
-</p>
+
+    @if (myRole <= ProjectRoleDTO.Creator)
+    {
+        <Button Color="Color.Danger"  class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
+    }
+
+</div>
 
 @if (project is not null)
 {
@@ -124,6 +132,7 @@
         </ModalFooter>
     </ModalContent>
 </Modal>
+
 <Modal @ref="modalRemoveRef">
     <ModalContent Centered>
         <ModalHeader>
@@ -133,6 +142,18 @@
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="@HideRemoveModal">Close</Button>
             <Button Color="Color.Danger" Clicked="@RemoveUser">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="modalConfirmRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Confirm delete</ModalTitle>
+    </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="async () => await modalConfirmRef!.Hide()">Cancel</Button>
+            <Button Color="Color.Danger" Clicked="@DeleteProject">Confirm</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -147,6 +168,7 @@
     private Modal? modalAddRef;
     private Modal? modalEditRef;
     private Modal? modalRemoveRef;
+    private Modal? modalConfirmRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
@@ -262,12 +284,28 @@
         int userId = project!.Users.ElementAt(deleteIndex).Id;
 
         var response = await httpClient.DeleteAsync($"api/projects/{Id}/{userId}");
-     
+
         if (response.IsSuccessStatusCode)
         {
             toastService.ShowSuccess("User was removed");
             await HideRemoveModal();
             await LoadData();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+    }
+    private async Task DeleteProject()
+    {
+        var response = await httpClient.DeleteAsync($"api/projects/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/projects");
+            toastService.ShowSuccess("Project was deleted");
         }
         else
         {

@@ -105,6 +105,26 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);
         }
+        
+        public async Task<ProjectRoles?> GetProjectRole(int projectId)
+        {
+            var userId = GetUserId();
+
+            var project = await _projectRepository.GetAsync(projectId);
+
+            if (project is null) return null;
+            if (!project.AppUserProject.Any(aup => aup.AppUserId == userId)) return null;
+
+            var join = project.AppUserProject.Single(aup => aup.AppUserId == userId);
+
+            return join.Role;
+        }
+
+        public async Task<string> RemoveProject(int projectId)
+        {
+            return await _projectRepository.RemoveProject(projectId);
+        }
+
         #region Private Methods
         private int GetUserId()
         {

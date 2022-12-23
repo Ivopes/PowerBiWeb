@@ -69,5 +69,16 @@ namespace PowerBiWeb.Server.Controllers
 
             return BadRequest(result);
         }
+        [HttpDelete("{projectId}")]
+        public async Task<ActionResult<string>> DeleteProject(int projectId)
+        {
+            if ((await _projectService.GetProjectRole(projectId)) != ProjectRoles.Creator) return Forbid();
+
+            var result = await _projectService.RemoveProject(projectId);
+
+            if (string.IsNullOrEmpty(result)) return Ok(result);
+
+            return BadRequest(result);
+        }
     }
 }

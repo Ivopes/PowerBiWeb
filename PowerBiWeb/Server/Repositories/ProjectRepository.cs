@@ -116,6 +116,16 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
+        public async Task<string> RemoveProject(int projectId)
+        {
+            var entity = await _dbContext.Projects.FindAsync(projectId);
+            if (entity is null) return "Project not found";
+            _dbContext.Projects.Remove(entity);
+            
+            await SaveContextAsync();
+
+            return string.Empty;
+        }
         #region Private Methods
         private async Task SaveContextAsync()
         {
