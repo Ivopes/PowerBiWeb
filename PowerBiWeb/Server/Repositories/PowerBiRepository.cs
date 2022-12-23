@@ -13,6 +13,7 @@ using System.Text.Json.Nodes;
 using System.Text;
 using System.Net.Http.Headers;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Models.Contexts;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -21,11 +22,13 @@ namespace PowerBiWeb.Server.Repositories
         private readonly AadService _aadService;
         private readonly Guid _workspaceId;
         private readonly ILogger _logger;
-        public PowerBiRepository(AadService aadService, ILogger<PowerBiRepository> logger)
+        private readonly PowerBiContext _dbContext;
+        public PowerBiRepository(AadService aadService, ILogger<PowerBiRepository> logger, PowerBiContext dbContext)
         {
             _aadService = aadService;
             _workspaceId = Guid.Parse(_aadService.WorkspaceId);
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         public async Task UploadMetric(Project project, MetricPortion metric)
@@ -87,6 +90,10 @@ namespace PowerBiWeb.Server.Repositories
                     string r = await response.Content.ReadAsStringAsync();
                     _logger.LogError($"Could not post rows: {r}");
                 }
+
+                var entityProject = await _dbContext.Projects.FindAsync(project.Id);
+                entityProject!.LastUpdate = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
             }
             catch (Microsoft.Rest.HttpOperationException httpEx)
             {
