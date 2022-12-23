@@ -39,7 +39,7 @@ namespace PowerBiWeb.Server.Repositories
             return result;
         }
 
-        public async Task<List<MetricPortion>> GetMetricAll(string projectName, bool isTotal)
+        public async Task<List<MetricPortion>> GetMetricAllAsync(string projectName, bool isTotal)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
 

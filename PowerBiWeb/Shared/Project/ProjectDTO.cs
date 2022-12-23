@@ -14,7 +14,7 @@ namespace PowerBiWeb.Shared.Project
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]
-        public string MetricUrl { get; set; } = string.Empty;
+        public string MetricName { get; set; } = string.Empty;
         public ICollection<UserDTO> Users { get; set; } = Array.Empty<UserDTO>();
     }
 }

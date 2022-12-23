@@ -116,20 +116,6 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
-        public async Task LoadProjectMetricsAll(int projectId)
-        {
-            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
-
-            Guid workspaceId = Guid.Parse(_aadService.WorkspaceId);
-
-            var project = await _dbContext.Projects.FindAsync(projectId);
-
-            var metrics = await _metricsApiRepository.GetMetricAll(project.Name, true);
-
-            await _metricsSaverRepository.UploadMetric(metrics[0]);
-
-        }
-
         #region Private Methods
         private async Task SaveContextAsync()
         {

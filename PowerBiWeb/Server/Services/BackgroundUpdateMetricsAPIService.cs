@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Repositories;
@@ -21,7 +22,7 @@ namespace PowerBiWeb.Server.Services
         {
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
             
-            //await UpdateMetricsForProjectsAsync();
+            await UpdateMetricsForProjectsAsync();
             
             while (await _timer.WaitForNextTickAsync(stoppingToken) 
                     && !stoppingToken.IsCancellationRequested)
@@ -45,16 +46,29 @@ namespace PowerBiWeb.Server.Services
             var projects = await dbContext.Projects.ToListAsync();
             foreach (var project in projects)
             {
-                var result = await metricApiRepository.GetMetricLatestAll(project.MetricFilesName);
-            
-                if (result is not null)
+                // Projekt byl zalozen a nejnovejsi data se stahli pri zalozeni
+                //if (project.LastUpdate.DayOfWeek != DayOfWeek.Saturday || DateTime.UtcNow.Subtract(project.LastUpdate).TotalHours > 24) continue;
+
+                try
                 {
 
-                    //var metricSaver = scope.ServiceProvider.GetRequiredService<IMetricsSaverRepository>();
-                    //await metricSaver.UploadMetric(result);
+                    var result = await metricApiRepository.GetMetricLatestAll(project.MetricFilesName);
+
+                    if (result is not null && result.Count > 0)
+                    {
+                        // TODO: Smazat komentare pro produkci
+                        //var metricSaver = scope.ServiceProvider.GetRequiredService<IMetricsSaverRepository>();
+                        //await metricSaver.UploadMetric(result);
+                        //project.LastUpdate = DateTime.UtcNow;
+                    }
                 }
-                
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not auto-update metrics for project: {0}, with metric name: {1}", project.Name, project.MetricFilesName);
+                }
             }
+
+            //await dbContext.SaveChangesAsync();
         }
     }
 }

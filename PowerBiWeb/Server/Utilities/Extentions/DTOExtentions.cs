@@ -33,7 +33,8 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             return new Project
             {
                 Id = p.Id,
-                Name = p.Name
+                Name = p.Name,
+                MetricFilesName = p.MetricName
             };
         }
     }

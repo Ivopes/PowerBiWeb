@@ -1,4 +1,5 @@
 ﻿using MetricsAPI.Models;
+using PowerBiWeb.Server.Models.Entities;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
@@ -7,7 +8,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     /// </summary>
     public interface IMetricsSaverRepository
     {
-        Task UploadMetric(MetricPortion metric);
-        Task UploadMetric(List<MetricPortion> metrics);
+        Task UploadMetric(Project project, MetricPortion metric);
+        Task UploadMetric(Project project, List<MetricPortion> metrics);
     }
 }

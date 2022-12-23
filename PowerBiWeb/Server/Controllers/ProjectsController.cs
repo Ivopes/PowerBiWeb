@@ -69,14 +69,5 @@ namespace PowerBiWeb.Server.Controllers
 
             return BadRequest(result);
         }
-        [HttpGet("metrics/{projectName}/{metricName}")]
-        public async Task<ActionResult<string>> LoadData(string projectName, string metricName)
-        {
-
-            //await metricsApiRepository.GetMetric(projectName, metricName);
-            await _projectService.LoadProjectMetrics(5);
-
-            return Ok();
-        }
     }
 }

@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using System.Text;
 using System.Net.Http.Headers;
+using PowerBiWeb.Server.Models.Entities;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -27,16 +28,18 @@ namespace PowerBiWeb.Server.Repositories
             _logger = logger;
         }
 
-        public async Task UploadMetric(MetricPortion metric)
+        public async Task UploadMetric(Project project, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             var datasets = await pbiClient.Datasets.GetDatasetsInGroupAsync(_workspaceId);
 
+            var datasetName = $"{project.Name}_{metric.Name}";
+
             string datasetId = string.Empty;
             foreach (var dataset in datasets.Value)
             {
-                if (dataset.Name == metric.Name)
+                if (dataset.Name == datasetName)
                 {
                     datasetId = dataset.Id;
 
@@ -46,7 +49,7 @@ namespace PowerBiWeb.Server.Repositories
             
             if (string.IsNullOrEmpty(datasetId)) // Create new dataset
             {
-                var dt = await CreateMetricDataset(metric);
+                var dt = await CreateMetricDataset(project, metric);
                 if (dt is null)
                 {
                     return;
@@ -55,11 +58,6 @@ namespace PowerBiWeb.Server.Repositories
             }
 
             //Add rows
-            foreach (var row in metric.Rows)
-            {
-                row.Release += 2;
-            }
-
             var serializeOptions = new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -100,14 +98,14 @@ namespace PowerBiWeb.Server.Repositories
             }
             //return stringData;
         }
-        public async Task UploadMetric(List<MetricPortion> metrics)
+        public async Task UploadMetric(Project project, List<MetricPortion> metrics)
         {
             foreach (var metric in metrics)
             {
-                await UploadMetric(metric);
+                await UploadMetric(project, metric);
             }
         }
-        private async Task<Dataset?> CreateMetricDataset(MetricPortion metric)
+        private async Task<Dataset?> CreateMetricDataset(Project project, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -144,7 +142,7 @@ namespace PowerBiWeb.Server.Repositories
 
             tables.Add(table);
 
-            var pushDatasetRequest = new CreateDatasetRequest(metric.Name, tables);
+            var pushDatasetRequest = new CreateDatasetRequest($"{project.Name}_{metric.Name}", tables);
 
             try
             {

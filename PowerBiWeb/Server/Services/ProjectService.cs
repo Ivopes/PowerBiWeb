@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
@@ -13,12 +14,16 @@ namespace PowerBiWeb.Server.Services
         private readonly IProjectRepository _projectRepository;
         private readonly IAppUserRepository _appUserRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMetricsSaverRepository _metricsSaverRepository;
+        private readonly IMetricsApiLoaderRepository _metricsApiLoaderRepository;
 
-        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository)
+        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository)
         {
             _projectRepository = projectRepository;
             _httpContextAccessor = httpContext;
             _appUserRepository = appUserRepository;
+            _metricsSaverRepository = metricsSaverRepository;
+            _metricsApiLoaderRepository = metricsApiLoaderRepository;
         }
 
         public async Task<List<ProjectDTO>> GetAllAsync()
@@ -52,12 +57,19 @@ namespace PowerBiWeb.Server.Services
         public async Task<ProjectDTO> PostAsync(ProjectDTO project)
         {
             var p = project.ToBO();
-
+            
             int userId = GetUserId();
 
             var created = await _projectRepository.Post(userId, p);
 
             project.Id = created.Id;
+
+            //Update metrics
+            var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(created.MetricFilesName, true);
+            if (metrics is not null && metrics.Count > 0)
+            {
+                await _metricsSaverRepository.UploadMetric(created, metrics);
+            }
 
             return project;
         }
@@ -92,10 +104,6 @@ namespace PowerBiWeb.Server.Services
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);
-        }
-        public async Task LoadProjectMetrics(int projectId)
-        {
-            await _projectRepository.LoadProjectMetricsAll(projectId);
         }
         #region Private Methods
         private int GetUserId()

@@ -8,7 +8,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     public interface IMetricsApiLoaderRepository
     {
         Task<MetricPortion?> GetMetric(string projectName, string metricName, bool isTotal);
-        Task<List<MetricPortion>> GetMetricAll(string projectName, bool isTotal);
+        Task<List<MetricPortion>> GetMetricAllAsync(string projectName, bool isTotal);
         /// <summary>
         /// Download all latest increment metric for specific project
         /// </summary>
