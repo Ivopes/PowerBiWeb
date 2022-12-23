@@ -59,7 +59,7 @@ namespace PowerBiWeb.Server.Services
             var p = project.ToBO();
             
             int userId = GetUserId();
-
+            
             var created = await _projectRepository.Post(userId, p);
 
             project.Id = created.Id;

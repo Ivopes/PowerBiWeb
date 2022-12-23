@@ -12,10 +12,12 @@ namespace PowerBiWeb.Server.Repositories
         private readonly IHttpClientFactory _clientFactory;
         private const string IncPath = "/metrics/{0}/inc/{1}";
         private const string TotalPath = "/metrics/{0}/total/{1}";
+        private readonly ILogger<MetricsApiRepository> _logger;
 
-        public MetricsApiRepository(IHttpClientFactory factory)
+        public MetricsApiRepository(IHttpClientFactory factory, ILogger<MetricsApiRepository> logger)
         {
             _clientFactory = factory;
+            _logger = logger;
         }
 
         public async Task<MetricPortion?> GetMetric(string projectName, string metricName, bool isTotal)
@@ -30,11 +32,18 @@ namespace PowerBiWeb.Server.Repositories
             else 
                 path = string.Format(IncPath, projectName, metricName);
 
-            var httpResult = await httpClient.GetAsync(path);
-
-            if (httpResult.IsSuccessStatusCode)
+            try
             {
-                result = await httpResult.Content.ReadFromJsonAsync<MetricPortion>();
+                var httpResult = await httpClient.GetAsync(path);
+
+                if (httpResult.IsSuccessStatusCode)
+                {
+                    result = await httpResult.Content.ReadFromJsonAsync<MetricPortion>();
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }
             return result;
         }
@@ -51,11 +60,17 @@ namespace PowerBiWeb.Server.Repositories
             else
                 path = string.Format(IncPath, projectName, string.Empty);
 
-            var httpResult = await httpClient.GetAsync(path);
-
-            if (httpResult.IsSuccessStatusCode)
+            try
             {
-                result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
+                var httpResult = await httpClient.GetAsync(path);
+                if (httpResult.IsSuccessStatusCode)
+                {
+                    result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
+                }
+            }
+            catch (HttpRequestException ex) 
+            {
+                _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }
             return result;
         }
@@ -67,12 +82,18 @@ namespace PowerBiWeb.Server.Repositories
             List<MetricPortion> result = Enumerable.Empty<MetricPortion>().ToList();
 
             string path = $"/metrics/{projectName}/latest";
-
-            var httpResult = await httpClient.GetAsync(path);
-
-            if (httpResult.IsSuccessStatusCode)
+            try
             {
-                result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
+                var httpResult = await httpClient.GetAsync(path);
+
+                if (httpResult.IsSuccessStatusCode)
+                {
+                    result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
+                }
+            }
+            catch (HttpRequestException ex) 
+            {
+                _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }
             return result;
         }
@@ -84,12 +105,18 @@ namespace PowerBiWeb.Server.Repositories
             MetricPortion? result = null;
 
             string path = $"/metrics/{projectName}/latest/{metricName}";
-
-            var httpResult = await httpClient.GetAsync(path);
-
-            if (httpResult.IsSuccessStatusCode)
+            try
             {
-                result = await httpResult.Content.ReadFromJsonAsync<MetricPortion>();
+                var httpResult = await httpClient.GetAsync(path);
+
+                if (httpResult.IsSuccessStatusCode)
+                {
+                    result = await httpResult.Content.ReadFromJsonAsync<MetricPortion>();
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }
             return result;
         }
