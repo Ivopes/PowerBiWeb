@@ -1,14 +1,9 @@
 ﻿using EntityFramework.Exceptions.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.PowerBI.Api;
-using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Server.Utilities.Constants;
-using PowerBiWeb.Server.Utilities.PowerBI;
-using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -42,8 +37,8 @@ namespace PowerBiWeb.Server.Repositories
         {
             var user = await _dbContext.AppUsers.FindAsync(userId);
 
-            user!.AppUserProjects.Add(new() 
-            { 
+            user!.AppUserProjects.Add(new()
+            {
                 Project = project,
                 Role = ProjectRoles.Creator
             });
@@ -56,7 +51,7 @@ namespace PowerBiWeb.Server.Repositories
         public async Task<string> AddToUserAsync(string userEmail, int projectId, ProjectRoles role)
         {
             var user = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
-            
+
             if (user is null) return "Email not found";
 
             var project = await _dbContext.Projects.FindAsync(projectId);
@@ -74,11 +69,11 @@ namespace PowerBiWeb.Server.Repositories
             try
             {
                 await SaveContextAsync();
-            } 
+            }
             catch (UniqueConstraintException)
             {
                 return "User is already assigned";
-            
+
             }
 
             return string.Empty;
@@ -121,7 +116,7 @@ namespace PowerBiWeb.Server.Repositories
             var entity = await _dbContext.Projects.FindAsync(projectId);
             if (entity is null) return "Project not found";
             _dbContext.Projects.Remove(entity);
-            
+
             await SaveContextAsync();
 
             return string.Empty;

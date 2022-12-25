@@ -33,7 +33,7 @@ namespace PowerBiWeb.Server.Utilities
         public static byte[] HashPassword(string password)
         {
             using var sha = SHA256.Create();
-             
+
             byte[] bytes = Encoding.UTF8.GetBytes(password);
             byte[] hash = sha.ComputeHash(bytes);
 

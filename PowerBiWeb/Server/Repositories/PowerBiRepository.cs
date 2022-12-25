@@ -1,19 +1,15 @@
 ﻿using MetricsAPI.Models;
-using Microsoft.PowerBI.Api.Models;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
-using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Server.Utilities.PowerBI;
-using System.Text.Json;
-using PowerBiWeb.Server.Utilities.Extentions;
-using PowerBiWeb.Shared;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Text.Json.Nodes;
-using System.Text;
-using System.Net.Http.Headers;
-using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Models.Contexts;
+using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Utilities;
+using PowerBiWeb.Server.Utilities.Extentions;
+using PowerBiWeb.Server.Utilities.PowerBI;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -49,7 +45,7 @@ namespace PowerBiWeb.Server.Repositories
                     break;
                 }
             }
-            
+
             if (string.IsNullOrEmpty(datasetId)) // Create new dataset
             {
                 var dt = await CreateMetricDataset(project, metric);
@@ -73,7 +69,7 @@ namespace PowerBiWeb.Server.Repositories
             var json = JsonSerializer.Serialize(metric, serializeOptions);
 
             try
-            { 
+            {
                 // Must use HttpClient because power bi SDK cant handle custom serialization
                 var httpClient = new HttpClient();
                 var url = $"https://api.powerbi.com/v1.0/myorg/groups/{_workspaceId}/datasets/{datasetId}/tables/{metric.Name}/rows";
@@ -135,7 +131,7 @@ namespace PowerBiWeb.Server.Repositories
             {
                 new Measure("SumCelkem", $"CALCULATE (SUM({metric.Name}[{metric.AdditionWithoutSignName}]), FILTER( ALL( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
                 new Measure("SumCelkemByRelease", $"CALCULATE (SUM ({metric.Name}[{metric.AdditionWithoutSignName}] ), FILTER(ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )), VALUES({metric.Name}[Release]))"),
-                                
+
                 new Measure("SumPriznak", $"CALCULATE ( SUM({metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
                 new Measure("SumPriznakByRelease", $"CALCULATE ( SUM ( {metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum])), VALUES({metric.Name}[Release]))"),
 
@@ -143,7 +139,7 @@ namespace PowerBiWeb.Server.Repositories
                 new Measure("PodilPodleRelease", $"{metric.Name}[SumPriznakByRelease] / {metric.Name}[SumCelkemByRelease]"),
 
             };
-            
+
             table.Columns = columns;
             table.Measures = measures;
 
@@ -177,7 +173,7 @@ namespace PowerBiWeb.Server.Repositories
                 "System.Boolean" => "Boolean",
                 "System.DateTime" => "Datetime",
                 "System.String" => "String",
-            }; 
+            };
         }
     }
 }

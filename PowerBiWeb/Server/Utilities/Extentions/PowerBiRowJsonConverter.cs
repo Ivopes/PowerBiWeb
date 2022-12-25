@@ -26,7 +26,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 writer.WriteString("Datum", row.Date);
 
                 writer.WriteString("Release", row.Release.ToString());
-                
+
                 if (IsValueType(value.AdditionWithSignType))
                     writer.WriteNumber(value.AdditionWithSignName, row.AdditionWithSign);
                 else

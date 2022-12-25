@@ -1,20 +1,16 @@
-using Microsoft.AspNetCore.ResponseCompression;
+using EntityFramework.Exceptions.SqlServer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Server.Services;
 using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Server.Controllers;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using EntityFramework.Exceptions.SqlServer;
 using PowerBiWeb.Server.Utilities.ConfigOptions;
-using Microsoft.Extensions.DependencyInjection;
 using PowerBiWeb.Server.Utilities.Constants;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 

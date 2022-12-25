@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.OpenApi;
 using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Controllers
@@ -25,7 +22,7 @@ namespace PowerBiWeb.Server.Controllers
 
             if (!string.IsNullOrEmpty(result)) return Ok(result);
 
-             
+
             return Unauthorized();
         }
     }

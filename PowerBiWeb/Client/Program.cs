@@ -1,14 +1,13 @@
 using Blazored.LocalStorage;
 using Blazored.Toast;
+using Blazorise;
+using Blazorise.Bootstrap5;
+using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PowerBiWeb.Client;
 using PowerBiWeb.Client.Utilities.Auth;
-using Blazorise;
-using Blazorise.Icons.FontAwesome;
-using Blazorise.Bootstrap5;
-using System.Net.Http;
 using PowerBiWeb.Client.Utilities.Http;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);

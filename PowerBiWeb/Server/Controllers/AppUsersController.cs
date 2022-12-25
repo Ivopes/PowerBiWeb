@@ -30,7 +30,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDetail>> GetByIdAsync(int id)
         {
-            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int jwtUserId ))
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int jwtUserId))
             {
                 return Unauthorized();
             }

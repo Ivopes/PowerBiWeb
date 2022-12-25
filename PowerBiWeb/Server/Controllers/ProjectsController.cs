@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
@@ -22,7 +20,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<ProjectDTO>>> Get()
         {
-            
+
             return Ok(await _projectService.GetAllAsync());
         }
         [HttpGet("{id}")]

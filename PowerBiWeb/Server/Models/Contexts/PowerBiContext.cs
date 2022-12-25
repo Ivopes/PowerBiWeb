@@ -19,6 +19,9 @@ namespace PowerBiWeb.Server.Models.Contexts
 
             modelBuilder.Entity<AppUserProject>()
                 .HasKey(a => new { a.AppUserId, a.ProjectId });
+
+            modelBuilder.Entity<ProjectReports>()
+                .HasKey(p => new { p.PowerBiGuidId, p.ProjectId });
         }
     }
 }

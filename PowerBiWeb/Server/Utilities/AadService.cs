@@ -13,7 +13,7 @@
         public string WorkspaceId => azureAd.Value.WorkspaceId;
         public string PowerBiUrl => azureAd.Value.PowerBiApiUrl;
 
-        public AadService(IOptions<PowerBiOptions> azureAd)  
+        public AadService(IOptions<PowerBiOptions> azureAd)
         {
             this.azureAd = azureAd;
         }

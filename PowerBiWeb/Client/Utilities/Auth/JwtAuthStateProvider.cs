@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
-using System.Security.Claims;
-using Blazored.LocalStorage;
-using PowerBiWeb.Shared;
-using System.Text.Json.Serialization;
-using System.Text.Json;
+﻿using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace PowerBiWeb.Client.Utilities.Auth
 {
@@ -24,7 +21,7 @@ namespace PowerBiWeb.Client.Utilities.Auth
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var token = await _localStorage.GetItemAsync<string>(TokenKey);
-            
+
             if (token is null)
             {
                 NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));

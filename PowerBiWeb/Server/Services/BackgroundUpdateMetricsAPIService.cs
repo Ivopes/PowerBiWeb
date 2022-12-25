@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
-using PowerBiWeb.Server.Repositories;
-using PowerBiWeb.Server.Utilities.Constants;
 
 namespace PowerBiWeb.Server.Services
 {
@@ -21,10 +18,10 @@ namespace PowerBiWeb.Server.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
-            
+
             await UpdateMetricsForProjectsAsync();
-            
-            while (await _timer.WaitForNextTickAsync(stoppingToken) 
+
+            while (await _timer.WaitForNextTickAsync(stoppingToken)
                     && !stoppingToken.IsCancellationRequested)
             {
                 var day = DateTime.UtcNow.DayOfWeek;

@@ -1,9 +1,6 @@
 ﻿using MetricsAPI.Models;
-using Microsoft.EntityFrameworkCore;
 using PowerBiWeb.Server.Interfaces.Repositories;
-using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Utilities.Constants;
-using System.IO;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -27,9 +24,9 @@ namespace PowerBiWeb.Server.Repositories
             MetricPortion? result = null;
 
             string path;
-            if (isTotal) 
+            if (isTotal)
                 path = string.Format(TotalPath, projectName, metricName);
-            else 
+            else
                 path = string.Format(IncPath, projectName, metricName);
 
             try
@@ -68,7 +65,7 @@ namespace PowerBiWeb.Server.Repositories
                     result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
                 }
             }
-            catch (HttpRequestException ex) 
+            catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }
@@ -91,7 +88,7 @@ namespace PowerBiWeb.Server.Repositories
                     result = (await httpResult.Content.ReadFromJsonAsync<List<MetricPortion>>())!;
                 }
             }
-            catch (HttpRequestException ex) 
+            catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "Could not load metrics for project: {0}", projectName);
             }

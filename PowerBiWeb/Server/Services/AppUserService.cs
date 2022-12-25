@@ -23,17 +23,17 @@ namespace PowerBiWeb.Server.Services
         {
             var entity = await _appUserRepository.GetByIdAsync(id);
 
-            if (entity is null) 
+            if (entity is null)
             {
                 return null;
             }
 
             var result = new UserDetail
             {
-                Email= entity.Email,
-                Firstname= entity.Firstname,
-                Lastname= entity.Lastname,
-                Username= entity.Username,
+                Email = entity.Email,
+                Firstname = entity.Firstname,
+                Lastname = entity.Lastname,
+                Username = entity.Username,
             };
 
             return result;
@@ -47,7 +47,7 @@ namespace PowerBiWeb.Server.Services
                 Lastname = user.Lastname,
                 Email = user.Email,
                 Username = user.Username,
-                Password= user.Password,
+                Password = user.Password,
                 AppRole = AppRoles.User
             };
             return await _appUserRepository.PostAsync(u);

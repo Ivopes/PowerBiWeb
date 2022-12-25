@@ -1,13 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Shared.User;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -28,7 +24,7 @@ namespace PowerBiWeb.Server.Repositories
 
             if (entity is null) return null;
 
-            
+
             byte[] passHash = PasswordUtility.HashPassword(user.Password, entity.PasswordSalt);
 
             if (!Enumerable.SequenceEqual(entity.PasswordHash, passHash)) return null;

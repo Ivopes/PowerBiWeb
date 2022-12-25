@@ -1,6 +1,5 @@
 ﻿using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
-using Microsoft.Rest;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.PowerBI;
@@ -62,7 +61,7 @@ namespace PowerBiWeb.Server.Repositories
 
             // Add report data for embedding
 
-            var embedReports = new List<EmbedReport>() 
+            var embedReports = new List<EmbedReport>()
             {
                 new EmbedReport
                 {

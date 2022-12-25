@@ -3,9 +3,6 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Shared;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PowerBiWeb.Server.Repositories
 {
@@ -42,7 +39,7 @@ namespace PowerBiWeb.Server.Repositories
                 return response;
             }
 
-            user.Created= DateTime.UtcNow;
+            user.Created = DateTime.UtcNow;
 
             user.PasswordSalt = PasswordUtility.GenerateSalt();
 

@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.PowerBI.Api;
-using PowerBiWeb.Server.Interfaces.Repositories;
+﻿using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Extentions;
@@ -57,9 +55,9 @@ namespace PowerBiWeb.Server.Services
         public async Task<ProjectDTO> PostAsync(ProjectDTO project)
         {
             var p = project.ToBO();
-            
+
             int userId = GetUserId();
-            
+
             var created = await _projectRepository.Post(userId, p);
 
             project.Id = created.Id;
@@ -105,7 +103,7 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);
         }
-        
+
         public async Task<ProjectRoles?> GetProjectRole(int projectId)
         {
             var userId = GetUserId();
