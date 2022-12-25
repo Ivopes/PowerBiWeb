@@ -16,11 +16,15 @@
         <button type="button" class="btn btn-primary">Back</button>
     </NavLink><br />
 
-    @if (myRole <= ProjectRoleDTO.Creator)
+    
+    @if (project is not null)
     {
-        <Button Color="Color.Danger"  class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
+        @if (myRole <= ProjectRoleDTO.Creator)
+        {
+            <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
+        }
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
-
 </div>
 
 @if (project is null)
@@ -303,6 +307,22 @@ else
         }
     }
     private async Task DeleteProject()
+    {
+        var response = await httpClient.DeleteAsync($"api/projects/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/projects");
+            toastService.ShowSuccess("Project was deleted");
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+    }
+    private async Task UpdateReports()
     {
         var response = await httpClient.DeleteAsync($"api/projects/{Id}");
 
