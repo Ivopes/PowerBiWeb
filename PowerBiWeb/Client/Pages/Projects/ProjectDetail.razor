@@ -23,7 +23,11 @@
 
 </div>
 
-@if (project is not null)
+@if (project is null)
+{
+    <div>Loading...</div>
+}
+else
 {
     <Table>
         <TableHeader>

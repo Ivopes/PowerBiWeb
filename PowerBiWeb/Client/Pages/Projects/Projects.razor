@@ -10,18 +10,25 @@
 
 <button type="button" class="btn btn-primary" @onclick="@ModalShow">Create new</button>
 
-<div>
-    @foreach (var p in _projects)
-    {
-        string link = $"/projects/{p.Id}"; 
+@if(_projects is null)
+{
+    <div>Loading...</div>  
+}
+else
+{
+    <div>
+        @foreach (var p in _projects)
+        {
+            string link = $"/projects/{p.Id}"; 
     
-        <NavLink href=@link>
-            <span>@p.Name</span>
-        </NavLink>
-        <br/>
+            <NavLink href=@link>
+                <span>@p.Name</span>
+            </NavLink>
+            <br/>
     
-    }
-</div>
+        }
+    </div>
+}
 
 @if (showModal)
 {
@@ -40,11 +47,11 @@
     private AddProject ModalWindow { get; set; }
     private bool showModal;
     void ModalShow() => showModal = true;
-    private List<ProjectDTO> _projects = new();
+    private List<ProjectDTO>? _projects = null;
 
     async Task LoadProjects()
     {
-        _projects = new();
+        _projects = null;
 
         var response = await httpClient.GetAsync("api/projects");
         if (response.IsSuccessStatusCode)

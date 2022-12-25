@@ -8,7 +8,11 @@
 
 <h3>AccDetail</h3>
 
-@if (detail is not null)
+@if (detail is null)
+{
+    <div>Loading...</div>
+}
+else 
 {
   
         <Field>
