@@ -10,13 +10,11 @@ namespace PowerBiWeb.Server.Repositories
     public class ProjectRepository : IProjectRepository
     {
         private readonly PowerBiContext _dbContext;
-        private readonly AadService _aadService;
         private readonly IMetricsApiLoaderRepository _metricsApiRepository;
         private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public ProjectRepository(PowerBiContext dbContext, AadService aadService, IMetricsApiLoaderRepository metricsApiRepository, IMetricsSaverRepository metricsSaverRepository)
+        public ProjectRepository(PowerBiContext dbContext, IMetricsApiLoaderRepository metricsApiRepository, IMetricsSaverRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
-            _aadService = aadService;
             _metricsApiRepository = metricsApiRepository;
             _metricsSaverRepository = metricsSaverRepository;
         }

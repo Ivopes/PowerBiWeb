@@ -18,17 +18,10 @@ namespace PowerBiWeb.Server.Services
             _logger = logger;
             _metricsSaverRepository = metricsSaverRepository;
         }
-
-        public async Task<EmbedParams> GetAsync()
-        {
-            return await _reportRepository.GetAsync();
-        }
-
         public async Task<EmbedParams> GetAsync(int projectId)
         {
             return await _reportRepository.GetAsync(projectId);
         }
-
         public async Task<EmbedReportDTO> GetByIdAsync(int projectId, Guid reportId)
         {
             // Check if report belongs to project
