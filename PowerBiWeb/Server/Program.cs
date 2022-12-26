@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
+using PowerBiWeb.Server.Middlewares;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Server.Services;
@@ -72,6 +73,7 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseExceptionCatcher();
 
 app.UseHttpsRedirection();
 
