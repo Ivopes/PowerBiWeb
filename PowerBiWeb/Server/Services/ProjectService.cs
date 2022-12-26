@@ -93,9 +93,9 @@ namespace PowerBiWeb.Server.Services
 
             var project = await _projectRepository.GetAsync(projectId);
             if (project is null) return false;
-            if (!project.AppUserProject.Any(aup => aup.AppUserId == userId)) return false;
+            if (!project.AppUserProjects.Any(aup => aup.AppUserId == userId)) return false;
 
-            var join = project.AppUserProject.Single(aup => aup.AppUserId == userId);
+            var join = project.AppUserProjects.Single(aup => aup.AppUserId == userId);
 
             return join.Role <= ProjectRoles.Editor;
         }
@@ -111,9 +111,9 @@ namespace PowerBiWeb.Server.Services
             var project = await _projectRepository.GetAsync(projectId);
 
             if (project is null) return null;
-            if (!project.AppUserProject.Any(aup => aup.AppUserId == userId)) return null;
+            if (!project.AppUserProjects.Any(aup => aup.AppUserId == userId)) return null;
 
-            var join = project.AppUserProject.Single(aup => aup.AppUserId == userId);
+            var join = project.AppUserProjects.Single(aup => aup.AppUserId == userId);
 
             return join.Role;
         }

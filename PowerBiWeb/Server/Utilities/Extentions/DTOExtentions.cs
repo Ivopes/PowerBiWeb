@@ -15,7 +15,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
 
             dto.Users = new List<UserDTO>();
 
-            foreach (var user in p.AppUserProject)
+            foreach (var user in p.AppUserProjects)
             {
                 dto.Users.Add(new()
                 {
@@ -23,6 +23,17 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                     Email = user.AppUser.Email,
                     Username = user.AppUser.Username,
                     Role = (ProjectRoleDTO)user.Role,
+                });
+            }
+
+            dto.Reports = new List<EmbedReportDTO>();
+
+            foreach (var report in p.ProjectReports)
+            {
+                dto.Reports.Add(new()
+                {
+                    ReportName = report.Name,
+                    ReportId = report.PowerBiId
                 });
             }
 

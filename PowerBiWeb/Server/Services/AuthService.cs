@@ -2,6 +2,7 @@
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Shared.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,10 +14,15 @@ namespace PowerBiWeb.Server.Services
     {
         private readonly IAuthRepository _authRepository;
         private readonly IConfiguration _config;
-        public AuthService(IAuthRepository authRepository, IConfiguration config)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IProjectRepository _projectRepository;
+
+        public AuthService(IAuthRepository authRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository)
         {
             _authRepository = authRepository;
             _config = config;
+            _httpContextAccessor = httpContextAccessor;
+            _projectRepository = projectRepository;
         }
 
         public async Task<string> LoginAsync(UserLoginInformation user)
@@ -48,6 +54,19 @@ namespace PowerBiWeb.Server.Services
 
             return token;
         }
+        public async Task<ProjectRoles?> GetProjectRole(int projectId)
+        {
+            var userId = GetUserId();
+
+            var project = await _projectRepository.GetAsync(projectId);
+
+            if (project is null) return null;
+            if (!project.AppUserProjects.Any(aup => aup.AppUserId == userId)) return null;
+
+            var join = project.AppUserProjects.Single(aup => aup.AppUserId == userId);
+
+            return join.Role;
+        }
         private List<Claim> CreateRoleClaims(AppRoles role)
         {
             var roleClaims = new List<Claim>();
@@ -67,5 +86,11 @@ namespace PowerBiWeb.Server.Services
 
             return roleClaims;
         }
+        #region Private Methods
+        private int GetUserId()
+        {
+            return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+        }
+        #endregion
     }
 }

@@ -1,10 +1,12 @@
 ﻿@page "/projects"
+@using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project;
 @using System.Text.Json;
 @inject HttpClient httpClient
 @inject IJSRuntime JS
 @inject ILogger<Projects> _logger;
 @inject IToastService toastService;
+@inject IProjectService _projectService
 
 <h3 id="p">Projects</h3>
 
@@ -49,21 +51,22 @@ else
     void ModalShow() => showModal = true;
     private List<ProjectDTO>? _projects = null;
 
-    async Task LoadProjects()
+    private async Task LoadProjects()
     {
         _projects = null;
 
-        var response = await httpClient.GetAsync("api/projects");
-        if (response.IsSuccessStatusCode)
+        var response = await _projectService.GetProjectsAsync();
+        if (response.Success)
         {
-            _projects = await response.Content.ReadFromJsonAsync<List<ProjectDTO>>();
+            _projects = response.Value!.ToList();
         }
         else
         {
-            _logger.LogError("Could not load projects");
+            _logger.LogError(response.ErrorMessage);
+            _projects = Array.Empty<ProjectDTO>().ToList();
         }
     }
-    async Task ModalOk(ProjectDTO? project)
+    private async Task ModalOk(ProjectDTO? project)
     {
         showModal = false;
         if (project is not null)

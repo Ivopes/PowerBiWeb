@@ -8,6 +8,7 @@
         public string MetricFilesName { get; set; } = string.Empty;
 
         // Other entities
-        public ICollection<AppUserProject> AppUserProject { get; set; } = new HashSet<AppUserProject>();
+        public ICollection<AppUserProject> AppUserProjects { get; set; } = new HashSet<AppUserProject>();
+        public ICollection<ProjectReport> ProjectReports { get; set; } = new HashSet<ProjectReport>();
     }
 }

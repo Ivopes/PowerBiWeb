@@ -1,0 +1,68 @@
+﻿@page "/projects/{projectId:int}/reports/{reportId:guid}"
+@using PowerBiWeb.Client.Utilities.Interfaces;
+@using PowerBiWeb.Shared.Project;
+@inject IReportService _reportService 
+@inject IToastService toastService
+@inject IJSRuntime JS
+@inject ILogger<ReportDetail> _logger;
+
+ @if (report is not null)
+{
+    <h3>@report.ReportName</h3>
+}
+
+<NavLink href=@($"/projects/{projectId}")>
+    <button type="button" class="btn btn-primary">Back</button>
+</NavLink>
+<br />
+
+@if (report is null)
+{
+    <div>Loading...</div>
+}
+
+<div @ref="@PowerBIElement" style="width:100%;height:600px;max-width: 2000px" />
+
+@code {
+    [Parameter]
+    public Guid reportId { get; set; }
+    [Parameter]
+    public int projectId { get; set; }
+
+    EmbedReportDTO? report;
+    private ElementReference PowerBIElement;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "/js/powerBiUtils.js");
+
+            if (module is null)
+            {
+                _logger.LogError("Could not load JS file");
+            }
+            _logger.LogInformation("Js loaded");
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var respose = await _reportService.GetReportAsync(projectId, reportId);
+
+        if (respose.Success)
+        {
+            report = respose.Value;
+            await EmbedView();
+        }
+        else
+        {
+            toastService.ShowError(respose.ErrorMessage);
+        }
+    }
+    private async Task EmbedView()
+    {
+        await module.InvokeVoidAsync("showReport", PowerBIElement, report.EmbedToken, report.EmbedUrl, report.ReportId);
+    }
+}

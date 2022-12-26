@@ -1,9 +1,13 @@
-﻿using Microsoft.PowerBI.Api;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Models.Contexts;
+using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 using System.Runtime.InteropServices;
 
 namespace PowerBiWeb.Server.Repositories
@@ -11,13 +15,18 @@ namespace PowerBiWeb.Server.Repositories
     public class ReportRepository : IReportRepository
     {
         private readonly AadService _aadService;
-        private const string powerBiApiUrl = "https://api.powerbi.com";
-
-        public ReportRepository(AadService aadService)
+        private readonly PowerBiContext _dbContext;
+        private readonly IMetricsSaverRepository _metricsSaverRepository;
+        public ReportRepository(AadService aadService, PowerBiContext dbContext, IMetricsSaverRepository metricsSaverRepository)
         {
             _aadService = aadService;
+            _dbContext = dbContext;
+            _metricsSaverRepository = metricsSaverRepository;
         }
-
+        public Task<EmbedParams> GetAsync(int projectId)
+        {
+            throw new NotImplementedException();
+        }
         public Task<EmbedParams> GetAsync()
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -61,9 +70,9 @@ namespace PowerBiWeb.Server.Repositories
 
             // Add report data for embedding
 
-            var embedReports = new List<EmbedReport>()
+            var embedReports = new List<EmbedReportDTO>()
             {
-                new EmbedReport
+                new EmbedReportDTO
                 {
                     ReportId = pbiReport.Id,
                     ReportName = pbiReport.Name,
@@ -81,6 +90,19 @@ namespace PowerBiWeb.Server.Repositories
 
             return Task.FromResult(embedParams);
         }
+
+        public async Task<ProjectReport?> GetByIdAsync(int projectId, Guid reportId)
+        {
+            var entity = await _dbContext.ProjectReports.Include(r => r.Project).SingleAsync(r => r.PowerBiId == reportId && r.Project.Id == projectId);
+
+            return entity;
+        }
+
+        public async Task<string> UpdateReportsAsync(int projectId)
+        {
+            return await _metricsSaverRepository.UpdateReportsAsync(projectId);
+        }
+
         /// <summary>
         /// Get Embed token for single report, multiple datasets, and an optional target workspace
         /// </summary>

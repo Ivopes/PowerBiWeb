@@ -23,15 +23,19 @@ namespace PowerBiWeb.Server.Repositories
         public async Task<List<Project>> GetAllAsync(int userId)
         {
             var result = await _dbContext.Projects
-                .Where(p => p.AppUserProject.Any(aup => aup.AppUser.Id == userId))
-                .Include(p => p.AppUserProject)
+                .Where(p => p.AppUserProjects.Any(aup => aup.AppUser.Id == userId))
+                .Include(p => p.AppUserProjects)
                 .ToListAsync();
 
             return result;
         }
         public async Task<Project?> GetAsync(int id)
         {
-            return await _dbContext.Projects.Include(p => p.AppUserProject).ThenInclude(aup => aup.AppUser).SingleAsync(p => p.Id == id);
+            return await _dbContext.Projects
+                .Include(p => p.AppUserProjects)
+                .ThenInclude(aup => aup.AppUser)
+                .Include(p => p.ProjectReports)
+                .SingleAsync(p => p.Id == id);
         }
         public async Task<Project> Post(int userId, Project project)
         {

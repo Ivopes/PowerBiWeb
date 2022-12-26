@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PowerBiWeb.Server.Models.Contexts;
 
@@ -11,9 +12,11 @@ using PowerBiWeb.Server.Models.Contexts;
 namespace PowerBiWeb.Server.Migrations
 {
     [DbContext(typeof(PowerBiContext))]
-    partial class PowerBiContextModelSnapshot : ModelSnapshot
+    [Migration("20221225200310_UpravenyReportProp")]
+    partial class UpravenyReportProp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,20 +115,19 @@ namespace PowerBiWeb.Server.Migrations
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectReport", b =>
                 {
                     b.Property<Guid>("PowerBiId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("PowerBiId");
+                    b.HasKey("PowerBiId", "ProjectId");
 
                     b.HasIndex("ProjectId");
 

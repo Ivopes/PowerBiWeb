@@ -1,5 +1,8 @@
 ﻿using MetricsAPI.Models;
+using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
@@ -8,6 +11,8 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     /// </summary>
     public interface IMetricsSaverRepository
     {
+        Task<EmbedReportDTO> GetEmbededAsync(Guid reportId);
+        Task<string> UpdateReportsAsync(int projectId);
         Task UploadMetric(Project project, MetricPortion metric);
         Task UploadMetric(Project project, List<MetricPortion> metrics);
     }

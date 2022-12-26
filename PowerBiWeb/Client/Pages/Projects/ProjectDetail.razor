@@ -1,10 +1,12 @@
 ﻿@page "/projects/{Id:int}"
+@using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project;
 @using System.Security.Claims;
 @inject HttpClient httpClient
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
+@inject IProjectService _projectService
 
 
 @if (project is not null)
@@ -64,6 +66,29 @@ else
                             <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
                         </TableRowCell>
                     }
+                </TableRow>
+            }
+        </TableBody>
+    </Table>
+
+    <div>Reports</div>
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHeaderCell>Report name</TableHeaderCell>
+                <TableHeaderCell></TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @for (int i = 0; i < project.Reports.Count; i++)
+            {
+                var report = project.Reports.ElementAt(i);
+                string reportId =  project.Reports.ElementAt(i).ReportId.ToString();
+                <TableRow>
+                    <TableRowCell>@report.ReportName</TableRowCell>
+                    <TableRowCell>
+                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">Show</Button>
+                    </TableRowCell>
                 </TableRow>
             }
         </TableBody>
@@ -227,17 +252,21 @@ else
     }
     private async Task LoadData()
     {
-        var response = await httpClient.GetAsync($"api/projects/{Id}");
+        var response = await _projectService.GetProjectDetailAsync(Id);
 
-        if (response.IsSuccessStatusCode)
+        if (response.Success)
         {
-            project = await response.Content.ReadFromJsonAsync<ProjectDTO>();
+            project = response.Value;
 
             var state = await AuthState.GetAuthenticationStateAsync();
 
             var username = state.User.Identity!.Name;
 
             myRole = project!.Users.Single(u => u.Username == username).Role;
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private async Task AddUserToProject()
@@ -324,12 +353,12 @@ else
     }
     private async Task UpdateReports()
     {
-        var response = await httpClient.DeleteAsync($"api/projects/{Id}");
+        var response = await httpClient.GetAsync($"api/reports/{Id}/update");
 
         if (response.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo("/projects");
-            toastService.ShowSuccess("Project was deleted");
+            toastService.ShowSuccess("Reports updated");
+            await LoadData();
         }
         else
         {
@@ -337,5 +366,9 @@ else
 
             toastService.ShowError(message);
         }
+    }
+    private void ShowReport(string reportId)
+    {
+        Navigation.NavigateTo($"/projects/{Id}/reports/{reportId}");
     }
 }

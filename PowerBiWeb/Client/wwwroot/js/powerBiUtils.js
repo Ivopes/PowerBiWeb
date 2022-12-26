@@ -1,9 +1,8 @@
-﻿
-export function getMessage() {
+﻿export function getMessage() {
     return 'Olá do Blazor!';
 }
 
-export async function setMessage() {
+export  async function setMessage() {
     const { getAssemblyExports } = await globalThis.getDotnetRuntime(0);
     var exports = await getAssemblyExports("BlazorSample.dll");
 
@@ -11,7 +10,7 @@ export async function setMessage() {
         exports.BlazorSample.JavaScriptInterop.Interop.GetMessageFromDotnet();
 }
 
-export function convertArray(win1251Array) {
+export  function convertArray(win1251Array) {
     var win1251decoder = new TextDecoder('windows-1251');
     var bytes = new Uint8Array(win1251Array);
     var decodedArray = win1251decoder.decode(bytes);
@@ -19,14 +18,14 @@ export function convertArray(win1251Array) {
     return decodedArray;
 };
 
-export function changeText(id, text) {
+export  function changeText(id, text) {
     document.getElementById(id).innerHTML = text;
 }
-export function showReport(reportContainer, accessToken, embedUrl) {
-
+export  function showReport(reportContainer, accessToken, embedUrl) {
     var models = window['powerbi-client'].models;
-    console.log(window['powerbi-client']);
-    console.log(models);
+    console.log(reportContainer);
+    console.log(accessToken);
+    console.log(embedUrl);
     var config = {
         type: 'report',
         tokenType: models.TokenType.Embed,

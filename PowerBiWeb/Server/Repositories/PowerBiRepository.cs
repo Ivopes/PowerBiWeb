@@ -1,4 +1,5 @@
 ﻿using MetricsAPI.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
@@ -7,7 +8,10 @@ using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Server.Utilities.PowerBI;
+using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -17,7 +21,7 @@ namespace PowerBiWeb.Server.Repositories
     {
         private readonly AadService _aadService;
         private readonly Guid _workspaceId;
-        private readonly ILogger _logger;
+        private readonly ILogger<PowerBiRepository> _logger;
         private readonly PowerBiContext _dbContext;
         public PowerBiRepository(AadService aadService, ILogger<PowerBiRepository> logger, PowerBiContext dbContext)
         {
@@ -27,6 +31,72 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<EmbedReportDTO> GetEmbededAsync(Guid reportId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var report = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, reportId);
+
+            EmbedToken embedToken = GetEmbedToken(reportId, new Guid(report.DatasetId), _workspaceId);
+
+            return new()
+            {
+                ReportName = report.Name,
+                ReportId = reportId,
+                EmbedToken = embedToken.Token,
+                EmbedUrl = report.EmbedUrl
+            };
+        }
+        public async Task<string> UpdateReportsAsync(int projectId)
+        {
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found", projectId);
+                return "Project was not found";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var reportsReponse = await pbiClient.Reports.GetReportsInGroupAsync(_workspaceId);
+
+                var reports = new List<Report>();
+
+                foreach (var r in reportsReponse.Value)
+                {
+                    if (r.Name.StartsWith(projectEntity.Name))
+                    {
+                        var entityInDb = await _dbContext.ProjectReports.FindAsync(r.Id);
+
+                        if (entityInDb is not null) continue;
+
+                        reports.Add(r);
+
+                        var report = new ProjectReport()
+                        {
+                            PowerBiId = r.Id,
+                            Name = r.Name.Substring(projectEntity.Name.Length + 1),
+                            WorkspaceId = _workspaceId,
+                            Project = projectEntity
+                        };
+
+                        await _dbContext.ProjectReports.AddAsync(report);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not update reports for project id: {0}", projectId);
+                return "Could not update reports for project";
+            }
+
+            return string.Empty;
+        }
         public async Task UploadMetric(Project project, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -174,6 +244,23 @@ namespace PowerBiWeb.Server.Repositories
                 "System.DateTime" => "Datetime",
                 "System.String" => "String",
             };
+        }
+        private EmbedToken GetEmbedToken(Guid reportId, Guid datasetId, Guid workspaceId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            // Create a request for getting Embed token 
+            // This method works only with new Power BI V2 workspace experience
+            var tokenRequest = new GenerateTokenRequestV2(
+                reports: new List<GenerateTokenRequestV2Report>() { new GenerateTokenRequestV2Report(reportId) },
+                datasets: new List<GenerateTokenRequestV2Dataset>() { new GenerateTokenRequestV2Dataset(datasetId.ToString()) },
+                targetWorkspaces: new List<GenerateTokenRequestV2TargetWorkspace>() { new GenerateTokenRequestV2TargetWorkspace(workspaceId) }
+            );
+
+            // Generate Embed token
+            var embedToken = pbiClient.EmbedToken.GenerateToken(tokenRequest);
+
+            return embedToken;
         }
     }
 }

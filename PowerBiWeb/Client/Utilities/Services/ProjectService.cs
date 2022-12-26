@@ -25,6 +25,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var projects = await response.Content.ReadFromJsonAsync<ProjectDTO[]>();
                 return new()
                 {
+                    Success = true,
                     Value = projects,
                     ErrorMessage = string.Empty
                 };
@@ -44,6 +45,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var project = await response.Content.ReadFromJsonAsync<ProjectDTO>();
                 return new()
                 {
+                    Success = true,
                     Value = project,
                     ErrorMessage = string.Empty
                 };
@@ -62,6 +64,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
                 return new()
                 {
+                    Success = true,
                     Value = p,
                     ErrorMessage = string.Empty
                 };
@@ -146,4 +149,4 @@ namespace PowerBiWeb.Client.Utilities.Services
         }
     }
 }
-}
+

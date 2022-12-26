@@ -6,7 +6,7 @@ namespace PowerBiWeb.Server.Services
 {
     public class BackgroundUpdateMetricsAPIService : BackgroundService
     {
-        private readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(10000)); // upravit na 1 hour
+        private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(1)); // upravit na 1 hour
         private readonly ILogger<BackgroundUpdateMetricsAPIService> _logger;
         private readonly IServiceProvider _serviceProvider;
 
@@ -19,7 +19,7 @@ namespace PowerBiWeb.Server.Services
         {
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
 
-            await UpdateMetricsForProjectsAsync();
+            //await UpdateMetricsForProjectsAsync();
 
             while (await _timer.WaitForNextTickAsync(stoppingToken)
                     && !stoppingToken.IsCancellationRequested)

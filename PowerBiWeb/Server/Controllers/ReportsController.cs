@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
+using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Controllers
 {
@@ -9,17 +11,34 @@ namespace PowerBiWeb.Server.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly IReportService _reportService;
-
-        public ReportsController(IReportService reportService)
+        private readonly IAuthService _authService;
+        public ReportsController(IReportService reportService, IAuthService authService)
         {
             _reportService = reportService;
+            _authService = authService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<EmbedParams>> Get()
+        [HttpGet("{projectId:int}")]
+        public async Task<ActionResult<EmbedParams>> GetAsync(int projectId)
         {
+            //var result = await _reportService.GetAsync(projectId);
 
-            var result = await _reportService.GetAsync();
+            return Ok();
+
+        }
+        [HttpGet("{projectId:int}/{reportId:Guid}")]
+        public async Task<ActionResult<EmbedReportDTO>> GetByIdAsync(int projectId, Guid reportId)
+        {
+            var embed = await _reportService.GetByIdAsync(projectId, reportId);
+
+            return Ok(embed);
+        }
+        [HttpGet("{projectId}/update")]
+        public async Task<ActionResult<string>> UpdateReportsAsync(int projectId)
+        {
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.UpdateReportsAsync(projectId);
 
             return Ok(result);
 

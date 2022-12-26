@@ -1,4 +1,5 @@
 ﻿using Microsoft.PowerBI.Api.Models;
+using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Shared
 {
@@ -8,7 +9,7 @@ namespace PowerBiWeb.Shared
         public string Type { get; set; }
 
         // Report to be embedded
-        public List<EmbedReport> EmbedReport { get; set; }
+        public List<EmbedReportDTO> EmbedReport { get; set; }
 
         // Embed Token for the Power BI report
         public EmbedToken EmbedToken { get; set; }
