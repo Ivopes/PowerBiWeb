@@ -1,10 +1,11 @@
 ﻿@page "/projects/{projectId:int}/reports/{reportId:guid}"
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project;
+@using PowerBiWeb.Shared.Project
 @inject IReportService _reportService 
 @inject IToastService toastService
 @inject IJSRuntime JS
-@inject ILogger<ReportDetail> _logger;
+@inject ILogger<ReportDetail> _logger
+@implements IDisposable
 
  @if (report is not null)
 {
@@ -32,6 +33,7 @@
     EmbedReportDTO? report;
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
+    private CancellationTokenSource cts = new CancellationTokenSource();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,7 +51,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        var respose = await _reportService.GetReportAsync(projectId, reportId);
+        var respose = await _reportService.GetReportAsync(projectId, reportId, cts.Token);
 
         if (respose.Success)
         {
@@ -64,5 +66,10 @@
     private async Task EmbedView()
     {
         await module.InvokeVoidAsync("showReport", PowerBIElement, report.EmbedToken, report.EmbedUrl, report.ReportId);
+    }
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }

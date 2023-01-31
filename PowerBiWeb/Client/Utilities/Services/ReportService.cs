@@ -16,7 +16,11 @@ namespace PowerBiWeb.Client.Utilities.Services
         }
         public async Task<HttpResponse<EmbedReportDTO[]?>> GetReportsAsync(int projectId)
         {
-            var response = await _httpClient.GetAsync($"api/reports/{projectId}");
+            return await GetReportsAsync(projectId, CancellationToken.None);
+        }
+        public async Task<HttpResponse<EmbedReportDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct)
+        {
+            var response = await _httpClient.GetAsync($"api/reports/{projectId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 var reports = await response.Content.ReadFromJsonAsync<EmbedReportDTO[]>();
@@ -35,7 +39,11 @@ namespace PowerBiWeb.Client.Utilities.Services
         }
         public async Task<HttpResponse<EmbedReportDTO?>> GetReportAsync(int projectId, Guid reportId)
         {
-            var response = await _httpClient.GetAsync($"api/reports/{projectId}/{reportId}");
+            return await GetReportAsync(projectId, reportId, CancellationToken.None);
+        }
+        public async Task<HttpResponse<EmbedReportDTO?>> GetReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        {
+            var response = await _httpClient.GetAsync($"api/reports/{projectId}/{reportId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 try

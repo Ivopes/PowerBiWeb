@@ -9,95 +9,129 @@
 @inject IProjectService _projectService
 
 
-@if (project is not null)
-{
-    <h3>@project.Name</h3>
-}
-<div class="d-flex flex-row">
+<div class="d-flex flex-row" style="margin: 15px">
     <NavLink href="/projects">
         <button type="button" class="btn btn-primary">Back</button>
     </NavLink><br />
 
-    
     @if (project is not null)
     {
         @if (myRole <= ProjectRoleDTO.Creator)
         {
             <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
         }
-        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
+        //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
 
-@if (project is null)
+@if (project is not null)
 {
-    <div>Loading...</div>
+    <h3>@project.Name</h3>
 }
-else
-{
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHeaderCell>Username</TableHeaderCell>
-                <TableHeaderCell>Email</TableHeaderCell>
-                <TableHeaderCell>Role</TableHeaderCell>
-                @if(myRole <= ProjectRoleDTO.Editor)
-                {
-                    <TableHeaderCell></TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
-                }
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            @for (int i = 0; i < project.Users.Count; i++)
-            {
-                var user = project.Users.ElementAt(i);
-                int j = i;
-                <TableRow>
-                    <TableRowCell>@user.Username</TableRowCell>
-                    <TableRowCell>@user.Email</TableRowCell>
-                    <TableRowCell>@user.Role</TableRowCell>
-                    @if(myRole <= ProjectRoleDTO.Editor)
-                    {
-                    <TableRowCell>
-                        <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
-                    </TableRowCell>
-                        <TableRowCell>
-                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
-                        </TableRowCell>
-                    }
-                </TableRow>
-            }
-        </TableBody>
-    </Table>
 
-    <div>Reports</div>
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHeaderCell>Report name</TableHeaderCell>
-                <TableHeaderCell></TableHeaderCell>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            @for (int i = 0; i < project.Reports.Count; i++)
-            {
-                var report = project.Reports.ElementAt(i);
-                string reportId =  project.Reports.ElementAt(i).ReportId.ToString();
-                <TableRow>
-                    <TableRowCell>@report.ReportName</TableRowCell>
-                    <TableRowCell>
-                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">Show</Button>
-                    </TableRowCell>
-                </TableRow>
-            }
-        </TableBody>
-    </Table>
-}
- @if(myRole <= ProjectRoleDTO.Editor)
-{
-    <Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
-}
+<Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged" Style="margin-top: 10px">
+    <Items>
+        <Tab Name="reports">Reports</Tab>
+        <Tab Name="dashboards">Dashboards</Tab>
+        <Tab Name="users">Users</Tab>
+        <Tab Name="settings">Settings</Tab>
+    </Items>
+    <Content>
+        <TabPanel Name="reports">
+            <div style="margin: 5px">
+                @if (project is null)
+                {
+                    <div>Loading...</div>
+                }
+                else
+                {
+                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()">Update reports</Button>
+
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Report name</TableHeaderCell>
+                                <TableHeaderCell></TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @for (int i = 0; i < project.Reports.Count; i++)
+                            {
+                                var report = project.Reports.ElementAt(i);
+                                string reportId = project.Reports.ElementAt(i).ReportId.ToString();
+                                <TableRow>
+                                    <TableRowCell>@report.ReportName</TableRowCell>
+                                    <TableRowCell>
+                                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">Show</Button>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+            </div>
+
+        </TabPanel>
+        <TabPanel Name="dashboards">
+            Content for dashboards.
+        </TabPanel>
+        <TabPanel Name="users">   
+            <div style="margin: 5px">
+                @if (project is null)
+                {
+                    <div>Loading...</div>
+                }
+                else
+                {
+                    @if (myRole <= ProjectRoleDTO.Editor)
+                    {
+                        <Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
+                    }
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Username</TableHeaderCell>
+                                <TableHeaderCell>Email</TableHeaderCell>
+                                <TableHeaderCell>Role</TableHeaderCell>
+                                @if (myRole <= ProjectRoleDTO.Editor)
+                                {
+                                    <TableHeaderCell></TableHeaderCell>
+                                    <TableHeaderCell></TableHeaderCell>
+                                }
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @for (int i = 0; i < project.Users.Count; i++)
+                            {
+                                var user = project.Users.ElementAt(i);
+                                int j = i;
+                                <TableRow>
+                                    <TableRowCell>@user.Username</TableRowCell>
+                                    <TableRowCell>@user.Email</TableRowCell>
+                                    <TableRowCell>@user.Role</TableRowCell>
+                                    @if (myRole <= ProjectRoleDTO.Editor)
+                                    {
+                                        <TableRowCell>
+                                            <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
+                                        </TableRowCell>
+                                        <TableRowCell>
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
+                                        </TableRowCell>
+                                    }
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+            </div>
+        </TabPanel>
+        <TabPanel Name="settings">
+            Content for settings.
+        </TabPanel>
+    </Content>
+</Tabs>
+
+
 @*
     Modal add user window
 *@
@@ -184,6 +218,7 @@ else
         <ModalHeader>
             <ModalTitle>Confirm delete</ModalTitle>
     </ModalHeader>
+    <ModalBody>This is destructive operation.</ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="async () => await modalConfirmRef!.Hide()">Cancel</Button>
             <Button Color="Color.Danger" Clicked="@DeleteProject">Confirm</Button>
@@ -207,6 +242,15 @@ else
     private int editRole;
     private string editEmail;
     private int deleteIndex;
+
+    string selectedTab = "reports";
+
+    private Task OnSelectedTabChanged(string name)
+    {
+        selectedTab = name;
+
+        return Task.CompletedTask;
+    }
 
     private Task ShowAddModal()
     {
