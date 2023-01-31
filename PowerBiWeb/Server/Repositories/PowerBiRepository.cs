@@ -37,7 +37,7 @@ namespace PowerBiWeb.Server.Repositories
 
             var report = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, reportId);
 
-            EmbedToken embedToken = GetEmbedReportToken(reportId, new Guid(report.DatasetId), _workspaceId);
+            EmbedToken embedToken = await GetEmbedReportToken(reportId, new Guid(report.DatasetId), _workspaceId);
 
             return new()
             {
@@ -311,20 +311,24 @@ namespace PowerBiWeb.Server.Repositories
                 "System.String" => "String",
             };
         }
-        private EmbedToken GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
+        private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             // Create a request for getting Embed token 
             // This method works only with new Power BI V2 workspace experience
-            var tokenRequest = new GenerateTokenRequestV2(
+            /*var tokenRequest = new GenerateTokenRequestV2(
                 reports: new List<GenerateTokenRequestV2Report>() { new GenerateTokenRequestV2Report(reportId) },
                 datasets: new List<GenerateTokenRequestV2Dataset>() { new GenerateTokenRequestV2Dataset(datasetId.ToString()) },
                 targetWorkspaces: new List<GenerateTokenRequestV2TargetWorkspace>() { new GenerateTokenRequestV2TargetWorkspace(workspaceId) }
+            );*/
+
+            var tokenRequest = new GenerateTokenRequest(
+                accessLevel: TokenAccessLevel.View
             );
 
             // Generate Embed token
-            var embedToken = pbiClient.EmbedToken.GenerateToken(tokenRequest);
+            var embedToken = await pbiClient.Reports.GenerateTokenInGroupAsync(workspaceId, reportId, tokenRequest);
 
             return embedToken;
         }
@@ -333,7 +337,6 @@ namespace PowerBiWeb.Server.Repositories
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             // Create a request for getting Embed token 
-            // This method works only with new Power BI V2 workspace experience
             var tokenRequest = new GenerateTokenRequest();
 
             // Generate Embed token

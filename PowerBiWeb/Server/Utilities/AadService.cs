@@ -31,18 +31,23 @@
                 IPublicClientApplication clientApp = PublicClientApplicationBuilder.Create(azureAd.Value.ClientId).WithAuthority(azureAd.Value.AuthorityUrl).Build();
                 try
                 {
-                    var userAccounts = clientApp.GetAccountsAsync().Result;
+                    authenticationResult = clientApp.AcquireTokenByUsernamePassword(
+                        azureAd.Value.ScopeBase,
+                        azureAd.Value.PbiUsername,
+                        azureAd.Value.PbiPassword)
+                        .ExecuteAsync().Result;
+
+                    //var userAccounts = clientApp.GetAccountsAsync().Result;
                     // Retrieve Access token from cache if available
-                    authenticationResult = clientApp.AcquireTokenSilent(azureAd.Value.ScopeBase, userAccounts.FirstOrDefault()).ExecuteAsync().Result;
+                    //authenticationResult = clientApp.AcquireTokenSilent(azureAd.Value.ScopeBase, userAccounts.FirstOrDefault()).ExecuteAsync().Result;
                 }
                 catch (Exception)
                 {
-                    SecureString password = new SecureString();
-                    foreach (var key in azureAd.Value.PbiPassword)
-                    {
-                        password.AppendChar(key);
-                    }
-                    authenticationResult = clientApp.AcquireTokenByUsernamePassword(azureAd.Value.ScopeBase, azureAd.Value.PbiUsername, password).ExecuteAsync().Result;
+                    authenticationResult = clientApp.AcquireTokenByUsernamePassword(
+                        azureAd.Value.ScopeBase, 
+                        azureAd.Value.PbiUsername,
+                        azureAd.Value.PbiPassword)
+                        .ExecuteAsync().Result;
                 }
             }
 

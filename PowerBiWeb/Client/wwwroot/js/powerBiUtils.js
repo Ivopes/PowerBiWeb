@@ -33,7 +33,6 @@ export  function showReport(reportContainer, accessToken, embedUrl) {
         embedUrl: embedUrl,
         permissions: models.Permissions.Read,
         settings: {
-            filterPaneEnabled: true,
             navContentPaneEnabled: true
         }
     };
