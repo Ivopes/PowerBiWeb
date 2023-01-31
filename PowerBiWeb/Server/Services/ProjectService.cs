@@ -87,18 +87,6 @@ namespace PowerBiWeb.Server.Services
 
             return await _projectRepository.EditUserAsync(dto.UserEmail, dto.ProjectId, role);
         }
-        public async Task<bool> IsMinEditor(int projectId)
-        {
-            var userId = GetUserId();
-
-            var project = await _projectRepository.GetAsync(projectId);
-            if (project is null) return false;
-            if (!project.AppUserProjects.Any(aup => aup.AppUserId == userId)) return false;
-
-            var join = project.AppUserProjects.Single(aup => aup.AppUserId == userId);
-
-            return join.Role <= ProjectRoles.Editor;
-        }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);

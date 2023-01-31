@@ -12,10 +12,6 @@ namespace PowerBiWeb.Server.Interfaces.Services
         /// Create new project and add it to the creator
         /// </summary>
         Task<ProjectDTO> PostAsync(ProjectDTO project);
-        /// <summary>
-        /// Does user have atleast Editor privilege
-        /// </summary>
-        Task<bool> IsMinEditor(int projectId);
         Task<ProjectRoles?> GetProjectRole(int projectId);
         Task<string> EditUserAsync(UserToProjectDTO dto);
         Task<string> RemoveUserAsync(int userId, int projectId);

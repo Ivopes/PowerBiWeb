@@ -11,11 +11,13 @@ namespace PowerBiWeb.Server.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _projectService;
-        private readonly IMetricsApiLoaderRepository metricsApiRepository;
-        public ProjectsController(IProjectService projectService, IMetricsApiLoaderRepository metricsApiRepository)
+        private readonly IMetricsApiLoaderRepository _metricsApiRepository;
+        private readonly IAuthService _authService;
+        public ProjectsController(IProjectService projectService, IMetricsApiLoaderRepository metricsApiRepository, IAuthService authService)
         {
             _projectService = projectService;
-            this.metricsApiRepository = metricsApiRepository;
+            _metricsApiRepository = metricsApiRepository;
+            _authService = authService;
         }
         [HttpGet]
         public async Task<ActionResult<List<ProjectDTO>>> Get()
@@ -26,6 +28,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectDTO>> Get(int id)
         {
+            if (await _authService.GetProjectRole(id) > ProjectRoles.Editor) return Forbid();
+
             var result = await _projectService.GetAsync(id);
             return Ok(result);
         }
@@ -38,7 +42,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("user")]
         public async Task<ActionResult<string>> AddToUser([FromBody] UserToProjectDTO dto)
         {
-            if (!await _projectService.IsMinEditor(dto.ProjectId)) return Forbid();
+            if (await _authService.GetProjectRole(dto.ProjectId) > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.AddToUserAsync(dto);
 
@@ -49,7 +53,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPut("user")]
         public async Task<ActionResult<string>> EditUser([FromBody] UserToProjectDTO dto)
         {
-            if (!await _projectService.IsMinEditor(dto.ProjectId)) return Forbid();
+            if (await _authService.GetProjectRole(dto.ProjectId) > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.EditUserAsync(dto);
 
@@ -60,7 +64,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpDelete("{projectId}/{userId}")]
         public async Task<ActionResult<string>> DeleteUser(int projectId, int userId)
         {
-            if (!await _projectService.IsMinEditor(projectId)) return Forbid();
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.RemoveUserAsync(userId, projectId);
 
