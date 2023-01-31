@@ -11,15 +11,21 @@
 
 <div class="d-flex flex-row" style="margin: 15px">
     <NavLink href="/projects">
-        <button type="button" class="btn btn-primary">Back</button>
+        <button type="button" class="btn btn-outline-secondary"><Icon Name="IconName.ArrowLeft" /> Back</button>
     </NavLink><br />
 
     @if (project is not null)
     {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
         @if (myRole <= ProjectRoleDTO.Creator)
         {
-            <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
+            <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">
+                <Icon Name="IconName.Delete" /> Delete project
+            </Button>
         }
+
         //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
@@ -45,7 +51,9 @@
                 }
                 else
                 {
-                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()">Update reports</Button>
+                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()">
+                        <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI
+                    </Button>
 
                     <Table>
                         <TableHeader>
@@ -62,7 +70,9 @@
                                 <TableRow>
                                     <TableRowCell>@report.ReportName</TableRowCell>
                                     <TableRowCell>
-                                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">Show</Button>
+                                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">
+                                            <Icon Name="IconName.ArrowRight" /> Show
+                                        </Button>
                                     </TableRowCell>
                                 </TableRow>
                             }
@@ -73,7 +83,43 @@
 
         </TabPanel>
         <TabPanel Name="dashboards">
-            Content for dashboards.
+            <div style="margin: 5px">
+                @if (project is null)
+                {
+                    <div>Loading...</div>
+                }
+                else
+                {
+                    <Button Color="Color.Primary" Clicked="async () => await UpdateDashboards()">
+                        <Icon Name="IconName.CloudDownloadAlt" />
+                        Refresh from PowerBI
+                    </Button>
+
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Dashboard name</TableHeaderCell>
+                                <TableHeaderCell></TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @for (int i = 0; i < project.Dashboards.Count; i++)
+                            {
+                                var dashboard = project.Dashboards.ElementAt(i);
+                                string dashboardId = project.Dashboards.ElementAt(i).ReportId.ToString();
+                                <TableRow>
+                                    <TableRowCell>@dashboard.ReportName</TableRowCell>
+                                    <TableRowCell>
+                                        <Button Color="Color.Secondary" Clicked="() => ShowDashboard(dashboardId)">
+                                            <Icon Name="IconName.ArrowRight" /> Show
+                                        </Button>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
+            </div>
         </TabPanel>
         <TabPanel Name="users">   
             <div style="margin: 5px">
@@ -85,7 +131,9 @@
                 {
                     @if (myRole <= ProjectRoleDTO.Editor)
                     {
-                        <Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
+                        <Button Color="Color.Primary" Clicked="@ShowAddModal">
+                            <Icon Name="IconName.UserPlus" /> Add user
+                        </Button>
                     }
                     <Table>
                         <TableHeader>
@@ -112,10 +160,14 @@
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
                                         <TableRowCell>
-                                            <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
+                                            <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">
+                                                <Icon Name="IconName.Edit" /> Edit
+                                            </Button>
                                         </TableRowCell>
                                         <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">
+                                                <Icon Name="IconName.Delete" /> Remove
+                                            </Button>
                                         </TableRowCell>
                                     }
                                 </TableRow>
@@ -307,6 +359,8 @@
             var username = state.User.Identity!.Name;
 
             myRole = project!.Users.Single(u => u.Username == username).Role;
+
+            toastService.ShowSuccess("Project loaded");
         }
         else
         {
@@ -411,8 +465,28 @@
             toastService.ShowError(message);
         }
     }
+    private async Task UpdateDashboards()
+    {
+        var response = await httpClient.GetAsync($"api/dashboards/{Id}/update");
+
+        if (response.IsSuccessStatusCode)
+        {
+            toastService.ShowSuccess("Dashboards updated");
+            await LoadData();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+    }
     private void ShowReport(string reportId)
     {
         Navigation.NavigateTo($"/projects/{Id}/reports/{reportId}");
+    }
+    private void ShowDashboard(string dashboardId)
+    {
+        Navigation.NavigateTo($"/projects/{Id}/dashboards/{dashboardId}");
     }
 }

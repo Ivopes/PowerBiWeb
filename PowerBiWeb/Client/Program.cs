@@ -24,6 +24,7 @@ builder.Services
 builder.Services.AddScoped(sp => sp.GetService<IHttpClientFactory>()!.CreateClient("ServerAPI"));
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IProjectService, ProjectService>();
+builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage(opt =>

@@ -37,6 +37,17 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
+            dto.Dashboards = new List<EmbedReportDTO>();
+
+            foreach (var dashboard in p.ProjectDashboards)
+            {
+                dto.Dashboards.Add(new()
+                {
+                    ReportName = dashboard.Name,
+                    ReportId = dashboard.PowerBiId
+                });
+            }
+
             return dto;
         }
         public static Project ToBO(this ProjectDTO p)

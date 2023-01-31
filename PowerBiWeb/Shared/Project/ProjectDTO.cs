@@ -12,5 +12,6 @@ namespace PowerBiWeb.Shared.Project
         public string MetricName { get; set; } = string.Empty;
         public ICollection<UserDTO> Users { get; set; } = Array.Empty<UserDTO>();
         public ICollection<EmbedReportDTO> Reports { get; set; } = Array.Empty<EmbedReportDTO>();
+        public ICollection<EmbedReportDTO> Dashboards { get; set; } = Array.Empty<EmbedReportDTO>();
     }
 }

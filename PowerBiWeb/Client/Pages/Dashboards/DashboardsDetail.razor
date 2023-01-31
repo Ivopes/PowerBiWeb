@@ -1,15 +1,15 @@
-﻿@page "/projects/{projectId:int}/reports/{reportId:guid}"
+﻿@page "/projects/{projectId:int}/dashboards/{dashboardId:guid}"
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project
-@inject IReportService _reportService 
+@inject IDashboardService _dashboardService 
 @inject IToastService toastService
 @inject IJSRuntime JS
-@inject ILogger<ReportDetail> _logger
+@inject ILogger<DashboardsDetail> _logger
 @implements IDisposable
 
- @if (report is not null)
+ @if (dashboard is not null)
 {
-    <h3>@report.ReportName</h3>
+    <h3>@dashboard.ReportName</h3>
 }
 
 <NavLink href=@($"/projects/{projectId}")>
@@ -17,7 +17,7 @@
 </NavLink>
 <br />
 
-@if (report is null)
+@if (dashboard is null)
 {
     <div>Loading...</div>
 }
@@ -26,11 +26,11 @@
 
 @code {
     [Parameter]
-    public Guid reportId { get; set; }
+    public Guid dashboardId { get; set; }
     [Parameter]
     public int projectId { get; set; }
 
-    EmbedReportDTO? report;
+    EmbedReportDTO? dashboard;
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
     private CancellationTokenSource cts = new CancellationTokenSource();
@@ -51,11 +51,11 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        var respose = await _reportService.GetReportAsync(projectId, reportId, cts.Token);
+        var respose = await _dashboardService.GetDashboardAsync(projectId, dashboardId, cts.Token);
 
         if (respose.Success)
         {
-            report = respose.Value;
+            dashboard = respose.Value;
             await EmbedView();
         }
         else
@@ -65,7 +65,7 @@
     }
     private async Task EmbedView()
     {
-        await module.InvokeVoidAsync("showReport", PowerBIElement, report.EmbedToken, report.EmbedUrl, report.ReportId);
+        await module.InvokeVoidAsync("showDashboard", PowerBIElement, dashboard.EmbedToken, dashboard.EmbedUrl, dashboard.ReportId);
     }
     public void Dispose()
     {

@@ -27,7 +27,7 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<ProjectReport?> GetByIdAsync(int projectId, Guid reportId)
         {
-            var entity = await _dbContext.ProjectReports.Include(r => r.Project).SingleAsync(r => r.PowerBiId == reportId && r.Project.Id == projectId);
+            var entity = await _dbContext.ProjectReports.Include(r => r.Project).SingleOrDefaultAsync(r => r.PowerBiId == reportId && r.Project.Id == projectId);
 
             return entity;
         }

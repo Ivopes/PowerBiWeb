@@ -36,7 +36,7 @@ namespace PowerBiWeb.Server.Services
                 };
             }
 
-            var result = await _metricsSaverRepository.GetEmbededAsync(reportId);
+            var result = await _metricsSaverRepository.GetEmbededReportAsync(reportId);
 
             return result;
         }

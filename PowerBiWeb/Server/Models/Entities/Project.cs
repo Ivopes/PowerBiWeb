@@ -10,5 +10,6 @@
         // Other entities
         public ICollection<AppUserProject> AppUserProjects { get; set; } = new HashSet<AppUserProject>();
         public ICollection<ProjectReport> ProjectReports { get; set; } = new HashSet<ProjectReport>();
+        public ICollection<ProjectDashboard> ProjectDashboards { get; set; } = new HashSet<ProjectDashboard>();
     }
 }

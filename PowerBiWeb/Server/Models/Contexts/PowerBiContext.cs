@@ -9,6 +9,7 @@ namespace PowerBiWeb.Server.Models.Contexts
         public DbSet<Project> Projects { get; set; }
         public DbSet<AppUserProject> AppUserProjects { get; set; }
         public DbSet<ProjectReport> ProjectReports { get; set; }
+        public DbSet<ProjectDashboard> ProjectDashboards { get; set; }
 
         public PowerBiContext(DbContextOptions<PowerBiContext> options) : base(options)
         {

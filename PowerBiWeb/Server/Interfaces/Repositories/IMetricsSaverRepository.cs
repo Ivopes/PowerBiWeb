@@ -11,7 +11,9 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     /// </summary>
     public interface IMetricsSaverRepository
     {
-        Task<EmbedReportDTO> GetEmbededAsync(Guid reportId);
+        Task<EmbedReportDTO> GetEmbededDashboardAsync(Guid dashboardId);
+        Task<EmbedReportDTO> GetEmbededReportAsync(Guid reportId);
+        Task<string> UpdateDashboardsAsync(int dashboardId);
         Task<string> UpdateReportsAsync(int projectId);
         Task UploadMetric(Project project, MetricPortion metric);
         Task UploadMetric(Project project, List<MetricPortion> metrics);

@@ -31,7 +31,7 @@ export  function showReport(reportContainer, accessToken, embedUrl) {
         tokenType: models.TokenType.Embed,
         accessToken: accessToken,
         embedUrl: embedUrl,
-        permissions: models.Permissions.All,
+        permissions: models.Permissions.Read,
         settings: {
             filterPaneEnabled: true,
             navContentPaneEnabled: true
@@ -40,4 +40,16 @@ export  function showReport(reportContainer, accessToken, embedUrl) {
     // Embed the report and display it within the div container.
     powerbi.embed(reportContainer, config);
 }
+export function showDashboard(dashboardContainer, accessToken, embedUrl) {
+    var models = window['powerbi-client'].models;
+    // Set up the configuration object that determines what to embed and how to embed it.
+    let embedConfiguration = {
+        type: 'dashboard',
+        tokenType: models.TokenType.Embed,
+        accessToken: accessToken,
+        embedUrl: embedUrl,
+    };
 
+    // Embed the dashboard.
+    powerbi.embed(dashboardContainer, embedConfiguration);
+}

@@ -31,13 +31,13 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<EmbedReportDTO> GetEmbededAsync(Guid reportId)
+        public async Task<EmbedReportDTO> GetEmbededReportAsync(Guid reportId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             var report = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, reportId);
 
-            EmbedToken embedToken = GetEmbedToken(reportId, new Guid(report.DatasetId), _workspaceId);
+            EmbedToken embedToken = GetEmbedReportToken(reportId, new Guid(report.DatasetId), _workspaceId);
 
             return new()
             {
@@ -45,6 +45,22 @@ namespace PowerBiWeb.Server.Repositories
                 ReportId = reportId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = report.EmbedUrl
+            };
+        }
+        public async Task<EmbedReportDTO> GetEmbededDashboardAsync(Guid dashboardId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var dashboard = await pbiClient.Dashboards.GetDashboardInGroupAsync(_workspaceId, dashboardId);
+
+            EmbedToken embedToken = await GetEmbedDashboardTokenAsync(dashboardId, _workspaceId);
+
+            return new()
+            {
+                ReportName = dashboard.DisplayName,
+                ReportId = dashboardId,
+                EmbedToken = embedToken.Token,
+                EmbedUrl = dashboard.EmbedUrl
             };
         }
         public async Task<string> UpdateReportsAsync(int projectId)
@@ -93,6 +109,56 @@ namespace PowerBiWeb.Server.Repositories
             {
                 _logger.LogError(ex, "Could not update reports for project id: {0}", projectId);
                 return "Could not update reports for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> UpdateDashboardsAsync(int dashboardId)
+        {
+            var projectEntity = await _dbContext.Projects.FindAsync(dashboardId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found", dashboardId);
+                return "Project was not found";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var dashboradsResponse = await pbiClient.Dashboards.GetDashboardsInGroupAsync(_workspaceId);
+
+                var dashboards = new List<Dashboard>();
+
+                foreach (var d in dashboradsResponse.Value)
+                {
+                    if (d.DisplayName.StartsWith(projectEntity.Name))
+                    {
+                        var entityInDb = await _dbContext.ProjectDashboards.FindAsync(d.Id);
+
+                        if (entityInDb is not null) continue;
+
+                        dashboards.Add(d);
+
+                        var dashboard = new ProjectDashboard()
+                        {
+                            PowerBiId = d.Id,
+                            Name = d.DisplayName.Substring(projectEntity.Name.Length + 1),
+                            WorkspaceId = _workspaceId,
+                            Project = projectEntity
+                        };
+
+                        await _dbContext.ProjectDashboards.AddAsync(dashboard);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not update dashboards for project id: {0}", dashboardId);
+                return "Could not update dashboards for project";
             }
 
             return string.Empty;
@@ -245,7 +311,7 @@ namespace PowerBiWeb.Server.Repositories
                 "System.String" => "String",
             };
         }
-        private EmbedToken GetEmbedToken(Guid reportId, Guid datasetId, Guid workspaceId)
+        private EmbedToken GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -259,6 +325,19 @@ namespace PowerBiWeb.Server.Repositories
 
             // Generate Embed token
             var embedToken = pbiClient.EmbedToken.GenerateToken(tokenRequest);
+
+            return embedToken;
+        }
+        private async Task<EmbedToken> GetEmbedDashboardTokenAsync(Guid dashboardId, Guid workspaceId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            // Create a request for getting Embed token 
+            // This method works only with new Power BI V2 workspace experience
+            var tokenRequest = new GenerateTokenRequest();
+
+            // Generate Embed token
+            var embedToken = await pbiClient.Dashboards.GenerateTokenInGroupAsync(workspaceId, dashboardId, tokenRequest);
 
             return embedToken;
         }
