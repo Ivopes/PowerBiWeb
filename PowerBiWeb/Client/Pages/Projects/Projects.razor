@@ -78,6 +78,10 @@ else
                 toastService.ShowSuccess("Project added");
                 await LoadProjects();
             }
+            else
+            {
+                toastService.ShowError("Could not create project");
+            }
         }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)

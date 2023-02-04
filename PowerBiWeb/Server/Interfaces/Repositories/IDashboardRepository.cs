@@ -6,6 +6,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     public interface IDashboardRepository
     {
         Task<ProjectDashboard?> GetByIdAsync(int projectId, Guid dashboardId);
-        Task<string> UpdateReportsAsync(int projectId);
+        Task<string> UpdateDashboardsAsync(int projectId);
     }
 }

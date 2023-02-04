@@ -17,11 +17,11 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<ProjectDashboard?> GetByIdAsync(int projectId, Guid dashboardId)
         {
-            var entity = await _dbContext.ProjectDashboards.Include(d => d.Project).SingleAsync(d => d.PowerBiId == dashboardId && d.Project.Id == projectId);
+            var entity = await _dbContext.ProjectDashboards.Include(d => d.Project).SingleOrDefaultAsync(d => d.PowerBiId == dashboardId && d.Project.Id == projectId);
 
             return entity;
         }
-        public async Task<string> UpdateReportsAsync(int projectId)
+        public async Task<string> UpdateDashboardsAsync(int projectId)
         {
             return await _metricsSaverRepository.UpdateDashboardsAsync(projectId);
         }

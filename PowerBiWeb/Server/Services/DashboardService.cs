@@ -27,7 +27,7 @@ namespace PowerBiWeb.Server.Services
                 _logger.LogError("Dashboard with id: {0} for project id: {1} was not found", dashboardId, projectId);
                 throw new MessageException
                 {
-                    Message = "Report was not found"
+                    Message = "Dashboard was not found"
                 };
             }
 
@@ -38,7 +38,7 @@ namespace PowerBiWeb.Server.Services
 
         public async Task<string> UpdateDashboardsAsync(int projectId)
         {
-            return await _dashboardRepository.UpdateReportsAsync(projectId);
+            return await _dashboardRepository.UpdateDashboardsAsync(projectId);
         }
     }
 }

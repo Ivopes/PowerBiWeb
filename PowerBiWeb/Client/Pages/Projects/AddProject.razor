@@ -8,22 +8,43 @@
                     <h4 class="modal-title">Add Project</h4>
                 </div>
                 <div class="modal-body">
-                        <div class="form-group">
+                    <div class="form-group">
                         <label for="name">Name</label>
-                            <InputText id="name" @bind-Value="project.Name" class="form-control" />
-                            <ValidationMessage For="@(() => project.Name)" />
-                        </div>
-                        <div class="form-group">
-                            <label for="url">Metric project name</label>
+                        <InputText id="name" @bind-Value="project.Name" class="form-control"  />
+                        <ValidationMessage For="@(() => project.Name)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="url">Metric project name</label>
+                        <Tooltip Text="Name under which are metrics loaded from metric server">
                             <InputText id="url" @bind-Value="project.MetricName" class="form-control" />
-                            <ValidationMessage For="@(() => project.MetricName)" />
-                        </div>
+                        </Tooltip>
+                        <ValidationMessage For="@(() => project.MetricName)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="biName">Power BI prefix</label>
+                            <Tooltip Text="Prefix under which is content loaded from Power BI">
+                        <InputText id="biName" @bind-Value="project.PowerBiPrefix" class="form-control" />
+                        </Tooltip>
+                        <ValidationMessage For="@(() => project.PowerBiPrefix)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createDatasets"> Do you want to download metrics from metrics server and create datasets in Power BI?</label>
+                        <InputCheckbox id="createDatasets" @bind-Value="project.CreateDatasets" class="form-check-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-label" for="downloadContent">Do you want to download already created content from PowerBI?</label>
+                        <InputCheckbox id="downloadContent" @bind-Value="project.DownloadContent" class="form-check-input" />
+                    </div>
+                        
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Tooltip on top">
                         Add
                     </button>
-                    <button type="button" class="btn btn-light" @onclick=@Cancel>
+                    <button type="button" class="btn btn-outline-secondary" @onclick=@Cancel>
                         Cancel
                     </button>
                 </div>
@@ -34,7 +55,7 @@
 
 @code {
     [Parameter] public EventCallback<ProjectDTO?> OnClose { get; set; }
-    private ProjectDTO project = new();
+    private ProjectDTO project = new() { CreateDatasets = true };
     private Task Cancel()
     {
         return OnClose.InvokeAsync(null);

@@ -235,7 +235,6 @@ namespace PowerBiWeb.Server.Repositories
             {
                 _logger.LogError(ex, "General error");
             }
-            //return stringData;
         }
         public async Task UploadMetric(Project project, List<MetricPortion> metrics)
         {

@@ -14,14 +14,18 @@ namespace PowerBiWeb.Server.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMetricsSaverRepository _metricsSaverRepository;
         private readonly IMetricsApiLoaderRepository _metricsApiLoaderRepository;
+        private readonly IReportRepository _reportRepository;
+        private readonly IDashboardRepository _dashboardRepository;
 
-        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository)
+        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository)
         {
             _projectRepository = projectRepository;
             _httpContextAccessor = httpContext;
             _appUserRepository = appUserRepository;
             _metricsSaverRepository = metricsSaverRepository;
             _metricsApiLoaderRepository = metricsApiLoaderRepository;
+            _reportRepository = reportRepository;
+            _dashboardRepository = dashboardRepository;
         }
 
         public async Task<List<ProjectDTO>> GetAllAsync()
@@ -62,11 +66,21 @@ namespace PowerBiWeb.Server.Services
 
             project.Id = created.Id;
 
-            //Update metrics
-            var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(created.MetricFilesName, true);
-            if (metrics is not null && metrics.Count > 0)
+            if (created.CreateDatasets)
             {
-                await _metricsSaverRepository.UploadMetric(created, metrics);
+                //Update metrics
+                var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(created.MetricFilesName, true);
+                if (metrics is not null && metrics.Count > 0)
+                {
+                    await _metricsSaverRepository.UploadMetric(created, metrics);
+                }
+            }
+
+            if (created.DownloadContent)
+            {
+                //Download content from Power BI
+                await _reportRepository.UpdateReportsAsync(created.Id);
+                await _dashboardRepository.UpdateDashboardsAsync(created.Id);
             }
 
             return project;

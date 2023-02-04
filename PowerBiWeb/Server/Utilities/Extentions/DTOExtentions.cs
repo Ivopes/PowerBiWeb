@@ -56,7 +56,10 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             {
                 Id = p.Id,
                 Name = p.Name,
-                MetricFilesName = p.MetricName
+                MetricFilesName = p.MetricName,
+                PowerBiPrefix = p.PowerBiPrefix,
+                CreateDatasets = p.CreateDatasets,
+                DownloadContent = p.DownloadContent,
             };
         }
     }
