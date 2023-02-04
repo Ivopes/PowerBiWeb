@@ -77,7 +77,6 @@ namespace PowerBiWeb.Server.Controllers
         {
             if ((await _projectService.GetProjectRole(projectId)) != ProjectRoles.Creator) return Forbid();
 
-            //TODO: Smazat taky v PowerBI reporty?
             var result = await _projectService.RemoveProject(projectId);
 
             if (string.IsNullOrEmpty(result)) return Ok(result);

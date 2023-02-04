@@ -21,6 +21,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{projectId:int}/{reportId:Guid}")]
         public async Task<ActionResult<EmbedReportDTO>> GetByIdAsync(int projectId, Guid reportId)
         {
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+
             var embed = await _dashboardService.GetByIdAsync(projectId, reportId);
 
             return Ok(embed);
