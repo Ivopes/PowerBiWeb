@@ -10,6 +10,7 @@ namespace PowerBiWeb.Server.Services
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IDatasetRepository _datasetRepository;
         private readonly IAppUserRepository _appUserRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMetricsSaverRepository _metricsSaverRepository;
@@ -17,7 +18,7 @@ namespace PowerBiWeb.Server.Services
         private readonly IReportRepository _reportRepository;
         private readonly IDashboardRepository _dashboardRepository;
 
-        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository)
+        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository, IDatasetRepository datasetRepository)
         {
             _projectRepository = projectRepository;
             _httpContextAccessor = httpContext;
@@ -26,6 +27,7 @@ namespace PowerBiWeb.Server.Services
             _metricsApiLoaderRepository = metricsApiLoaderRepository;
             _reportRepository = reportRepository;
             _dashboardRepository = dashboardRepository;
+            _datasetRepository = datasetRepository;
         }
 
         public async Task<List<ProjectDTO>> GetAllAsync()
@@ -62,17 +64,41 @@ namespace PowerBiWeb.Server.Services
 
             int userId = GetUserId();
 
+            var entitiesDatasets = new List<PBIDataset>();
+
+            bool[] downloadTotal = new bool[p.Datasets.Count]; // Should download full total metric if new
+            int i = 0;
+            foreach (var dataset in p.Datasets)
+            {
+                PBIDataset? d = await _datasetRepository.GetAsync(dataset.MetricFilesId);
+            
+                if (d is null)
+                {
+                    d = await _datasetRepository.PostAsync(dataset);
+                    downloadTotal[i++] = true;
+                }
+                else
+                {
+                    downloadTotal[i++] = false;
+                }
+
+                entitiesDatasets.Add(d);
+            }
+            p.Datasets = entitiesDatasets;
+
             var created = await _projectRepository.Post(userId, p);
 
             project.Id = created.Id;
-
-            if (created.CreateDatasets)
+            i = 0;
+            foreach(var dataset in p.Datasets)
             {
-                //Update metrics
-                var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(created.MetricFilesName, true);
+                if (dataset.LastUpdate.DayOfWeek == DayOfWeek.Saturday && DateTime.UtcNow.Subtract(dataset.LastUpdate).TotalHours < 24) continue;
+
+                //Update or create dataset from metric
+                var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(dataset.MetricFilesId, downloadTotal[i++]);
                 if (metrics is not null && metrics.Count > 0)
                 {
-                    await _metricsSaverRepository.UploadMetric(created, metrics);
+                    await _metricsSaverRepository.UploadMetric(dataset, metrics);
                 }
             }
 

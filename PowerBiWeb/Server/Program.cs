@@ -34,6 +34,7 @@ builder.Services.AddTransient<IMetricsApiLoaderRepository, MetricsApiRepository>
 builder.Services.AddTransient<IMetricsSaverRepository, PowerBiRepository>();
 builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IDashboardRepository, DashboardRepository>();
+builder.Services.AddTransient<IDatasetRepository, DatasetRepository>();
 
 
 builder.Logging.ClearProviders();

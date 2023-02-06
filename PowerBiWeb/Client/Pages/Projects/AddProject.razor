@@ -14,11 +14,11 @@
                         <ValidationMessage For="@(() => project.Name)" />
                     </div>
                     <div class="form-group">
-                        <label for="url">Metric project name</label>
-                        <Tooltip Text="Name under which are metrics loaded from metric server">
-                            <InputText id="url" @bind-Value="project.MetricName" class="form-control" />
+                        <label for="url">Metric project names</label>
+                        <Tooltip Text="Name under which are metrics loaded from metric server (separate by ';' if multiple)">
+                            <InputText id="url" @bind-Value="project.ConnectedMetricsIds" class="form-control" />
                         </Tooltip>
-                        <ValidationMessage For="@(() => project.MetricName)" />
+                        <ValidationMessage For="@(() => project.ConnectedMetricsIds)" />
                     </div>
 
                     <div class="form-group">
@@ -30,12 +30,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="createDatasets"> Do you want to download metrics from metrics server and create datasets in Power BI?</label>
-                        <InputCheckbox id="createDatasets" @bind-Value="project.CreateDatasets" class="form-check-input" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-check-label" for="downloadContent">Do you want to download already created content from PowerBI?</label>
+                        <label class="form-check-label" for="downloadContent">Download already created content from PowerBI?</label>
                         <InputCheckbox id="downloadContent" @bind-Value="project.DownloadContent" class="form-check-input" />
                     </div>
                         
@@ -55,7 +50,7 @@
 
 @code {
     [Parameter] public EventCallback<ProjectDTO?> OnClose { get; set; }
-    private ProjectDTO project = new() { CreateDatasets = true };
+    private ProjectDTO project = new();
     private Task Cancel()
     {
         return OnClose.InvokeAsync(null);

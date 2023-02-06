@@ -163,20 +163,20 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
-        public async Task UploadMetric(Project project, MetricPortion metric)
+        public async Task UploadMetric(PBIDataset dataset, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             var datasets = await pbiClient.Datasets.GetDatasetsInGroupAsync(_workspaceId);
 
-            var datasetName = $"{project.Name}_{metric.Name}";
+            var datasetName = $"{dataset.MetricFilesId}_{metric.Name}";
 
             string datasetId = string.Empty;
-            foreach (var dataset in datasets.Value)
+            foreach (var d in datasets.Value)
             {
-                if (dataset.Name == datasetName)
+                if (d.Name == datasetName)
                 {
-                    datasetId = dataset.Id;
+                    datasetId = d.Id;
 
                     break;
                 }
@@ -184,7 +184,7 @@ namespace PowerBiWeb.Server.Repositories
 
             if (string.IsNullOrEmpty(datasetId)) // Create new dataset
             {
-                var dt = await CreateMetricDataset(project, metric);
+                var dt = await CreateMetricDataset(dataset, metric);
                 if (dt is null)
                 {
                     return;
@@ -223,8 +223,8 @@ namespace PowerBiWeb.Server.Repositories
                     _logger.LogError($"Could not post rows: {r}");
                 }
 
-                var entityProject = await _dbContext.Projects.FindAsync(project.Id);
-                entityProject!.LastUpdate = DateTime.UtcNow;
+                var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
+                entityDataset!.LastUpdate = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
             }
             catch (Microsoft.Rest.HttpOperationException httpEx)
@@ -236,14 +236,14 @@ namespace PowerBiWeb.Server.Repositories
                 _logger.LogError(ex, "General error");
             }
         }
-        public async Task UploadMetric(Project project, List<MetricPortion> metrics)
+        public async Task UploadMetric(PBIDataset dataset, List<MetricPortion> metrics)
         {
             foreach (var metric in metrics)
             {
-                await UploadMetric(project, metric);
+                await UploadMetric(dataset, metric);
             }
         }
-        private async Task<Dataset?> CreateMetricDataset(Project project, MetricPortion metric)
+        private async Task<Dataset?> CreateMetricDataset(PBIDataset dataset, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -280,7 +280,7 @@ namespace PowerBiWeb.Server.Repositories
 
             tables.Add(table);
 
-            var pushDatasetRequest = new CreateDatasetRequest($"{project.Name}_{metric.Name}", tables);
+            var pushDatasetRequest = new CreateDatasetRequest($"{dataset.MetricFilesId}_{metric.Name}", tables);
 
             try
             {

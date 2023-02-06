@@ -52,15 +52,28 @@ namespace PowerBiWeb.Server.Utilities.Extentions
         }
         public static Project ToBO(this ProjectDTO p)
         {
-            return new Project
+            var created = new Project
             {
                 Id = p.Id,
                 Name = p.Name,
-                MetricFilesName = p.MetricName,
                 PowerBiPrefix = p.PowerBiPrefix,
-                CreateDatasets = p.CreateDatasets,
                 DownloadContent = p.DownloadContent,
+                
             };
+
+            created.Datasets = new List<PBIDataset>();
+
+            var ids = p.ConnectedMetricsIds.Split(';');
+
+            foreach (var id in ids)
+            {
+                created.Datasets.Add(new()
+                {
+                    MetricFilesId = id,
+                });
+            }
+
+            return created;
         }
     }
 }

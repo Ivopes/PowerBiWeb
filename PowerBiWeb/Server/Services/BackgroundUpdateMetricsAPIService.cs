@@ -40,16 +40,16 @@ namespace PowerBiWeb.Server.Services
 
             var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
 
-            var projects = await dbContext.Projects.ToListAsync();
-            foreach (var project in projects)
+            var datasets = await dbContext.Datasets.ToListAsync();
+            foreach (var dataset in datasets)
             {
                 // Projekt byl zalozen a nejnovejsi data se stahli pri zalozeni
-                //if (project.LastUpdate.DayOfWeek != DayOfWeek.Saturday || DateTime.UtcNow.Subtract(project.LastUpdate).TotalHours > 24) continue;
+                if (dataset.LastUpdate.DayOfWeek == DayOfWeek.Saturday && DateTime.UtcNow.Subtract(dataset.LastUpdate).TotalHours < 24) continue;
 
                 try
                 {
 
-                    var result = await metricApiRepository.GetMetricLatestAll(project.MetricFilesName);
+                    var result = await metricApiRepository.GetMetricLatestAll(dataset.MetricFilesId);
 
                     if (result is not null && result.Count > 0)
                     {
@@ -61,7 +61,7 @@ namespace PowerBiWeb.Server.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Could not auto-update metrics for project: {0}, with metric name: {1}", project.Name, project.MetricFilesName);
+                    _logger.LogError(ex, "Could not auto-update metrics for dataset: {0}, with id: {1}", dataset.MetricFilesId, dataset.Id);
                 }
             }
 

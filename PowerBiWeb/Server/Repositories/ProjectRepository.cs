@@ -46,7 +46,6 @@ namespace PowerBiWeb.Server.Repositories
                 Role = ProjectRoles.Creator
             });
 
-            //await _dbContext.Projects.AddAsync(project);
             await SaveContextAsync();
 
             return project;
