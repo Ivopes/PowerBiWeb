@@ -25,7 +25,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var projects = await response.Content.ReadFromJsonAsync<ProjectDTO[]>();
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     Value = projects,
                     ErrorMessage = string.Empty
                 };
@@ -45,7 +45,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var project = await response.Content.ReadFromJsonAsync<ProjectDTO>();
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     Value = project,
                     ErrorMessage = string.Empty
                 };
@@ -64,7 +64,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     Value = p,
                     ErrorMessage = string.Empty
                 };
@@ -83,14 +83,14 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     ErrorMessage = string.Empty
                 };
             }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
-                Success = false
+                IsSuccess = false
             };
         }
         public async Task<HttpResponse> AddUserToProject(UserToProjectDTO dto)
@@ -101,14 +101,14 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     ErrorMessage = string.Empty
                 };
             }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
-                Success = false
+                IsSuccess = false
             };
         }
         public async Task<HttpResponse> EditUserInProject(UserToProjectDTO dto)
@@ -119,14 +119,14 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     ErrorMessage = string.Empty
                 };
             }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
-                Success = false
+                IsSuccess = false
             };
         }
         public async Task<HttpResponse> RemoveUserFromProject(int projectId, int userId)
@@ -137,14 +137,33 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     ErrorMessage = string.Empty
                 };
             }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
-                Success = false
+                IsSuccess = false
+            };
+        }
+
+        public async Task<HttpResponse> EditProjectSettings(ProjectDTO project)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/projects/{project.Id}", project);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
             };
         }
     }

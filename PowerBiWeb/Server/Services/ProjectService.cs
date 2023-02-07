@@ -127,11 +127,33 @@ namespace PowerBiWeb.Server.Services
 
             return await _projectRepository.EditUserAsync(dto.UserEmail, dto.ProjectId, role);
         }
+        public async Task<string> EditProject(int projectId, ProjectDTO dto)
+        {
+            var p = dto.ToBO();
+
+            var entitiesDatasets = new List<PBIDataset>();
+
+            foreach (var dataset in p.Datasets)
+            {
+                PBIDataset? d = await _datasetRepository.GetAsync(dataset.MetricFilesId);
+
+                if (d is null)
+                {
+                    return $"Dataset with id {dataset.MetricFilesId} was not found";
+                }
+
+                entitiesDatasets.Add(d);
+            }
+            p.Datasets = entitiesDatasets;
+
+            await _projectRepository.EditProject(projectId, p);
+
+            return string.Empty;
+        }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
             return await _projectRepository.RemoveUserAsync(userId, projectId);
         }
-
         public async Task<ProjectRoles?> GetProjectRole(int projectId)
         {
             var userId = GetUserId();

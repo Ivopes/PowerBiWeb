@@ -34,6 +34,7 @@ namespace PowerBiWeb.Server.Repositories
                 .ThenInclude(aup => aup.AppUser)
                 .Include(p => p.ProjectReports)
                 .Include(p => p.ProjectDashboards)
+                .Include(p => p.Datasets)
                 .SingleAsync(p => p.Id == id);
         }
         public async Task<Project> Post(int userId, Project project)
@@ -96,6 +97,15 @@ namespace PowerBiWeb.Server.Repositories
             await SaveContextAsync();
 
             return string.Empty;
+        }
+        public async Task EditProject(int projectId, Project newProject)
+        {
+            var entity = await _dbContext.Projects.FindAsync(projectId);
+
+            entity.Name = newProject.Name;
+            entity.Datasets = newProject.Datasets;
+
+            await _dbContext.SaveChangesAsync();
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {

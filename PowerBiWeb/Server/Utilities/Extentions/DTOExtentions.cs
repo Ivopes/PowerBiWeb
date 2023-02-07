@@ -48,6 +48,10 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
+            dto.ConnectedMetricsIds = string.Join(';', p.Datasets.Select(d => d.MetricFilesId));
+
+            dto.PowerBiPrefix = p.PowerBiPrefix;
+
             return dto;
         }
         public static Project ToBO(this ProjectDTO p)

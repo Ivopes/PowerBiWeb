@@ -28,7 +28,7 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectDTO>> Get(int id)
         {
-            if (await _authService.GetProjectRole(id) > ProjectRoles.Editor) return Forbid();
+            if (await _authService.GetProjectRole(id) > ProjectRoles.Viewer) return Forbid();
 
             var result = await _projectService.GetAsync(id);
             return Ok(result);
@@ -56,6 +56,17 @@ namespace PowerBiWeb.Server.Controllers
             if (await _authService.GetProjectRole(dto.ProjectId) > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.EditUserAsync(dto);
+
+            if (string.IsNullOrEmpty(result)) return Ok(result);
+
+            return BadRequest(result);
+        }
+        [HttpPut("{projectId}")]
+        public async Task<ActionResult<string>> EditProject(int projectId, [FromBody] ProjectDTO dto)
+        {
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+
+            var result = await _projectService.EditProject(projectId, dto);
 
             if (string.IsNullOrEmpty(result)) return Ok(result);
 

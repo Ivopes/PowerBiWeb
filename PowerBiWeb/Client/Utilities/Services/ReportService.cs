@@ -26,7 +26,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 var reports = await response.Content.ReadFromJsonAsync<EmbedReportDTO[]>();
                 return new()
                 {
-                    Success = true,
+                    IsSuccess = true,
                     Value = reports,
                     ErrorMessage = string.Empty
                 };
@@ -51,7 +51,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                     var report = await response.Content.ReadFromJsonAsync<EmbedReportDTO>();
                     return new()
                     {
-                        Success = true,
+                        IsSuccess = true,
                         Value = report,
                         ErrorMessage = string.Empty
                     };

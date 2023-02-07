@@ -56,7 +56,7 @@ else
         _projects = null;
 
         var response = await _projectService.GetProjectsAsync();
-        if (response.Success)
+        if (response.IsSuccess)
         {
             _projects = response.Value!.ToList();
         }

@@ -29,7 +29,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                     var dashboard = await response.Content.ReadFromJsonAsync<EmbedReportDTO>();
                     return new()
                     {
-                        Success = true,
+                        IsSuccess = true,
                         Value = dashboard,
                         ErrorMessage = string.Empty
                     };

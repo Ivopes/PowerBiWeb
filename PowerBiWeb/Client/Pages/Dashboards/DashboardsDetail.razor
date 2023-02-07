@@ -53,7 +53,7 @@
     {
         var respose = await _dashboardService.GetDashboardAsync(projectId, dashboardId, cts.Token);
 
-        if (respose.Success)
+        if (respose.IsSuccess)
         {
             dashboard = respose.Value;
             await EmbedView();

@@ -12,5 +12,6 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse<ProjectDTO?>> GetProjectDetailAsync(int projectId);
         Task<HttpResponse<ProjectDTO[]?>> GetProjectsAsync();
         Task<HttpResponse> RemoveUserFromProject(int projectId, int userId);
+        Task<HttpResponse> EditProjectSettings(ProjectDTO project);
     }
 }
