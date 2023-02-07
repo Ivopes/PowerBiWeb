@@ -166,6 +166,42 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
+        public async Task<HttpResponse> UpdateReportsForProject(int projectId)
+        {
+            var response = await _httpClient.GetAsync($"api/reports/{projectId}/update");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
+        public async Task<HttpResponse> UpdateDashboardsForProject(int projectId)
+        {
+            var response = await _httpClient.GetAsync($"api/dashboards/{projectId}/update");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
     }
 }
 

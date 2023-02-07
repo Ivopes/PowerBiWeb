@@ -2,7 +2,6 @@
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project;
 @using System.Text.Json;
-@inject HttpClient httpClient
 @inject IJSRuntime JS
 @inject ILogger<Projects> _logger;
 @inject IToastService toastService;
@@ -71,10 +70,23 @@ else
         showModal = false;
         if (project is not null)
         {
+            /*
             var response = await httpClient.PostAsJsonAsync("api/projects", project);
             if (response.IsSuccessStatusCode)
-            {
+                {
                 var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
+                toastService.ShowSuccess("Project added");
+            await LoadProjects();
+            }
+            else
+                {
+                toastService.ShowError("Could not create project");
+            }
+            */
+            var response = await _projectService.CreateProject(project);
+            if (response.IsSuccess)
+            {
+                var p = response.Value;
                 toastService.ShowSuccess("Project added");
                 await LoadProjects();
             }

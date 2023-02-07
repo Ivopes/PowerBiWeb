@@ -3,7 +3,6 @@
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project;
 @using System.Security.Claims;
-@inject HttpClient httpClient
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
@@ -207,7 +206,7 @@ else
                         </div>
 
                         <Button Color="Color.Primary" Type="ButtonType.Submit">
-                            Save
+                            <Icon Name="IconName.Save" /> Save
                         </Button>
                     </EditForm>
                 </div>
@@ -410,10 +409,24 @@ else
             Role = (ProjectRoleDTO)addRole,
             UserEmail = addEmail,
         };
-
+        /*
         var response = await httpClient.PostAsJsonAsync($"api/projects/user", dto);
 
-        if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
+            {
+            toastService.ShowSuccess("User added");
+        ClearAddModalForm();
+            await LoadData();
+            }
+            else
+            {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+        */
+        var response = await _projectService.AddUserToProject(dto);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User added");
             ClearAddModalForm();
@@ -421,9 +434,7 @@ else
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private async Task EditUser()
@@ -434,10 +445,24 @@ else
                 UserEmail = editEmail,
                 Role = (ProjectRoleDTO)editRole,
             };
-
+        /*
         var response = await httpClient.PutAsJsonAsync($"api/projects/user", dto);
 
-        if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
+            {
+            toastService.ShowSuccess("User role changed");
+        await HideEditModal();
+            await LoadData();
+            }
+            else
+            {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+        */
+        var response = await _projectService.EditUserInProject(dto);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User role changed");
             await HideEditModal();
@@ -445,18 +470,31 @@ else
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private async Task RemoveUser()
     {
         int userId = project!.Users.ElementAt(deleteIndex).Id;
 
+        /*
         var response = await httpClient.DeleteAsync($"api/projects/{Id}/{userId}");
 
-        if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
+            {
+            toastService.ShowSuccess("User was removed");
+        await HideRemoveModal();
+        await LoadData();
+            }
+            else
+            {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+        */
+        var response = await _projectService.RemoveUserFromProject(Id, userId);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User was removed");
             await HideRemoveModal();
@@ -464,29 +502,40 @@ else
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private async Task DeleteProject()
     {
+        /*
         var response = await httpClient.DeleteAsync($"api/projects/{Id}");
 
         if (response.IsSuccessStatusCode)
+            {
+            Navigation.NavigateTo("/projects");
+            toastService.ShowSuccess("Project was deleted");
+        }
+            else
+            {
+            var message = await response.Content.ReadAsStringAsync();
+
+            toastService.ShowError(message);
+        }
+        */
+        var response = await _projectService.DeleteProject(Id);
+        if (response.IsSuccess)
         {
             Navigation.NavigateTo("/projects");
             toastService.ShowSuccess("Project was deleted");
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private async Task UpdateReports()
     {
+        /*
         var response = await httpClient.GetAsync($"api/reports/{Id}/update");
 
         if (response.IsSuccessStatusCode)
@@ -500,9 +549,21 @@ else
 
             toastService.ShowError(message);
         }
+        */
+        var response = await _projectService.UpdateReportsForProject(Id);
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Reports updated");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
     }
     private async Task UpdateDashboards()
     {
+        /*
         var response = await httpClient.GetAsync($"api/dashboards/{Id}/update");
 
         if (response.IsSuccessStatusCode)
@@ -515,6 +576,17 @@ else
             var message = await response.Content.ReadAsStringAsync();
 
             toastService.ShowError(message);
+        }
+        */
+        var response = await _projectService.UpdateDashboardsForProject(Id);
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dashboards updated");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private void ShowReport(string reportId)
