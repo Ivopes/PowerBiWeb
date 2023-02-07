@@ -4,7 +4,7 @@ namespace PowerBiWeb.Server.Utilities.Exceptions
 {
     public class MessageException : Exception
     {
-        public string Message { get; set; }
+        public string ExcptMessage { get; set; } = string.Empty;
         public MessageException()
         {
         }

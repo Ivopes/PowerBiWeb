@@ -32,7 +32,7 @@ namespace PowerBiWeb.Server.Services
                 _logger.LogError("Report with id: {0} for project id: {1} wwas not found", reportId, projectId);
                 throw new MessageException
                 {
-                    Message = "Report was not found"
+                    ExcptMessage = "Report was not found"
                 };
             }
 

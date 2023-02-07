@@ -56,7 +56,7 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSecretKey"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder!.Configuration["JwtSecretKey"]!))
     };
 });
 

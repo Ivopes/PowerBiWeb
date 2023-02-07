@@ -98,14 +98,18 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
-        public async Task EditProject(int projectId, Project newProject)
+        public async Task<string> EditProject(int projectId, Project newProject)
         {
             var entity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (entity is null) return $"Project with Id: {projectId} was not found";
 
             entity.Name = newProject.Name;
             entity.Datasets = newProject.Datasets;
 
             await _dbContext.SaveChangesAsync();
+
+            return string.Empty;
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {

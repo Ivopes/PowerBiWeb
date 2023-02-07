@@ -20,10 +20,9 @@ namespace PowerBiWeb.Server.Controllers
         }
 
         [HttpGet("{projectId:int}")]
-        public async Task<ActionResult<EmbedParams>> GetAsync(int projectId)
+        public ActionResult<EmbedParams> GetAsync(int projectId)
         {
             //var result = await _reportService.GetAsync(projectId);
-
             return Ok();
         }
         [HttpGet("{projectId:int}/{reportId:Guid}")]

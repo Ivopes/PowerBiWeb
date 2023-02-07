@@ -326,7 +326,7 @@ else
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
-    private string editEmail;
+    private string editEmail = string.Empty;
     private int deleteIndex;
 
     string selectedTab = "reports";
@@ -599,7 +599,7 @@ else
     }
     private async Task ChangeProjectSettings()
     {
-        _logger.LogInformation(project.ConnectedMetricsIds);
+        _logger.LogInformation(project!.ConnectedMetricsIds);
 
         HttpResponse respose = await _projectService.EditProjectSettings(project);
 

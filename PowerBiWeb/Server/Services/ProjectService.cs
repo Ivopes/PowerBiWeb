@@ -146,9 +146,7 @@ namespace PowerBiWeb.Server.Services
             }
             p.Datasets = entitiesDatasets;
 
-            await _projectRepository.EditProject(projectId, p);
-
-            return string.Empty;
+            return await _projectRepository.EditProject(projectId, p);
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {

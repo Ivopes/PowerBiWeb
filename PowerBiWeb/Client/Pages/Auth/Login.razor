@@ -3,7 +3,6 @@
 @layout EmptyLayout
 @using Blazored.LocalStorage
 @using PowerBiWeb.Client.Utilities.Auth;
-@using PowerBiWeb.Shared.User;
 @inject ILocalStorageService _localStorage
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider authProvider
@@ -192,7 +191,7 @@ else
 
     private async Task HandleLogin()
     {
-        if (!await loginForm.ValidateAll()) return;
+        if (!await loginForm!.ValidateAll()) return;
 
         var response = await httpClient.PostAsJsonAsync("api/auth", userLoginData);
         if (response.IsSuccessStatusCode)
@@ -214,7 +213,7 @@ else
     }
     private async Task HandleRegister()
     {
-        if (!await registerForm.ValidateAll()) return;
+        if (!await registerForm!.ValidateAll()) return;
 
         var response = await httpClient.PostAsJsonAsync("api/appusers", userRegisterData);
         if (response.IsSuccessStatusCode)
@@ -228,7 +227,6 @@ else
 
             await authProvider.GetAuthenticationStateAsync();
             navigation.NavigateTo("/");
-            TextEdit a;
         }
         else
         {

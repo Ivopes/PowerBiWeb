@@ -18,7 +18,7 @@ namespace PowerBiWeb.Server.Repositories
         {
             return await _dbContext.Datasets.SingleOrDefaultAsync(d => d.MetricFilesId == metricFilesId);
         }
-        public async Task<PBIDataset> PostAsync(PBIDataset? d)
+        public async Task<PBIDataset> PostAsync(PBIDataset d)
         {
             await _dbContext.Datasets.AddAsync(d);
 

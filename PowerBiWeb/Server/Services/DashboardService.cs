@@ -27,7 +27,7 @@ namespace PowerBiWeb.Server.Services
                 _logger.LogError("Dashboard with id: {0} for project id: {1} was not found", dashboardId, projectId);
                 throw new MessageException
                 {
-                    Message = "Dashboard was not found"
+                    ExcptMessage = "Dashboard was not found"
                 };
             }
 

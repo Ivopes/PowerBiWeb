@@ -308,6 +308,7 @@ namespace PowerBiWeb.Server.Repositories
                 "System.Boolean" => "Boolean",
                 "System.DateTime" => "Datetime",
                 "System.String" => "String",
+                _ => throw new NotImplementedException(),
             };
         }
         private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)

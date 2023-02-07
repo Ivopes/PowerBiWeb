@@ -36,16 +36,9 @@ else
     <AddProject OnClose="@ModalOk"></AddProject>
 }
 
-
-@*
-
-<div @ref="@PowerBIElement" style="width:100%;height:600px;max-width: 2000px" />
-*@
-
 @code {
     private IJSObjectReference? module;
-    private ElementReference PowerBIElement;
-    private AddProject ModalWindow { get; set; }
+    private AddProject? ModalWindow { get; set; }
     private bool showModal;
     void ModalShow() => showModal = true;
     private List<ProjectDTO>? _projects = null;

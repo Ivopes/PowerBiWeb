@@ -30,7 +30,7 @@ namespace PowerBiWeb.Server.Middlewares
 
                 httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 httpContext.Response.ContentType = "application/json";
-                await httpContext.Response.WriteAsync(ex.Message);
+                await httpContext.Response.WriteAsync(ex.ExcptMessage);
             }
         }
     }

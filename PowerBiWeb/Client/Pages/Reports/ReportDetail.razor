@@ -65,7 +65,8 @@
     }
     private async Task EmbedView()
     {
-        await module.InvokeVoidAsync("showReport", PowerBIElement, report.EmbedToken, report.EmbedUrl, report.ReportId);
+        if (module is null) return;
+        await module.InvokeVoidAsync("showReport", PowerBIElement, report!.EmbedToken, report.EmbedUrl, report.ReportId);
     }
     public void Dispose()
     {

@@ -65,7 +65,8 @@
     }
     private async Task EmbedView()
     {
-        await module.InvokeVoidAsync("showDashboard", PowerBIElement, dashboard.EmbedToken, dashboard.EmbedUrl, dashboard.ReportId);
+        if (module is null) return;
+        await module.InvokeVoidAsync("showDashboard", PowerBIElement, dashboard!.EmbedToken, dashboard.EmbedUrl, dashboard.ReportId);
     }
     public void Dispose()
     {

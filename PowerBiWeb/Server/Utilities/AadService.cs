@@ -24,7 +24,7 @@
         /// <returns>AAD token</returns>
         public string GetAccessToken()
         {
-            AuthenticationResult authenticationResult = null;
+            AuthenticationResult? authenticationResult = null;
             if (azureAd.Value.AuthenticationMode.Equals("masteruser", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Create a public client to authorize the app with the AAD app
@@ -67,7 +67,7 @@
                 authenticationResult = clientApp.AcquireTokenForClient(azureAd.Value.ScopeBase).ExecuteAsync().Result;
             }
 
-            return authenticationResult.AccessToken;
+            return authenticationResult!.AccessToken;
         }
     }
 }
