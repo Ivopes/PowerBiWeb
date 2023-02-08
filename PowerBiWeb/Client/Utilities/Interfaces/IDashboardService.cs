@@ -5,7 +5,7 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
 {
     public interface IDashboardService
     {
-        Task<HttpResponse<EmbedReportDTO?>> GetDashboardAsync(int projectId, Guid dashboardId);
-        Task<HttpResponse<EmbedReportDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct);
+        Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId);
+        Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct);
     }
 }

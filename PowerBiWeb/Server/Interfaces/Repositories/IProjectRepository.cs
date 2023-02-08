@@ -18,5 +18,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<string> RemoveUserAsync(int userId, int projectId);
         Task<string> RemoveProject(int projectId);
         Task<string> EditProject(int projectId, Project newProject);
+        Task<string> RemoveReportsAsync(int projectId, Guid reportId);
+        Task<string> RemoveDashboardsAsync(int projectId, Guid dashboardId);
     }
 }

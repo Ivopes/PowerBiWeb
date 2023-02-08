@@ -15,6 +15,9 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse> EditProjectSettings(ProjectDTO project);
         Task<HttpResponse> UpdateReportsForProject(int projectId);
         Task<HttpResponse> UpdateDashboardsForProject(int projectId);
-
+        Task<HttpResponse> AddPowerBiReport(int projectId, EmbedContentDTO report);
+        Task<HttpResponse> AddPowerBiDashboard(int projectId, EmbedContentDTO dashboard);
+        Task<HttpResponse> RemoveDashboardFromProject(int projectId, Guid dashboardId);
+        Task<HttpResponse> RemoveReportFromProject(int projectId, Guid reportId);
     }
 }

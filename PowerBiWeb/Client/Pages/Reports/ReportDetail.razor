@@ -9,7 +9,7 @@
 
  @if (report is not null)
 {
-    <h3>@report.ReportName</h3>
+    <h3>@report.Name</h3>
 }
 
 <NavLink href=@($"/projects/{projectId}")>
@@ -30,7 +30,7 @@
     [Parameter]
     public int projectId { get; set; }
 
-    EmbedReportDTO? report;
+    EmbedContentDTO? report;
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
     private CancellationTokenSource cts = new CancellationTokenSource();
@@ -66,7 +66,7 @@
     private async Task EmbedView()
     {
         if (module is null) return;
-        await module.InvokeVoidAsync("showReport", PowerBIElement, report!.EmbedToken, report.EmbedUrl, report.ReportId);
+        await module.InvokeVoidAsync("showReport", PowerBIElement, report!.EmbedToken, report.EmbedUrl, report.Id);
     }
     public void Dispose()
     {

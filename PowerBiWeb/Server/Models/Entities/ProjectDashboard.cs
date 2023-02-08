@@ -8,6 +8,7 @@ namespace PowerBiWeb.Server.Models.Entities
         public Guid PowerBiId { get; set; }
         public Guid WorkspaceId { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string PowerBiName { get; set; } = string.Empty;
         public Project Project { get; set; } = new();
     }
 }

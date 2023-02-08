@@ -6,7 +6,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     public interface IReportRepository
     {
         Task<EmbedParams> GetAsync(int projectId);
-        Task<ProjectReport?> GetByIdAsync(int projectId, Guid reportId);
+        Task<ProjectReport?> GetByIdAsync(Guid reportId);
         Task<string> UpdateReportsAsync(int projectId);
     }
 }

@@ -59,8 +59,12 @@ else
                 }
                 else
                 {
-                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()">
+                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()" class="m-2">
                         <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI
+                    </Button>
+
+                    <Button Color="Color.Primary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="m-2">
+                        <Icon Name="IconName.Add" /> Add from PowerBI manually
                     </Button>
 
                     <Table>
@@ -68,20 +72,33 @@ else
                             <TableRow>
                                 <TableHeaderCell>Report name</TableHeaderCell>
                                 <TableHeaderCell></TableHeaderCell>
+                                    @if (myRole <= ProjectRoleDTO.Editor)
+                                    {
+                                        <TableHeaderCell></TableHeaderCell>
+                                    }
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             @for (int i = 0; i < project.Reports.Count; i++)
                             {
                                 var report = project.Reports.ElementAt(i);
-                                string reportId = project.Reports.ElementAt(i).ReportId.ToString();
+                                string reportId = project.Reports.ElementAt(i).Id.ToString();
+                                var j = i;
                                 <TableRow>
-                                    <TableRowCell>@report.ReportName</TableRowCell>
+                                    <TableRowCell>@report.Name</TableRowCell>
                                     <TableRowCell>
                                         <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">
                                             <Icon Name="IconName.ArrowRight" /> Show
                                         </Button>
                                     </TableRowCell>
+                                    @if (myRole <= ProjectRoleDTO.Editor)
+                                    {
+                                        <TableRowCell>
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveReportModal(j)">
+                                                <Icon Name="IconName.Delete" /> Remove
+                                            </Button>
+                                        </TableRowCell>
+                                    }
                                 </TableRow>
                             }
                         </TableBody>
@@ -108,20 +125,32 @@ else
                             <TableRow>
                                 <TableHeaderCell>Dashboard name</TableHeaderCell>
                                 <TableHeaderCell></TableHeaderCell>
+                                @if (myRole <= ProjectRoleDTO.Editor)
+                                {
+                                    <TableHeaderCell></TableHeaderCell>
+                                }
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             @for (int i = 0; i < project.Dashboards.Count; i++)
                             {
                                 var dashboard = project.Dashboards.ElementAt(i);
-                                string dashboardId = project.Dashboards.ElementAt(i).ReportId.ToString();
+                                string dashboardId = project.Dashboards.ElementAt(i).Id.ToString();
                                 <TableRow>
-                                    <TableRowCell>@dashboard.ReportName</TableRowCell>
+                                    <TableRowCell>@dashboard.Name</TableRowCell>
                                     <TableRowCell>
                                         <Button Color="Color.Secondary" Clicked="() => ShowDashboard(dashboardId)">
                                             <Icon Name="IconName.ArrowRight" /> Show
                                         </Button>
                                     </TableRowCell>
+                                    @if (myRole <= ProjectRoleDTO.Editor)
+                                    {
+                                        <TableRowCell>
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveDashboardModal(i)">
+                                                <Icon Name="IconName.Delete" /> Remove
+                                            </Button>
+                                        </TableRowCell>
+                                    }
                                 </TableRow>
                             }
                         </TableBody>
@@ -173,7 +202,7 @@ else
                                             </Button>
                                         </TableRowCell>
                                         <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveUserModal(j)">
                                                 <Icon Name="IconName.Delete" /> Remove
                                             </Button>
                                         </TableRowCell>
@@ -286,19 +315,42 @@ else
     </ModalContent>
 </Modal>
 
-<Modal @ref="modalRemoveRef">
+<Modal @ref="modalRemoveUserRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Delete user</ModalTitle>
             <CloseButton />
         </ModalHeader>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideRemoveModal">Close</Button>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveUserModal">Close</Button>
             <Button Color="Color.Danger" Clicked="@RemoveUser">Remove</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
-
+<Modal @ref="modalRemoveReportRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete report</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveReportModal">Close</Button>
+            <Button Color="Color.Danger" Clicked="@RemoveReport">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+<Modal @ref="modalRemoveDashboardRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete dashboard</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveDashboardModal">Close</Button>
+            <Button Color="Color.Danger" Clicked="@RemoveDashboard">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 <Modal @ref="modalConfirmRef">
     <ModalContent Centered>
         <ModalHeader>
@@ -312,6 +364,38 @@ else
     </ModalContent>
 </Modal>
 
+<Modal @ref="modalAddPowerBiRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add Power BI content</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="metricsId">Content Power BI Id</label>
+                <InputText id="metricsId" class="form-control" @bind-Value="addContentId" />
+            </div>
+            <div class="form-group">
+                <label for="metricsId">Content name</label>
+                <InputText id="metricsId" class="form-control" @bind-Value="addContentName" />
+            </div>
+            <div class="form-group">
+                <label for="contentType">Type:</label>
+                <br/>
+                <InputRadioGroup id="contentType" @bind-Value="addReport">
+                    <InputRadio Value="true" />
+                    Report<br>
+                    <InputRadio Value="false" />
+                    Dashboard<br>
+                </InputRadioGroup>
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="async () => await modalAddPowerBiRef!.Hide()">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@AddPowerBIContent">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
 @code {
     [Parameter]
     public int Id { get; set; }
@@ -321,13 +405,22 @@ else
     // reference to the modal component
     private Modal? modalAddRef;
     private Modal? modalEditRef;
-    private Modal? modalRemoveRef;
+    private Modal? modalRemoveUserRef;
+    private Modal? modalRemoveReportRef;
+    private int removeReportIndex = -1;
+    private Modal? modalRemoveDashboardRef;
+    private int removeDashboardIndex = -1;
     private Modal? modalConfirmRef;
+    private Modal? modalAddPowerBiRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
     private string editEmail = string.Empty;
-    private int deleteIndex;
+    private int deleteIndex = -1;
+
+    private bool addReport = true; //false = is dashboard; true = is report
+    private string addContentId = string.Empty;
+    private string addContentName = string.Empty;
 
     string selectedTab = "reports";
 
@@ -353,23 +446,55 @@ else
         SetEditModalForm(index);
         return modalEditRef!.Show();
     }
-    private Task ShowRemoveModal(int index)
+    private Task ShowRemoveUserModal(int index)
     {
         deleteIndex = index;
-        return modalRemoveRef!.Show();
+        return modalRemoveUserRef!.Show();
     }
     private Task HideEditModal()
     {
         return modalEditRef!.Hide();
     }
-    private Task HideRemoveModal()
+    private Task HideRemoveUserModal()
     {
-        return modalRemoveRef!.Hide();
+        deleteIndex = -1;
+        return modalRemoveUserRef!.Hide();
     }
     private void ClearAddModalForm()
     {
         addEmail = string.Empty;
         addRole = 2;
+    }
+    private Task ShowAddPowerBIModal()
+    {
+        return modalAddPowerBiRef!.Show();
+    }
+    private Task HideAddPowerBIModal()
+    {
+        addReport = false;
+        addContentId = string.Empty;
+        addContentName = string.Empty;
+        return modalAddPowerBiRef!.Hide();
+    }
+    private Task ShowRemoveReportModal(int index)
+    {
+        removeReportIndex = index;
+        return modalRemoveReportRef!.Show();
+    }
+    private Task HideRemoveReportModal()
+    {
+        removeReportIndex = -1;
+        return modalRemoveReportRef!.Hide();
+    }
+    private Task ShowRemoveDashboardModal(int index)
+    {
+        removeDashboardIndex = index;
+        return modalRemoveDashboardRef!.Show();
+    }
+    private Task HideRemoveDashboardModal()
+    {
+        removeDashboardIndex = -1;
+        return modalRemoveDashboardRef!.Hide();
     }
     private void SetEditModalForm(int index)
     {
@@ -415,7 +540,7 @@ else
             if (response.IsSuccessStatusCode)
             {
             toastService.ShowSuccess("User added");
-        ClearAddModalForm();
+            ClearAddModalForm();
             await LoadData();
             }
             else
@@ -451,7 +576,7 @@ else
             if (response.IsSuccessStatusCode)
             {
             toastService.ShowSuccess("User role changed");
-        await HideEditModal();
+            await HideEditModal();
             await LoadData();
             }
             else
@@ -483,8 +608,8 @@ else
             if (response.IsSuccessStatusCode)
             {
             toastService.ShowSuccess("User was removed");
-        await HideRemoveModal();
-        await LoadData();
+            await HideRemoveModal();
+            await LoadData();
             }
             else
             {
@@ -497,7 +622,7 @@ else
         if (response.IsSuccess)
         {
             toastService.ShowSuccess("User was removed");
-            await HideRemoveModal();
+            await HideRemoveUserModal();
             await LoadData();
         }
         else
@@ -510,11 +635,11 @@ else
         /*
         var response = await httpClient.DeleteAsync($"api/projects/{Id}");
 
-        if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
             Navigation.NavigateTo("/projects");
             toastService.ShowSuccess("Project was deleted");
-        }
+            }
             else
             {
             var message = await response.Content.ReadAsStringAsync();
@@ -538,13 +663,13 @@ else
         /*
         var response = await httpClient.GetAsync($"api/reports/{Id}/update");
 
-        if (response.IsSuccessStatusCode)
-        {
+            if (response.IsSuccessStatusCode)
+            {
             toastService.ShowSuccess("Reports updated");
             await LoadData();
-        }
-        else
-        {
+            }
+            else
+            {
             var message = await response.Content.ReadAsStringAsync();
 
             toastService.ShowError(message);
@@ -566,13 +691,13 @@ else
         /*
         var response = await httpClient.GetAsync($"api/dashboards/{Id}/update");
 
-        if (response.IsSuccessStatusCode)
-        {
+            if (response.IsSuccessStatusCode)
+            {
             toastService.ShowSuccess("Dashboards updated");
             await LoadData();
-        }
-        else
-        {
+            }
+            else
+            {
             var message = await response.Content.ReadAsStringAsync();
 
             toastService.ShowError(message);
@@ -599,13 +724,81 @@ else
     }
     private async Task ChangeProjectSettings()
     {
-        _logger.LogInformation(project!.ConnectedMetricsIds);
-
         HttpResponse respose = await _projectService.EditProjectSettings(project);
 
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Changes saved");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
+        }
+    }
+    private async Task AddPowerBIContent()
+    {
+        HttpResponse respose;
+        EmbedContentDTO content = new();
+
+        if (!Guid.TryParse(addContentId, out var id))
+        {
+            toastService.ShowError("Wrong Id format");
+            return;
+        }
+        content.Id = id;
+        content.Name = addContentName;
+
+        if (addReport)
+        {
+            respose = await _projectService.AddPowerBiReport(Id, content);
+
+            if (respose.IsSuccess)
+            {
+                toastService.ShowSuccess("Report added");
+                await LoadData();
+            }
+            else
+            {
+                toastService.ShowError(respose.ErrorMessage);
+            }
+        }
+        else
+        {
+            respose = await _projectService.AddPowerBiDashboard(Id, content);
+
+            if (respose.IsSuccess)
+            {
+                toastService.ShowSuccess("Report added");
+                await LoadData();
+            }
+            else
+            {
+                toastService.ShowError(respose.ErrorMessage);
+            }
+        }
+    }
+    private async Task RemoveReport()
+    {
+        HttpResponse respose = await _projectService.RemoveReportFromProject(Id, project!.Reports.ElementAt(removeReportIndex).Id);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report removed");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
+        }
+    }
+    private async Task RemoveDashboard()
+    {
+        HttpResponse respose = await _projectService.RemoveDashboardFromProject(Id, project!.Dashboards.ElementAt(removeDashboardIndex).Id);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Dashboard removed");
             await LoadData();
         }
         else

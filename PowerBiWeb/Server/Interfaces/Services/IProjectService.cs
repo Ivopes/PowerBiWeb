@@ -17,5 +17,9 @@ namespace PowerBiWeb.Server.Interfaces.Services
         Task<string> RemoveUserAsync(int userId, int projectId);
         Task<string> RemoveProject(int projectId);
         Task<string> EditProject(int projectId, ProjectDTO dto);
+        Task<string> AddReportAsync(int projectId, EmbedContentDTO report);
+        Task<string> AddDashboardAsync(int projectId, EmbedContentDTO dashboard);
+        Task<string> RemoveReportAsync(int projectId, Guid reportId);
+        Task<string> RemoveDashboardAsync(int projectId, Guid dashboardId);
     }
 }

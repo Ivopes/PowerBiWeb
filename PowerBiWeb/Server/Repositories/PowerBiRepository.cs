@@ -17,7 +17,7 @@ using System.Text.Json;
 
 namespace PowerBiWeb.Server.Repositories
 {
-    public class PowerBiRepository : IMetricsSaverRepository
+    public class PowerBiRepository : IMetricsContentRepository
     {
         private readonly AadService _aadService;
         private readonly Guid _workspaceId;
@@ -31,7 +31,7 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<EmbedReportDTO> GetEmbededReportAsync(Guid reportId)
+        public async Task<EmbedContentDTO> GetEmbededReportAsync(Guid reportId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -41,13 +41,13 @@ namespace PowerBiWeb.Server.Repositories
 
             return new()
             {
-                ReportName = report.Name,
-                ReportId = reportId,
+                Name = report.Name,
+                Id = reportId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = report.EmbedUrl
             };
         }
-        public async Task<EmbedReportDTO> GetEmbededDashboardAsync(Guid dashboardId)
+        public async Task<EmbedContentDTO> GetEmbededDashboardAsync(Guid dashboardId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -57,8 +57,8 @@ namespace PowerBiWeb.Server.Repositories
 
             return new()
             {
-                ReportName = dashboard.DisplayName,
-                ReportId = dashboardId,
+                Name = dashboard.DisplayName,
+                Id = dashboardId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = dashboard.EmbedUrl
             };
@@ -79,27 +79,31 @@ namespace PowerBiWeb.Server.Repositories
             {
                 var reportsReponse = await pbiClient.Reports.GetReportsInGroupAsync(_workspaceId);
 
-                var reports = new List<Report>();
-
                 foreach (var r in reportsReponse.Value)
                 {
                     if (r.Name.StartsWith(projectEntity.Name))
                     {
                         var entityInDb = await _dbContext.ProjectReports.FindAsync(r.Id);
 
-                        if (entityInDb is not null) continue;
-
-                        reports.Add(r);
-
-                        var report = new ProjectReport()
+                        if (entityInDb is not null)
                         {
-                            PowerBiId = r.Id,
-                            Name = r.Name.Substring(projectEntity.Name.Length + 1),
-                            WorkspaceId = _workspaceId,
-                            Project = projectEntity
-                        };
+                            if (!entityInDb.Projects.Contains(projectEntity))
+                            {
+                                entityInDb.Projects.Add(projectEntity);
+                            }
+                        }
+                        else
+                        {
+                            var report = new ProjectReport()
+                            {
+                                PowerBiId = r.Id,
+                                Name = r.Name.Substring(projectEntity.Name.Length + 1),
+                                WorkspaceId = _workspaceId,
+                                Projects = new List<Project>() { projectEntity }
+                            };
+                            await _dbContext.ProjectReports.AddAsync(report);
+                        }
 
-                        await _dbContext.ProjectReports.AddAsync(report);
                     }
                 }
 
@@ -109,6 +113,58 @@ namespace PowerBiWeb.Server.Repositories
             {
                 _logger.LogError(ex, "Could not update reports for project id: {0}", projectId);
                 return "Could not update reports for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> AddReportsAsync(int projectId, ProjectReport report)
+        {
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found or you dont have a permision", projectId);
+                return "Project was not found or you dont have the right permision";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var reportResponse = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, report.PowerBiId);
+
+                var entityInDb = await _dbContext.ProjectReports.FindAsync(reportResponse.Id);
+
+                if (entityInDb is not null)
+                {
+                    if (!entityInDb.Projects.Contains(projectEntity))
+                    {
+                        entityInDb.Projects.Add(projectEntity);
+                    }
+                    else
+                    {
+                        return "Content is already in project";
+                    }
+                }
+                else
+                {
+                    var entityCreated = new ProjectReport()
+                    {
+                        PowerBiId = reportResponse.Id,
+                        PowerBIName = reportResponse.Name,
+                        Name = report.Name,
+                        WorkspaceId = _workspaceId,
+                        Projects = new List<Project>() { projectEntity }
+                    };
+                    await _dbContext.ProjectReports.AddAsync(entityCreated);
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not add report with id: {0} for project id: {1}",report.PowerBiId ,projectId);
+                return "Could not add report for project";
             }
 
             return string.Empty;
@@ -129,7 +185,6 @@ namespace PowerBiWeb.Server.Repositories
             {
                 var dashboradsResponse = await pbiClient.Dashboards.GetDashboardsInGroupAsync(_workspaceId);
 
-                var dashboards = new List<Dashboard>();
 
                 foreach (var d in dashboradsResponse.Value)
                 {
@@ -138,8 +193,6 @@ namespace PowerBiWeb.Server.Repositories
                         var entityInDb = await _dbContext.ProjectDashboards.FindAsync(d.Id);
 
                         if (entityInDb is not null) continue;
-
-                        dashboards.Add(d);
 
                         var dashboard = new ProjectDashboard()
                         {
@@ -159,6 +212,47 @@ namespace PowerBiWeb.Server.Repositories
             {
                 _logger.LogError(ex, "Could not update dashboards for project id: {0}", dashboardId);
                 return "Could not update dashboards for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> AddDashboardsAsync(int projectId, ProjectDashboard dashboard)
+        {
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found", projectId);
+                return "Project was not found";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var dashboardResponse = await pbiClient.Dashboards.GetDashboardInGroupAsync(_workspaceId, dashboard.PowerBiId);
+
+                var entityInDb = await _dbContext.ProjectDashboards.FindAsync(dashboardResponse.Id);
+
+                if (entityInDb is not null) return "Content is already in project";
+
+                var entityCreated = new ProjectDashboard()
+                {
+                    PowerBiId = dashboardResponse.Id,
+                    Name = dashboard.Name,
+                    PowerBiName = dashboardResponse.DisplayName,
+                    WorkspaceId = _workspaceId,
+                    Project = projectEntity
+                };
+
+                await _dbContext.ProjectDashboards.AddAsync(entityCreated);
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not add dashboard with id: {0} for project id: {1}", dashboard.PowerBiId, projectId);
+                return "Could not add dashboard for project";
             }
 
             return string.Empty;

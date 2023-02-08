@@ -1,4 +1,5 @@
-﻿using PowerBiWeb.Server.Interfaces.Repositories;
+﻿using Microsoft.PowerBI.Api.Models;
+using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Extentions;
@@ -13,21 +14,23 @@ namespace PowerBiWeb.Server.Services
         private readonly IDatasetRepository _datasetRepository;
         private readonly IAppUserRepository _appUserRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
+        private readonly IMetricsContentRepository _metricsContentRepository;
         private readonly IMetricsApiLoaderRepository _metricsApiLoaderRepository;
         private readonly IReportRepository _reportRepository;
         private readonly IDashboardRepository _dashboardRepository;
+        private readonly ILogger<ProjectService> _logger;
 
-        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository, IDatasetRepository datasetRepository)
+        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsContentRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository, IDatasetRepository datasetRepository, ILogger<ProjectService> logger)
         {
             _projectRepository = projectRepository;
             _httpContextAccessor = httpContext;
             _appUserRepository = appUserRepository;
-            _metricsSaverRepository = metricsSaverRepository;
+            _metricsContentRepository = metricsSaverRepository;
             _metricsApiLoaderRepository = metricsApiLoaderRepository;
             _reportRepository = reportRepository;
             _dashboardRepository = dashboardRepository;
             _datasetRepository = datasetRepository;
+            _logger = logger;
         }
 
         public async Task<List<ProjectDTO>> GetAllAsync()
@@ -57,7 +60,6 @@ namespace PowerBiWeb.Server.Services
 
             return newP;
         }
-
         public async Task<ProjectDTO> PostAsync(ProjectDTO project)
         {
             var p = project.ToBO();
@@ -98,7 +100,7 @@ namespace PowerBiWeb.Server.Services
                 var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(dataset.MetricFilesId, downloadTotal[i++]);
                 if (metrics is not null && metrics.Count > 0)
                 {
-                    await _metricsSaverRepository.UploadMetric(dataset, metrics);
+                    await _metricsContentRepository.UploadMetric(dataset, metrics);
                 }
             }
 
@@ -170,7 +172,34 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveProject(projectId);
         }
+        public async Task<string> AddReportAsync(int projectId, EmbedContentDTO report)
+        {
+            ProjectReport r = new()
+            {
+                Name = report.Name,
+                PowerBiId = report.Id
+            };
 
+            return await _metricsContentRepository.AddReportsAsync(projectId, r);
+        }
+        public async Task<string> RemoveReportAsync(int projectId, Guid reportId)
+        {
+            return await _projectRepository.RemoveReportsAsync(projectId, reportId);
+        }
+        public async Task<string> AddDashboardAsync(int projectId, EmbedContentDTO dashboard)
+        {
+            ProjectDashboard d = new()
+            {
+                Name = dashboard.Name,
+                PowerBiId = dashboard.Id
+            };
+
+            return await _metricsContentRepository.AddDashboardsAsync(projectId, d);
+        }
+        public async Task<string> RemoveDashboardAsync(int projectId, Guid dashboardId)
+        {
+            return await _projectRepository.RemoveDashboardsAsync(projectId, dashboardId);
+        }
         #region Private Methods
         private int GetUserId()
         {

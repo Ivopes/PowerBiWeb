@@ -9,7 +9,7 @@ namespace PowerBiWeb.Shared
         public string Type { get; set; } = string.Empty;
 
         // Report to be embedded
-        public List<EmbedReportDTO> EmbedReport { get; set; } = Enumerable.Empty<EmbedReportDTO>().ToList();
+        public List<EmbedContentDTO> EmbedReport { get; set; } = Enumerable.Empty<EmbedContentDTO>().ToList();
 
         // Embed Token for the Power BI report
         public EmbedToken EmbedToken { get; set; } = new();

@@ -11,8 +11,8 @@ namespace PowerBiWeb.Server.Repositories
     {
         private readonly PowerBiContext _dbContext;
         private readonly IMetricsApiLoaderRepository _metricsApiRepository;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public ProjectRepository(PowerBiContext dbContext, IMetricsApiLoaderRepository metricsApiRepository, IMetricsSaverRepository metricsSaverRepository)
+        private readonly IMetricsContentRepository _metricsSaverRepository;
+        public ProjectRepository(PowerBiContext dbContext, IMetricsApiLoaderRepository metricsApiRepository, IMetricsContentRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
             _metricsApiRepository = metricsApiRepository;
@@ -137,6 +137,41 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
+        public async Task<string> RemoveReportsAsync(int projectId, Guid reportId)
+        {
+            var entity = await _dbContext.Projects.Include(p => p.ProjectReports).SingleOrDefaultAsync(p => p.Id == projectId);
+
+            if (entity is null) return "Project not found";
+
+            var report = entity.ProjectReports.SingleOrDefault(r => r.PowerBiId == reportId);
+
+            if (report is not null)
+            {
+                entity.ProjectReports.Remove(report);
+
+                await SaveContextAsync();
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> RemoveDashboardsAsync(int projectId, Guid dashboardId)
+        {
+            var entity = await _dbContext.Projects.Include(p => p.ProjectDashboards).SingleOrDefaultAsync(p => p.Id == projectId);
+
+            if (entity is null) return "Dashboard not found";
+
+            var dashboard = entity.ProjectDashboards.SingleOrDefault(d => d.PowerBiId == dashboardId);
+
+            if (dashboard is not null)
+            {
+                entity.ProjectDashboards.Remove(dashboard);
+
+                await SaveContextAsync();
+            }
+
+            return string.Empty;
+        }
+
         #region Private Methods
         private async Task SaveContextAsync()
         {

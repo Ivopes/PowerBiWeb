@@ -14,7 +14,7 @@ namespace PowerBiWeb.Shared.Project
         public string PowerBiPrefix { get; set; } = string.Empty;
         public bool DownloadContent { get; set; }
         public ICollection<UserDTO> Users { get; set; } = Array.Empty<UserDTO>();
-        public ICollection<EmbedReportDTO> Reports { get; set; } = Array.Empty<EmbedReportDTO>();
-        public ICollection<EmbedReportDTO> Dashboards { get; set; } = Array.Empty<EmbedReportDTO>();
+        public ICollection<EmbedContentDTO> Reports { get; set; } = Array.Empty<EmbedContentDTO>();
+        public ICollection<EmbedContentDTO> Dashboards { get; set; } = Array.Empty<EmbedContentDTO>();
     }
 }

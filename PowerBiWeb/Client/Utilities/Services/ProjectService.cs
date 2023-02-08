@@ -1,4 +1,5 @@
 ﻿using Blazored.Toast.Services;
+using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Client.Pages.Projects;
 using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
@@ -187,6 +188,80 @@ namespace PowerBiWeb.Client.Utilities.Services
         public async Task<HttpResponse> UpdateDashboardsForProject(int projectId)
         {
             var response = await _httpClient.GetAsync($"api/dashboards/{projectId}/update");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
+
+        public async Task<HttpResponse> AddPowerBiReport(int projectId, EmbedContentDTO report)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/report", report);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
+
+        public async Task<HttpResponse> AddPowerBiDashboard(int projectId, EmbedContentDTO dashboard)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/dashboard", dashboard);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
+        public async Task<HttpResponse> RemoveReportFromProject(int projectId, Guid reportId)
+        {
+            var response = await _httpClient.DeleteAsync($"api/projects/{projectId}/report/{reportId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                IsSuccess = false
+            };
+        }
+        public async Task<HttpResponse> RemoveDashboardFromProject(int projectId, Guid dashboardId)
+        {
+            var response = await _httpClient.DeleteAsync($"api/projects/{projectId}/dashboard/{dashboardId}");
 
             if (response.IsSuccessStatusCode)
             {

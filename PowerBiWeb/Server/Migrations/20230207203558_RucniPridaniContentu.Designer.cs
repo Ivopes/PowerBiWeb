@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PowerBiWeb.Server.Models.Contexts;
 
@@ -11,9 +12,11 @@ using PowerBiWeb.Server.Models.Contexts;
 namespace PowerBiWeb.Server.Migrations
 {
     [DbContext(typeof(PowerBiContext))]
-    partial class PowerBiContextModelSnapshot : ModelSnapshot
+    [Migration("20230207203558_RucniPridaniContentu")]
+    partial class RucniPridaniContentu
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,27 +188,17 @@ namespace PowerBiWeb.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("PowerBiId");
 
+                    b.HasIndex("ProjectId");
+
                     b.ToTable("ProjectReports");
-                });
-
-            modelBuilder.Entity("ProjectProjectReport", b =>
-                {
-                    b.Property<Guid>("ProjectReportsPowerBiId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ProjectsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProjectReportsPowerBiId", "ProjectsId");
-
-                    b.HasIndex("ProjectsId");
-
-                    b.ToTable("ProjectProjectReport");
                 });
 
             modelBuilder.Entity("PBIDatasetProject", b =>
@@ -253,19 +246,15 @@ namespace PowerBiWeb.Server.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("ProjectProjectReport", b =>
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectReport", b =>
                 {
-                    b.HasOne("PowerBiWeb.Server.Models.Entities.ProjectReport", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectReportsPowerBiId")
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.Project", "Project")
+                        .WithMany("ProjectReports")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PowerBiWeb.Server.Models.Entities.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ApplUser", b =>
@@ -278,6 +267,8 @@ namespace PowerBiWeb.Server.Migrations
                     b.Navigation("AppUserProjects");
 
                     b.Navigation("ProjectDashboards");
+
+                    b.Navigation("ProjectReports");
                 });
 #pragma warning restore 612, 618
         }

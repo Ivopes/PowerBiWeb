@@ -31,7 +31,7 @@ builder.Services.AddTransient<IAppUserService, AppUserService>();
 builder.Services.AddTransient<IAppUserRepository, AppUserRepository>();
 builder.Services.AddHttpClient(HttpClientTypes.MetricsApi, c => c.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PowerBiMetricsUrl")!));
 builder.Services.AddTransient<IMetricsApiLoaderRepository, MetricsApiRepository>();
-builder.Services.AddTransient<IMetricsSaverRepository, PowerBiRepository>();
+builder.Services.AddTransient<IMetricsContentRepository, PowerBiRepository>();
 builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IDashboardRepository, DashboardRepository>();
 builder.Services.AddTransient<IDatasetRepository, DatasetRepository>();

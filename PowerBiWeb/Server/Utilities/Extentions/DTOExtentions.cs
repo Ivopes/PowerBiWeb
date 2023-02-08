@@ -1,4 +1,5 @@
-﻿using PowerBiWeb.Server.Models.Entities;
+﻿using Microsoft.PowerBI.Api.Models;
+using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Utilities.Extentions
@@ -26,25 +27,25 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
-            dto.Reports = new List<EmbedReportDTO>();
+            dto.Reports = new List<EmbedContentDTO>();
 
             foreach (var report in p.ProjectReports)
             {
                 dto.Reports.Add(new()
                 {
-                    ReportName = report.Name,
-                    ReportId = report.PowerBiId
+                    Name = report.Name,
+                    Id = report.PowerBiId
                 });
             }
 
-            dto.Dashboards = new List<EmbedReportDTO>();
+            dto.Dashboards = new List<EmbedContentDTO>();
 
             foreach (var dashboard in p.ProjectDashboards)
             {
                 dto.Dashboards.Add(new()
                 {
-                    ReportName = dashboard.Name,
-                    ReportId = dashboard.PowerBiId
+                    Name = dashboard.Name,
+                    Id = dashboard.PowerBiId
                 });
             }
 

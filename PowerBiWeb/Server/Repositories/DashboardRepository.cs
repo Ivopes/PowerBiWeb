@@ -9,8 +9,8 @@ namespace PowerBiWeb.Server.Repositories
     public class DashboardRepository : IDashboardRepository
     {
         private readonly PowerBiContext _dbContext;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public DashboardRepository(PowerBiContext dbContext, IMetricsSaverRepository metricsSaverRepository)
+        private readonly IMetricsContentRepository _metricsSaverRepository;
+        public DashboardRepository(PowerBiContext dbContext, IMetricsContentRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
             _metricsSaverRepository = metricsSaverRepository;

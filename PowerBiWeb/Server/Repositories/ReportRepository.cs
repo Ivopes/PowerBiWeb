@@ -15,8 +15,8 @@ namespace PowerBiWeb.Server.Repositories
     public class ReportRepository : IReportRepository
     {
         private readonly PowerBiContext _dbContext;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public ReportRepository(PowerBiContext dbContext, IMetricsSaverRepository metricsSaverRepository)
+        private readonly IMetricsContentRepository _metricsSaverRepository;
+        public ReportRepository(PowerBiContext dbContext, IMetricsContentRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
             _metricsSaverRepository = metricsSaverRepository;
@@ -25,9 +25,9 @@ namespace PowerBiWeb.Server.Repositories
         {
             throw new NotImplementedException();
         }
-        public async Task<ProjectReport?> GetByIdAsync(int projectId, Guid reportId)
+        public async Task<ProjectReport?> GetByIdAsync(Guid reportId)
         {
-            var entity = await _dbContext.ProjectReports.Include(r => r.Project).SingleOrDefaultAsync(r => r.PowerBiId == reportId && r.Project.Id == projectId);
+            var entity = await _dbContext.ProjectReports.Include(r => r.Projects).ThenInclude(p => p.Datasets).SingleOrDefaultAsync(r => r.PowerBiId == reportId);
 
             return entity;
         }

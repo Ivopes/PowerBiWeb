@@ -15,18 +15,18 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
-        public async Task<HttpResponse<EmbedReportDTO?>> GetDashboardAsync(int projectId, Guid dashboardId)
+        public async Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId)
         {
             return await GetDashboardAsync(projectId, dashboardId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedReportDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct)
+        public async Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/dashboards/{projectId}/{dashboardId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 try
                 {
-                    var dashboard = await response.Content.ReadFromJsonAsync<EmbedReportDTO>();
+                    var dashboard = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
                     return new()
                     {
                         IsSuccess = true,

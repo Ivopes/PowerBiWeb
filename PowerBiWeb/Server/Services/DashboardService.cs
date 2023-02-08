@@ -10,14 +10,14 @@ namespace PowerBiWeb.Server.Services
     {
         private readonly IDashboardRepository _dashboardRepository;
         private readonly ILogger<ReportService> _logger;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public DashboardService(IDashboardRepository dashboardRepository, ILogger<ReportService> logger, IMetricsSaverRepository metricsSaverRepository)
+        private readonly IMetricsContentRepository _metricsSaverRepository;
+        public DashboardService(IDashboardRepository dashboardRepository, ILogger<ReportService> logger, IMetricsContentRepository metricsSaverRepository)
         {
             _dashboardRepository = dashboardRepository;
             _logger = logger;
             _metricsSaverRepository = metricsSaverRepository;
         }
-        public async Task<EmbedReportDTO> GetByIdAsync(int projectId, Guid dashboardId)
+        public async Task<EmbedContentDTO> GetByIdAsync(int projectId, Guid dashboardId)
         {
             // Check if dashboard belongs to project
             var report = await _dashboardRepository.GetByIdAsync(projectId, dashboardId);

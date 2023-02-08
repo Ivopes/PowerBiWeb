@@ -14,16 +14,16 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
-        public async Task<HttpResponse<EmbedReportDTO[]?>> GetReportsAsync(int projectId)
+        public async Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId)
         {
             return await GetReportsAsync(projectId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedReportDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct)
+        public async Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/reports/{projectId}", ct);
             if (response.IsSuccessStatusCode)
             {
-                var reports = await response.Content.ReadFromJsonAsync<EmbedReportDTO[]>();
+                var reports = await response.Content.ReadFromJsonAsync<EmbedContentDTO[]>();
                 return new()
                 {
                     IsSuccess = true,
@@ -37,18 +37,18 @@ namespace PowerBiWeb.Client.Utilities.Services
                 Value = null
             };
         }
-        public async Task<HttpResponse<EmbedReportDTO?>> GetReportAsync(int projectId, Guid reportId)
+        public async Task<HttpResponse<EmbedContentDTO?>> GetReportAsync(int projectId, Guid reportId)
         {
             return await GetReportAsync(projectId, reportId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedReportDTO?>> GetReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        public async Task<HttpResponse<EmbedContentDTO?>> GetReportAsync(int projectId, Guid reportId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/reports/{projectId}/{reportId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 try
                 {
-                    var report = await response.Content.ReadFromJsonAsync<EmbedReportDTO>();
+                    var report = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
                     return new()
                     {
                         IsSuccess = true,
