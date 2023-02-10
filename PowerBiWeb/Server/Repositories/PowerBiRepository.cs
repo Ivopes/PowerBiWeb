@@ -347,7 +347,7 @@ namespace PowerBiWeb.Server.Repositories
                 Name = metric.Name,
                 Description = metric.Description
             };
-
+            
             var columns = new List<Column> //Int64, Double, Boolean, Datetime, String
             {
                 new Column("Datum", "Datetime"),
@@ -367,11 +367,22 @@ namespace PowerBiWeb.Server.Repositories
                 new Measure("Podil", $"{metric.Name}[SumPriznak] / {metric.Name}[SumCelkem]"),
                 new Measure("PodilPodleRelease", $"{metric.Name}[SumPriznakByRelease] / {metric.Name}[SumCelkemByRelease]"),
 
+                //new Measure("AktualniPodil", $"LASTNONBLANK({metric.Name}[Podil], 1)"),
+                //new Measure("AktualniPodilPodleRelease", $"LASTNONBLANK({metric.Name}[PodilPodleRelease], 1)")
+
+                //new Measure("AktualniPodil", $"CALCULATE(MIN({metric.Name}[SumPriznak]), FILTER({metric.Name}, {metric.Name}[Datum] == MAX({metric.Name}[Datum])))"),
+                //new Measure("AktualniPodilPodleRelease", $"CALCULATE(MIN({metric.Name}[PodilPodleRelease]), FILTER({metric.Name}, {metric.Name}[Datum] == MAX({metric.Name}[Datum])))")
+            
+                //new Measure("PosledniDatum", $"LASTDATE({metric.Name}[Datum])"),
+                //new Measure("PosledniDatumNotBlank", $"LASTNONBLANK({metric.Name}[Datum], 1)"),
+                new Measure("PosledniPodil", $"CALCULATE([Podil], {metric.Name}[Datum] == MAX({metric.Name}[Datum]))"),
+                new Measure("PosledniPodilPodleRelease", $"CALCULATE([PodilPodleRelease], {metric.Name}[Datum] == MAX({metric.Name}[Datum]))"),
+
             };
 
             table.Columns = columns;
             table.Measures = measures;
-
+     
             tables.Add(table);
 
             var pushDatasetRequest = new CreateDatasetRequest($"{dataset.MetricFilesId}_{metric.Name}", tables);
