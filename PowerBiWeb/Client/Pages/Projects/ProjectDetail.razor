@@ -390,7 +390,7 @@ else
             </div>
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="async () => await modalAddPowerBiRef!.Hide()">Cancel</Button>
+            <Button Color="Color.Secondary" Clicked="HideAddPowerBIModal">Cancel</Button>
             <Button Color="Color.Primary" Clicked="@AddPowerBIContent">Add</Button>
         </ModalFooter>
     </ModalContent>
@@ -471,7 +471,7 @@ else
     }
     private Task HideAddPowerBIModal()
     {
-        addReport = false;
+        addReport = true;
         addContentId = string.Empty;
         addContentName = string.Empty;
         return modalAddPowerBiRef!.Hide();
@@ -785,6 +785,7 @@ else
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Report removed");
+            await HideRemoveReportModal();
             await LoadData();
         }
         else
@@ -799,6 +800,7 @@ else
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Dashboard removed");
+            await HideRemoveDashboardModal();
             await LoadData();
         }
         else

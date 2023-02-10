@@ -385,7 +385,7 @@ namespace PowerBiWeb.Server.Repositories
      
             tables.Add(table);
 
-            var pushDatasetRequest = new CreateDatasetRequest($"{dataset.MetricFilesId}_{metric.Name}", tables);
+            var pushDatasetRequest = new CreateDatasetRequest($"{dataset.MetricFilesId}_{metric.Name}", tables, defaultMode: DatasetMode.Push);
 
             try
             {
