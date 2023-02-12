@@ -1,5 +1,6 @@
 ﻿using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Shared.Datasets;
 using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Utilities.Extentions
@@ -79,6 +80,21 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             }
 
             return created;
+        }
+        public static DatasetDTO ToDTO(this PBIDataset pBIDataset)
+        {
+            var dataset = new DatasetDTO()
+            {
+                Id = pBIDataset.Id,
+                PowerBiId = pBIDataset.PowerBiId,
+                MetricFilesId = pBIDataset.MetricFilesId,
+                ColumnNames = pBIDataset.ColumnNames.ToArray(),
+                ColumnTypes = pBIDataset.ColumnTypes.ToArray(),
+                Measures = pBIDataset.Measures.ToArray(),
+                MeasureDefinitions = pBIDataset.MeasureDefinitions.ToArray()
+            };
+
+            return dataset;
         }
     }
 }

@@ -1,0 +1,96 @@
+﻿@page "/datasets"
+@using PowerBiWeb.Client.Utilities.Http;
+@using PowerBiWeb.Client.Utilities.Interfaces;
+@using PowerBiWeb.Shared.Datasets;
+@inject IDatasetService _datasetService
+@inject IToastService toastService
+
+<h3 id="p">Datasets</h3>
+
+<button type="button" class="btn btn-primary" @onclick="@ShowAddModal">Add</button>
+
+@if (_datasets is null)
+{
+        <div>Loading...</div>  
+}
+else
+{
+        <div>
+        @foreach (var d in _datasets)
+        {
+            string link = $"/datasets/{d.Id}"; 
+
+                    <NavLink href=@link>
+                        <span>@d.MetricFilesId</span>
+                    </NavLink>
+                    <br/>
+
+        }
+        </div>
+}
+
+<Modal @ref="modalAddRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add datasets</ModalTitle>
+            <CloseButton />
+    </ModalHeader>
+    <ModalBody>
+            <Validations ValidateOnLoad="false">
+                  <Validation Validator="ValidationRule.IsEmail" >
+                    <Field Horizontal>
+                        <FieldLabel>Email</FieldLabel>
+                        <FieldBody>
+                            <TextEdit Role="TextRole.Email">
+                                <Feedback>
+                                    <ValidationError>Email is required</ValidationError>
+                                </Feedback>
+                            </TextEdit>
+                        </FieldBody>
+                    </Field>
+                </Validation>
+            </Validations>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideAddModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@AddDatasets">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<DatasetDTO>? _datasets = null;
+    private Modal? modalAddRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        HttpResponse<List<DatasetDTO>> response = await _datasetService.GetAllAsync();
+
+        if (response.IsSuccess)
+        {
+            _datasets = response.Value;
+
+            toastService.ShowSuccess("Datasets loaded");
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+    }
+    private async Task AddDatasets()
+    {
+        
+    }
+    private async Task HideAddModal()
+    {
+        await modalAddRef.Hide();
+    }
+    private async Task ShowAddModal()
+    {
+        await modalAddRef.Show();
+    }
+}

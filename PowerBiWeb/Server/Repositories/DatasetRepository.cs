@@ -14,10 +14,21 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<List<PBIDataset>> GetAllAsync()
+        {
+            return await _dbContext.Datasets.Include(d => d.Projects).ToListAsync();
+        }
+
         public async Task<PBIDataset?> GetAsync(string metricFilesId)
         {
             return await _dbContext.Datasets.SingleOrDefaultAsync(d => d.MetricFilesId == metricFilesId);
         }
+
+        public async Task<PBIDataset?> GetByIdAsync(int id)
+        {
+            return await _dbContext.Datasets.FindAsync(id);
+        }
+
         public async Task<PBIDataset> PostAsync(PBIDataset d)
         {
             await _dbContext.Datasets.AddAsync(d);
