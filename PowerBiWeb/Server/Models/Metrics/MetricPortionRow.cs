@@ -1,4 +1,4 @@
-﻿namespace MetricsAPI.Models
+﻿namespace PowerBiWeb.Server.Models.Metrics
 {
     public class MetricPortionRow
     {

@@ -1,15 +1,18 @@
-﻿using MetricsAPI.Models;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
+using Microsoft.Rest;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Models.Metrics;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
 using PowerBiWeb.Shared.Project;
+using System.Data;
+using System.Dynamic;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,6 +26,7 @@ namespace PowerBiWeb.Server.Repositories
         private readonly Guid _workspaceId;
         private readonly ILogger<PowerBiRepository> _logger;
         private readonly PowerBiContext _dbContext;
+        private const string TableName = "table1";
         public PowerBiRepository(AadService aadService, ILogger<PowerBiRepository> logger, PowerBiContext dbContext)
         {
             _aadService = aadService;
@@ -257,6 +261,32 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
+        public async Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            PostRowsRequest request = new PostRowsRequest
+            {
+                Rows = data.Rows.ToArray(),
+            };
+
+            try
+            {
+                await pbiClient.Datasets.PostRowsInGroupAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
+
+                return true;
+            }
+            catch (HttpOperationException httpEx)
+            {
+                _logger.LogError(httpEx, httpEx.Response.Content);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not push rows for dataset with id: {0}", dataset.Id);
+            }
+
+            return false;
+        }
         public async Task UploadMetric(PBIDataset dataset, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -297,7 +327,7 @@ namespace PowerBiWeb.Server.Repositories
             };
 
             var json = JsonSerializer.Serialize(metric, serializeOptions);
-
+            
             try
             {
                 // Must use HttpClient because power bi SDK cant handle custom serialization
@@ -336,6 +366,51 @@ namespace PowerBiWeb.Server.Repositories
             {
                 await UploadMetric(dataset, metric);
             }
+        }
+        public async Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var columns = new List<Column>();
+            for (int i = 0; i < definition.ColumnNames.Count; i++)
+            {
+                columns.Add(new Column(definition.ColumnNames[i], definition.ColumnTypes[i]));
+            }
+
+            var measures = new List<Measure>();
+            for (int i = 0; i < definition.Measures.Count; i++)
+            {
+                measures.Add(new Measure(definition.Measures[i], definition.MeasureDefinitions[i]));
+            }
+
+            var tables = new List<Table>();
+            var table = new Table()
+            {
+                Name = "table1"
+            };
+
+            table.Columns = columns;
+            table.Measures = measures;
+
+            tables.Add(table);
+
+            var pushDatasetRequest = new CreateDatasetRequest($"{definition.Name}", tables, defaultMode: DatasetMode.Push);
+
+            try
+            {
+                Dataset datasetResult = await pbiClient.Datasets.PostDatasetInGroupAsync(_workspaceId, pushDatasetRequest);
+                return datasetResult;
+
+            }
+            catch (Microsoft.Rest.HttpOperationException httpEx)
+            {
+                _logger.LogError(httpEx, httpEx.Response.Content);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "General error");
+            }
+            return null;
         }
         private async Task<Dataset?> CreateMetricDataset(PBIDataset dataset, MetricPortion metric)
         {
@@ -449,5 +524,7 @@ namespace PowerBiWeb.Server.Repositories
 
             return embedToken;
         }
+
+        
     }
 }

@@ -30,5 +30,14 @@ namespace PowerBiWeb.Server.Controllers
 
             return Ok(result);
         }
+        [HttpPost("{datasetId}")]
+        public async Task<ActionResult<DatasetDTO>> AddDatasetById([FromRoute] string datasetId)
+        {
+            var result = await _datasetService.AddDatasetByIdAsync(datasetId);
+
+            if (result is null) return NotFound("Dataset was not found");
+
+            return Ok(result);
+        }
     }
 }

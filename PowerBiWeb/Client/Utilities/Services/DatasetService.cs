@@ -18,6 +18,34 @@ namespace PowerBiWeb.Client.Utilities.Services
             _logger = logger;
         }
 
+        public async Task<HttpResponse<DatasetDTO>> AddDatasetAsync(string datasetId)
+        {
+            var response = await _httpClient.PostAsync($"api/datasets/{datasetId}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var datasets = await response.Content.ReadFromJsonAsync<DatasetDTO>();
+                    return new()
+                    {
+                        IsSuccess = true,
+                        Value = datasets,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                Value = null
+            };
+        }
+
         public async Task<HttpResponse<List<DatasetDTO>>> GetAllAsync()
         {
             var response = await _httpClient.GetAsync($"api/datasets/");
