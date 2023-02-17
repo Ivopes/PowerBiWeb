@@ -66,43 +66,9 @@ namespace PowerBiWeb.Server.Services
 
             int userId = GetUserId();
 
-            var entitiesDatasets = new List<PBIDataset>();
-
-            bool[] downloadTotal = new bool[p.Datasets.Count]; // Should download full total metric if new
-            int i = 0;
-            foreach (var dataset in p.Datasets)
-            {
-                PBIDataset? d = await _datasetRepository.GetAsync(dataset.MetricFilesId);
-            
-                if (d is null)
-                {
-                    d = await _datasetRepository.PostAsync(dataset);
-                    downloadTotal[i++] = true;
-                }
-                else
-                {
-                    downloadTotal[i++] = false;
-                }
-
-                entitiesDatasets.Add(d);
-            }
-            p.Datasets = entitiesDatasets;
-
             var created = await _projectRepository.Post(userId, p);
 
             project.Id = created.Id;
-            i = 0;
-            foreach(var dataset in p.Datasets)
-            {
-                if (dataset.LastUpdate.DayOfWeek == DayOfWeek.Saturday && DateTime.UtcNow.Subtract(dataset.LastUpdate).TotalHours < 24) continue;
-
-                //Update or create dataset from metric
-                var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(dataset.MetricFilesId, downloadTotal[i++]);
-                if (metrics is not null && metrics.Count > 0)
-                {
-                    await _metricsContentRepository.UploadMetric(dataset, metrics);
-                }
-            }
 
             if (created.DownloadContent)
             {
@@ -132,21 +98,6 @@ namespace PowerBiWeb.Server.Services
         public async Task<string> EditProject(int projectId, ProjectDTO dto)
         {
             var p = dto.ToBO();
-
-            var entitiesDatasets = new List<PBIDataset>();
-
-            foreach (var dataset in p.Datasets)
-            {
-                PBIDataset? d = await _datasetRepository.GetAsync(dataset.MetricFilesId);
-
-                if (d is null)
-                {
-                    return $"Dataset with id {dataset.MetricFilesId} was not found";
-                }
-
-                entitiesDatasets.Add(d);
-            }
-            p.Datasets = entitiesDatasets;
 
             return await _projectRepository.EditProject(projectId, p);
         }

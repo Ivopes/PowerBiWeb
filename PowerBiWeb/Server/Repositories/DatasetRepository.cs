@@ -29,7 +29,7 @@ namespace PowerBiWeb.Server.Repositories
 
         public async Task<List<PBIDataset>> GetAllAsync()
         {
-            return await _dbContext.Datasets.Include(d => d.Projects).ToListAsync();
+            return await _dbContext.Datasets.ToListAsync();
         }
 
         public async Task<PBIDataset?> GetAsync(string metricFilesId)
