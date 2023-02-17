@@ -2,6 +2,7 @@
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
+using PowerBiWeb.Client.Pages.Datasets;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
@@ -272,7 +273,34 @@ namespace PowerBiWeb.Server.Repositories
 
             try
             {
-                await pbiClient.Datasets.PostRowsInGroupAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
+                string json = JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true });
+                
+                // Must use HttpClient because power bi SDK cant handle custom serialization
+                var httpClient = new HttpClient();
+                var url = $"https://api.powerbi.com/v1.0/myorg/groups/{_workspaceId}/datasets/{dataset.PowerBiId}/tables/{TableName}/rows";
+
+                httpClient.BaseAddress = new Uri(url);
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _aadService.GetAccessToken());
+
+                var response = await httpClient.PostAsync(string.Empty, content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    string r = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Could not post rows: {r}");
+                    return false;
+                }
+                
+
+                //var response = await pbiClient.Datasets.PostRowsInGroupWithHttpMessagesAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
+
+                //await pbiClient.Datasets.PostRowsInGroupAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
+
+                var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
+                entityDataset!.LastUpdate = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
 
                 return true;
             }

@@ -26,7 +26,7 @@ namespace PowerBiWeb.Server.Services
             _logger = logger;
         }
 
-        public async Task<DatasetDTO?> AddDatasetByIdAsync(string datasetId)
+        public async Task<DatasetDTO?> AddDatasetByIdAsync(string datasetId, string name)
         {
             PBIDataset dataset;
 
@@ -35,7 +35,7 @@ namespace PowerBiWeb.Server.Services
 
             if (definition is null)
             {
-                throw new MessageException { ExcptMessage = "Dataset could not been created" };
+                throw new MessageException { ExcptMessage = "Dataset could not been created. Check the dataset ID" };
             }
 
             dataset = new PBIDataset
@@ -68,7 +68,7 @@ namespace PowerBiWeb.Server.Services
 
             await _datasetRepository.PostAsync(dataset);
 
-            //Upload matric data do powerBI
+            //Upload metric data do powerBI
 
             bool success = await _metricsSaverRepository.AddRowsToDataset(dataset, data);
 
@@ -78,6 +78,38 @@ namespace PowerBiWeb.Server.Services
             }
 
             return dataset.ToDTO();
+        }
+        public async Task<DatasetDTO?> AddExistingDatasetByIdAsync(string datasetId, Guid datasetGuid)
+        {
+            PBIDataset dataset;
+
+            // nacist definici a pripravit ji k vytvoreni v DB
+            MetricDefinition? definition = await _metricsApiLoaderRepository.GetMetricDefinition(datasetId);
+
+            if (definition is null)
+            {
+                throw new MessageException { ExcptMessage = "Dataset could not been created. Check the dataset ID" };
+            }
+
+            dataset = new PBIDataset
+            {
+                Name = definition.Name,
+                PowerBiId = datasetGuid,
+                MetricFilesId = datasetId,
+                ColumnNames = definition.ColumnNames,
+                ColumnTypes = definition.ColumnTypes,
+                Measures = definition.Measures,
+                MeasureDefinitions = definition.MeasureDefinitions
+            };
+
+            await _datasetRepository.PostAsync(dataset);
+
+            return dataset.ToDTO();
+        }
+
+        public async Task<bool> DeleteByIdAsync(int id)
+        {
+            return await _datasetRepository.DeleteByIdAsync(id);
         }
 
         public async Task<List<DatasetDTO>> GetAllAsync()

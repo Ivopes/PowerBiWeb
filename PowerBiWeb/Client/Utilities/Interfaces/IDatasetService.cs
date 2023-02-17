@@ -8,6 +8,7 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
     {
         Task<HttpResponse<List<DatasetDTO>>> GetAllAsync();
         Task<HttpResponse<DatasetDTO>> GetDatasetDetailAsync(int id);
-        Task<HttpResponse<DatasetDTO>>  AddDatasetAsync(string datasetId);
+        Task<HttpResponse<DatasetDTO>>  AddDatasetAsync(DatasetDTO dataset, bool addNew);
+        Task<HttpResponse>  DeleteDatasetAsync(int datasetId);
     }
 }

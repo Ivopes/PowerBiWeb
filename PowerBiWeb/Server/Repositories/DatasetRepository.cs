@@ -14,6 +14,19 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<bool> DeleteByIdAsync(int id)
+        {
+            var entity = await _dbContext.Datasets.FindAsync(id);
+
+            if (entity is null) return false;
+
+            _dbContext.Datasets.Remove(entity);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<List<PBIDataset>> GetAllAsync()
         {
             return await _dbContext.Datasets.Include(d => d.Projects).ToListAsync();
