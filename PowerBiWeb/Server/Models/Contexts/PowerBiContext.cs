@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json;
 using PowerBiWeb.Server.Models.Entities;
 
 namespace PowerBiWeb.Server.Models.Contexts
@@ -21,6 +23,34 @@ namespace PowerBiWeb.Server.Models.Contexts
 
             modelBuilder.Entity<AppUserProject>()
                 .HasKey(a => new { a.AppUserId, a.ProjectId });
+
+            modelBuilder.Entity<PBIDataset>()
+                .Property(d => d.ColumnNames)
+                .HasConversion<string>(
+                   v => JsonConvert.SerializeObject(v),
+                   v => JsonConvert.DeserializeObject<List<string>>(v)!
+                );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.ColumnTypes)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.Measures)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.MeasureDefinitions)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
         }
     }
 }

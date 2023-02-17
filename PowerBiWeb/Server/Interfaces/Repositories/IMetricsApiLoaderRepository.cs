@@ -1,4 +1,4 @@
-﻿using MetricsAPI.Models;
+﻿using PowerBiWeb.Server.Models.Metrics;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
@@ -17,5 +17,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         /// Download specific latest increment metric for specific project
         /// </summary>
         Task<MetricPortion?> GetMetricLatest(string projectName, string metricName);
+        Task<MetricDefinition?> GetMetricDefinition(string datasetId);
+        Task<MetricData?> GetMetricTotalNew(string datasetId);
     }
 }

@@ -1,6 +1,6 @@
-﻿using MetricsAPI.Models;
-using Microsoft.PowerBI.Api.Models;
+﻿using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Models.Metrics;
 using PowerBiWeb.Shared;
 using PowerBiWeb.Shared.Project;
 
@@ -19,5 +19,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<string> AddReportsAsync(int projectId, ProjectReport report);
         Task UploadMetric(PBIDataset dataset, MetricPortion metric);
         Task UploadMetric(PBIDataset dataset, List<MetricPortion> metrics);
+        Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition);
+        Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data);
     }
 }

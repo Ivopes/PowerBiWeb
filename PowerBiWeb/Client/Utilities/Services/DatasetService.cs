@@ -18,6 +18,63 @@ namespace PowerBiWeb.Client.Utilities.Services
             _logger = logger;
         }
 
+        public async Task<HttpResponse<DatasetDTO>> AddDatasetAsync(DatasetDTO dataset, bool addNew)
+        {
+            HttpResponseMessage? response = null;
+
+            if (addNew)
+            {
+                response = await _httpClient.PostAsync($"api/datasets/new/{dataset.MetricFilesId}/{dataset.Name}", null);
+            }
+            else
+            {
+                response = await _httpClient.PostAsync($"api/datasets/existing/{dataset.MetricFilesId}", null);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var datasets = await response.Content.ReadFromJsonAsync<DatasetDTO>();
+                    return new()
+                    {
+                        IsSuccess = true,
+                        Value = datasets,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+                Value = null
+            };
+        }
+
+        public async Task<HttpResponse> DeleteDatasetAsync(int datasetId)
+        {
+            var response = await _httpClient.DeleteAsync($"api/datasets/{datasetId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
         public async Task<HttpResponse<List<DatasetDTO>>> GetAllAsync()
         {
             var response = await _httpClient.GetAsync($"api/datasets/");

@@ -87,6 +87,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             {
                 Id = pBIDataset.Id,
                 PowerBiId = pBIDataset.PowerBiId,
+                Name = pBIDataset.Name,
                 MetricFilesId = pBIDataset.MetricFilesId,
                 ColumnNames = pBIDataset.ColumnNames.ToArray(),
                 ColumnTypes = pBIDataset.ColumnTypes.ToArray(),

@@ -5,6 +5,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
 {
     public interface IDatasetRepository
     {
+        Task<bool> DeleteByIdAsync(int id);
         Task<List<PBIDataset>> GetAllAsync();
         Task<PBIDataset?> GetAsync(string metricFilesId);
         Task<PBIDataset?> GetByIdAsync(int id);

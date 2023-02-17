@@ -10,6 +10,7 @@ namespace PowerBiWeb.Shared.Datasets
     {
         public int Id { get; set; }
         public string MetricFilesId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         public Guid PowerBiId { get; set; }
         public string[] ColumnNames { get; set; } = Array.Empty<string>();
         public string[] ColumnTypes { get; set; } = Array.Empty<string>();

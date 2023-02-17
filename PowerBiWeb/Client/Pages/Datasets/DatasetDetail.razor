@@ -7,7 +7,7 @@
 @inject NavigationManager navigation
 
 <div class="d-flex flex-row" style="margin: 15px">
-    <NavLink href="/projects">
+    <NavLink href="/datasets">
         <button type="button" class="btn btn-outline-secondary"><Icon Name="IconName.ArrowLeft" /> Back</button>
     </NavLink><br />
 
@@ -49,9 +49,11 @@ else
         <TableBody>
             @for (int i = 0; i < dataset.ColumnNames.Length; i++)
             {
+                int j = i;
+                
                 <TableRow>
-                    <TableRowHeader>@dataset.ColumnNames[i]</TableRowHeader>
-                    <TableRowCell>@dataset.ColumnTypes[i]</TableRowCell>
+                    <TableRowHeader>@dataset.ColumnNames[j]</TableRowHeader>
+                    <TableRowCell>@dataset.ColumnTypes[j]</TableRowCell>
                 </TableRow>
             }
         </TableBody>
@@ -67,9 +69,11 @@ else
         <TableBody>
             @for (int i = 0; i < dataset.Measures.Length; i++)
             {
+                int j = i;
+
                 <TableRow>
-                    <TableRowHeader>@dataset.Measures[i]</TableRowHeader>
-                    <TableRowCell>@dataset.MeasureDefinitions[i]</TableRowCell>
+                    <TableRowHeader>@dataset.Measures[j]</TableRowHeader>
+                    <TableRowCell>@dataset.MeasureDefinitions[j]</TableRowCell>
                 </TableRow>
             }
         </TableBody>
