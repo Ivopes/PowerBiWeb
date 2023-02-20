@@ -5,11 +5,13 @@
 @inject IToastService toastService
 @inject IJSRuntime JS
 @inject ILogger<DashboardsDetail> _logger
+@inject NavigationManager navigation
 @implements IDisposable
 
  @if (dashboard is not null)
 {
     <h3>@dashboard.Name</h3>
+    <h5>@dashboard.PowerBiName</h5>
 }
 
 <NavLink href=@($"/projects/{projectId}")>
@@ -17,7 +19,7 @@
 </NavLink>
 <br />
 
-@if (dashboard is null)
+@if (loading)
 {
     <div>Loading...</div>
 }
@@ -34,6 +36,7 @@
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
     private CancellationTokenSource cts = new CancellationTokenSource();
+    private bool loading = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,6 +54,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        loading = true;
         var respose = await _dashboardService.GetDashboardAsync(projectId, dashboardId, cts.Token);
 
         if (respose.IsSuccess)
@@ -60,8 +64,10 @@
         }
         else
         {
+            navigation.NavigateTo($"/projects/{projectId}");
             toastService.ShowError(respose.ErrorMessage);
         }
+        loading = false;
     }
     private async Task EmbedView()
     {

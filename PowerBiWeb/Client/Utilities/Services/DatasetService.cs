@@ -17,7 +17,6 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
-
         public async Task<HttpResponse<DatasetDTO>> AddDatasetAsync(DatasetDTO dataset, bool addNew)
         {
             HttpResponseMessage? response = null;
@@ -55,7 +54,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 Value = null
             };
         }
-
         public async Task<HttpResponse> DeleteDatasetAsync(int datasetId)
         {
             var response = await _httpClient.DeleteAsync($"api/datasets/{datasetId}");
@@ -74,7 +72,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
             };
         }
-
         public async Task<HttpResponse<List<DatasetDTO>>> GetAllAsync()
         {
             var response = await _httpClient.GetAsync($"api/datasets/");
@@ -102,7 +99,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 Value = null
             };
         }
-
         public async Task<HttpResponse<DatasetDTO>> GetDatasetDetailAsync(int id)
         {
             var response = await _httpClient.GetAsync($"api/datasets/{id}");

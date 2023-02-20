@@ -46,7 +46,7 @@ namespace PowerBiWeb.Server.Repositories
 
             return new()
             {
-                Name = report.Name,
+                PowerBiName = report.Name,
                 Id = reportId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = report.EmbedUrl
@@ -62,7 +62,7 @@ namespace PowerBiWeb.Server.Repositories
 
             return new()
             {
-                Name = dashboard.DisplayName,
+                PowerBiName = dashboard.DisplayName,
                 Id = dashboardId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = dashboard.EmbedUrl

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
@@ -29,9 +30,13 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectDTO>> Get(int id)
         {
-            if (await _authService.GetProjectRole(id) > ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(id);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var result = await _projectService.GetAsync(id);
+
+            if (result is null) return NotFound("Project was not found");
+
             return Ok(result);
         }
         [HttpPost]
@@ -43,7 +48,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("{projectId}/report")]
         public async Task<ActionResult<ProjectDTO>> AddReport(int projectId, [FromBody] EmbedContentDTO report)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.AddReportAsync(projectId, report);
 
@@ -54,7 +60,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpDelete("{projectId}/report/{reportId}")]
         public async Task<ActionResult<ProjectDTO>> RemoveReport(int projectId, Guid reportId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.RemoveReportAsync(projectId, reportId);
 
@@ -65,7 +72,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("{projectId}/dashboard")]
         public async Task<ActionResult<ProjectDTO>> AddDashboard(int projectId, [FromBody] EmbedContentDTO dashboard)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.AddDashboardAsync(projectId, dashboard);
 
@@ -76,7 +84,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpDelete("{projectId}/dashboard/{dashboardId}")]
         public async Task<ActionResult<ProjectDTO>> RemoveDashboard(int projectId, Guid dashboardId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.RemoveDashboardAsync(projectId, dashboardId);
 
@@ -87,7 +96,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("user")]
         public async Task<ActionResult<string>> AddToUser([FromBody] UserToProjectDTO dto)
         {
-            if (await _authService.GetProjectRole(dto.ProjectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(dto.ProjectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.AddToUserAsync(dto);
 
@@ -98,7 +108,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPut("user")]
         public async Task<ActionResult<string>> EditUser([FromBody] UserToProjectDTO dto)
         {
-            if (await _authService.GetProjectRole(dto.ProjectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(dto.ProjectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.EditUserAsync(dto);
 
@@ -109,7 +120,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPut("{projectId}")]
         public async Task<ActionResult<string>> EditProject(int projectId, [FromBody] ProjectDTO dto)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.EditProject(projectId, dto);
 
@@ -120,7 +132,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpDelete("{projectId}/{userId}")]
         public async Task<ActionResult<string>> DeleteUser(int projectId, int userId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _projectService.RemoveUserAsync(userId, projectId);
 
@@ -131,7 +144,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpDelete("{projectId}")]
         public async Task<ActionResult<string>> DeleteProject(int projectId)
         {
-            if ((await _projectService.GetProjectRole(projectId)) != ProjectRoles.Creator) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role != ProjectRoles.Creator) return Forbid();
 
             var result = await _projectService.RemoveProject(projectId);
 

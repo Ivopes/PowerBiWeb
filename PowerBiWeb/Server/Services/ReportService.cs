@@ -22,7 +22,7 @@ namespace PowerBiWeb.Server.Services
         {
             return await _reportRepository.GetAsync(projectId);
         }
-        public async Task<EmbedContentDTO> GetByIdAsync(int projectId, Guid reportId)
+        public async Task<EmbedContentDTO?> GetByIdAsync(int projectId, Guid reportId)
         {
             // Check if report belongs to project
             var report = await _reportRepository.GetByIdAsync(reportId);
@@ -30,13 +30,11 @@ namespace PowerBiWeb.Server.Services
             if (report == null || report.Projects.All(p => p.Id != projectId))
             {
                 _logger.LogError("Report with id: {0} for project id: {1} wwas not found", reportId, projectId);
-                throw new MessageException
-                {
-                    ExcptMessage = "Report was not found"
-                };
+                return null;
             }
 
             var result = await _metricsSaverRepository.GetEmbededReportAsync(reportId);
+            result.Name = report.Name;
 
             return result;
         }

@@ -8,11 +8,11 @@
 
 <h3>AccDetail</h3>
 
-@if (detail is null)
+@if (loading)
 {
     <div>Loading...</div>
 }
-else 
+else if (detail is not null)
 {
   
         <Field>
@@ -38,9 +38,10 @@ else
 
 @code {
     UserDetail? detail;
-
+    private bool loading = true;
     protected override async Task OnInitializedAsync()
     {
+        loading = true;
         var state = await authProvider.GetAuthenticationStateAsync();
 
         int id = int.Parse(state.User.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
@@ -55,5 +56,6 @@ else
         {
             toastService.ShowError("Could not load account detail information");
         }
+        loading = false;
     }
 }

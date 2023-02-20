@@ -17,25 +17,22 @@ namespace PowerBiWeb.Server.Services
             _logger = logger;
             _metricsSaverRepository = metricsSaverRepository;
         }
-        public async Task<EmbedContentDTO> GetByIdAsync(int projectId, Guid dashboardId)
+        public async Task<EmbedContentDTO?> GetByIdAsync(int projectId, Guid dashboardId)
         {
             // Check if dashboard belongs to project
-            var report = await _dashboardRepository.GetByIdAsync(projectId, dashboardId);
+            var dashboard = await _dashboardRepository.GetByIdAsync(projectId, dashboardId);
 
-            if (report == null)
+            if (dashboard is null)
             {
                 _logger.LogError("Dashboard with id: {0} for project id: {1} was not found", dashboardId, projectId);
-                throw new MessageException
-                {
-                    ExcptMessage = "Dashboard was not found"
-                };
+                return null;
             }
 
             var result = await _metricsSaverRepository.GetEmbededDashboardAsync(dashboardId);
+            result.Name = dashboard.Name;
 
             return result;
         }
-
         public async Task<string> UpdateDashboardsAsync(int projectId)
         {
             return await _dashboardRepository.UpdateDashboardsAsync(projectId);

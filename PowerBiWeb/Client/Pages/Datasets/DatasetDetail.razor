@@ -22,13 +22,13 @@
 
 </div>
 
-@if (dataset is null)
+@if (loading)
 {
     <div>
         Loading...
     </div>
 }
-else
+else if (dataset is not null)
 {
     <Field>
         <FieldLabel>Dataset identificator</FieldLabel>
@@ -85,6 +85,7 @@ else
     public int Id { get; set; }
 
     private DatasetDTO? dataset;
+    private bool loading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +93,7 @@ else
     }
     private async Task LoadData()
     {
+        loading = true;
         HttpResponse<DatasetDTO> response = await _datasetService.GetDatasetDetailAsync(Id);
 
         if (response.IsSuccess)
@@ -105,5 +107,6 @@ else
             navigation.NavigateTo("/datasets");
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
 }

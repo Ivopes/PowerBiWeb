@@ -153,7 +153,7 @@ namespace PowerBiWeb.Server.Repositories
 
             MetricData? result = null;
 
-            string path = $"/new/metrics/total/{datasetId}";
+            string path = string.Format(TotalPathNew, datasetId);
             try
             {
                 var httpResult = await httpClient.GetAsync(path);

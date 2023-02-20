@@ -148,7 +148,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
-
         public async Task<HttpResponse> EditProjectSettings(ProjectDTO project)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/projects/{project.Id}", project);
@@ -203,7 +202,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
-
         public async Task<HttpResponse> AddPowerBiReport(int projectId, EmbedContentDTO report)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/report", report);
@@ -222,7 +220,6 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
-
         public async Task<HttpResponse> AddPowerBiDashboard(int projectId, EmbedContentDTO dashboard)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/dashboard", dashboard);

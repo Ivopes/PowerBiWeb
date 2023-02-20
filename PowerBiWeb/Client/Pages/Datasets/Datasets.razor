@@ -12,11 +12,11 @@
 
 <button type="button" class="btn btn-primary" @onclick="async () => await ShowAddModal(false)">Add existing</button>
 
-@if (_datasets is null)
+@if (loading)
 {
         <div>Loading...</div>  
 }
-else
+else if (_datasets is not null)
 {
         <div>
         <Table>
@@ -79,13 +79,14 @@ else
     private Modal? modalAddRef;
     private DatasetDTO addDataset = new();
     private bool addNew = false; //Add new or add existing?
-
+    private bool loading = true;
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
     }
     private async Task LoadData()
     {
+        loading = true;
         HttpResponse<List<DatasetDTO>> response = await _datasetService.GetAllAsync();
 
         if (response.IsSuccess)
@@ -98,6 +99,7 @@ else
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task AddDataset()
     {

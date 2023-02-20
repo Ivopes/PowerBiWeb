@@ -5,19 +5,21 @@
 @inject IToastService toastService
 @inject IJSRuntime JS
 @inject ILogger<ReportDetail> _logger
+@inject NavigationManager navigation
 @implements IDisposable
 
  @if (report is not null)
 {
     <h3>@report.Name</h3>
+    <h5>@report.PowerBiName</h5>
 }
 
 <NavLink href=@($"/projects/{projectId}")>
-    <button type="button" class="btn btn-primary"><Icon Name="IconName.ArrowLeft" /> Back</button>
+    <button type="button" class="btn btn-primary m-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
 </NavLink>
 <br />
 
-@if (report is null)
+@if (loading)
 {
     <div>Loading...</div>
 }
@@ -34,6 +36,7 @@
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
     private CancellationTokenSource cts = new CancellationTokenSource();
+    private bool loading = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,6 +54,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        loading = true;
         var respose = await _reportService.GetReportAsync(projectId, reportId, cts.Token);
 
         if (respose.IsSuccess)
@@ -60,8 +64,10 @@
         }
         else
         {
+            navigation.NavigateTo($"/projects/{projectId}");
             toastService.ShowError(respose.ErrorMessage);
         }
+        loading = false;
     }
     private async Task EmbedView()
     {

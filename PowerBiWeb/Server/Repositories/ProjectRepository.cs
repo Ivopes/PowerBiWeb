@@ -34,7 +34,7 @@ namespace PowerBiWeb.Server.Repositories
                 .ThenInclude(aup => aup.AppUser)
                 .Include(p => p.ProjectReports)
                 .Include(p => p.ProjectDashboards)
-                .SingleAsync(p => p.Id == id);
+                .SingleOrDefaultAsync(p => p.Id == id);
         }
         public async Task<Project> Post(int userId, Project project)
         {
@@ -52,7 +52,7 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<string> AddToUserAsync(string userEmail, int projectId, ProjectRoles role)
         {
-            var user = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
+            var user = await _dbContext.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail);
 
             if (user is null) return "Email not found";
 
@@ -82,12 +82,12 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<string> EditUserAsync(string userEmail, int projectId, ProjectRoles newRole)
         {
-            var entity = await _dbContext.AppUsers.SingleAsync(u => u.Email == userEmail);
+            var entity = await _dbContext.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail);
             //var entity = await _dbContext.AppUsers.FindAsync(user.em);
 
             if (entity is null) return "User was not found";
 
-            var aup = await _dbContext.AppUserProjects.Include(aup => aup.AppUser).SingleAsync(aup => aup.ProjectId == projectId && aup.AppUser.Email == userEmail);
+            var aup = await _dbContext.AppUserProjects.Include(aup => aup.AppUser).SingleOrDefaultAsync(aup => aup.ProjectId == projectId && aup.AppUser.Email == userEmail);
 
             if (aup is null) return "User is not in specified project";
 
@@ -111,11 +111,11 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
-            var entity = await _dbContext.AppUsers.Include(u => u.AppUserProjects).SingleAsync(u => u.Id == userId);
+            var entity = await _dbContext.AppUsers.Include(u => u.AppUserProjects).SingleOrDefaultAsync(u => u.Id == userId);
 
             if (entity is null) return "User was not found";
 
-            var aup = entity.AppUserProjects.Single(aup => aup.ProjectId == projectId);
+            var aup = entity.AppUserProjects.SingleOrDefault(aup => aup.ProjectId == projectId);
 
             if (aup is null) return "User is not in specified project";
 

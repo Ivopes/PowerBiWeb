@@ -12,9 +12,10 @@
 
 
 <div class="d-flex flex-row" style="margin: 15px">
-    <NavLink href="/projects">
-        <button type="button" class="btn btn-outline-secondary"><Icon Name="IconName.ArrowLeft" /> Back</button>
-    </NavLink><br />
+        <Button Color="Color.Secondary" class="mx-2" Clicked="GoToProjects">
+            <Icon Name="IconName.ArrowLeft" /> 
+            Back
+        </Button>
 
     @if (project is not null)
     {
@@ -27,17 +28,28 @@
                 <Icon Name="IconName.Delete" /> Delete project
             </Button>
         }
+        @if (myRole <= ProjectRoleDTO.Editor)
+        {
+            <Button Color="Color.Primary" Clicked="async () => await UpdateContent()" class="mx-2">
+                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI by prefix
+            </Button>
+
+            <Button Color="Color.Primary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="mx-2">
+                    <Icon Name="IconName.Add" /> Add from PowerBI manually
+            </Button>
+        }
 
         //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
 
-@if (project is null)
+@if (loading)
 {
     <div> LOADING... </div>
 }
-else
+else if (project is not null)
 {
+
     <h3>@project.Name</h3>
 
     <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged" Style="margin-top: 10px">
@@ -53,19 +65,6 @@ else
     <Content>
         <TabPanel Name="reports">
             <div style="margin: 5px">
-                @if (project is null)
-                {
-                    <div>Loading...</div>
-                }
-                else
-                {
-                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()" class="m-2">
-                        <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI
-                    </Button>
-
-                    <Button Color="Color.Primary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="m-2">
-                        <Icon Name="IconName.Add" /> Add from PowerBI manually
-                    </Button>
 
                     <Table>
                         <TableHeader>
@@ -103,22 +102,12 @@ else
                             }
                         </TableBody>
                     </Table>
-                }
+                
             </div>
 
         </TabPanel>
         <TabPanel Name="dashboards">
             <div style="margin: 5px">
-                @if (project is null)
-                {
-                    <div>Loading...</div>
-                }
-                else
-                {
-                    <Button Color="Color.Primary" Clicked="async () => await UpdateDashboards()">
-                        <Icon Name="IconName.CloudDownloadAlt" />
-                        Refresh from PowerBI
-                    </Button>
 
                     <Table>
                         <TableHeader>
@@ -136,6 +125,7 @@ else
                             {
                                 var dashboard = project.Dashboards.ElementAt(i);
                                 string dashboardId = project.Dashboards.ElementAt(i).Id.ToString();
+                                int j = i;
                                 <TableRow>
                                     <TableRowCell>@dashboard.Name</TableRowCell>
                                     <TableRowCell>
@@ -146,7 +136,7 @@ else
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
                                         <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveDashboardModal(i)">
+                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveDashboardModal(j)">
                                                 <Icon Name="IconName.Delete" /> Remove
                                             </Button>
                                         </TableRowCell>
@@ -155,17 +145,12 @@ else
                             }
                         </TableBody>
                     </Table>
-                }
+                
             </div>
         </TabPanel>
         <TabPanel Name="users">   
             <div style="margin: 5px">
-                @if (project is null)
-                {
-                    <div>Loading...</div>
-                }
-                else
-                {
+
                     @if (myRole <= ProjectRoleDTO.Editor)
                     {
                         <Button Color="Color.Primary" Clicked="@ShowAddModal">
@@ -211,18 +196,13 @@ else
                             }
                         </TableBody>
                     </Table>
-                }
+                
             </div>
         </TabPanel>
         @if(myRole <= ProjectRoleDTO.Editor)
         {
             <TabPanel Name="settings">
-           @if (project is null)
-            {
-                <div>Loading...</div>
-            }
-            else
-            {
+
                     <div style="margin-top:25px">
                     <EditForm Model="project" OnSubmit="ChangeProjectSettings">
                         <div class="form-group">
@@ -235,7 +215,7 @@ else
                         </Button>
                     </EditForm>
                 </div>
-            }
+            
         </TabPanel>
         }
     </Content>
@@ -414,6 +394,8 @@ else
     private string editEmail = string.Empty;
     private int deleteIndex = -1;
 
+    private bool loading = true;
+
     private bool addReport = true; //false = is dashboard; true = is report
     private string addContentId = string.Empty;
     private string addContentName = string.Empty;
@@ -503,6 +485,7 @@ else
     }
     private async Task LoadData()
     {
+        loading = true;
         var response = await _projectService.GetProjectDetailAsync(Id);
 
         if (response.IsSuccess)
@@ -519,8 +502,10 @@ else
         }
         else
         {
+            Navigation.NavigateTo("/projects");
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task AddUserToProject()
     {
@@ -530,22 +515,6 @@ else
             Role = (ProjectRoleDTO)addRole,
             UserEmail = addEmail,
         };
-        /*
-        var response = await httpClient.PostAsJsonAsync($"api/projects/user", dto);
-
-            if (response.IsSuccessStatusCode)
-            {
-            toastService.ShowSuccess("User added");
-            ClearAddModalForm();
-            await LoadData();
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.AddUserToProject(dto);
         if (response.IsSuccess)
         {
@@ -566,22 +535,6 @@ else
                 UserEmail = editEmail,
                 Role = (ProjectRoleDTO)editRole,
             };
-        /*
-        var response = await httpClient.PutAsJsonAsync($"api/projects/user", dto);
-
-            if (response.IsSuccessStatusCode)
-            {
-            toastService.ShowSuccess("User role changed");
-            await HideEditModal();
-            await LoadData();
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.EditUserInProject(dto);
         if (response.IsSuccess)
         {
@@ -598,22 +551,6 @@ else
     {
         int userId = project!.Users.ElementAt(deleteIndex).Id;
 
-        /*
-        var response = await httpClient.DeleteAsync($"api/projects/{Id}/{userId}");
-
-            if (response.IsSuccessStatusCode)
-            {
-            toastService.ShowSuccess("User was removed");
-            await HideRemoveModal();
-            await LoadData();
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.RemoveUserFromProject(Id, userId);
         if (response.IsSuccess)
         {
@@ -628,21 +565,6 @@ else
     }
     private async Task DeleteProject()
     {
-        /*
-        var response = await httpClient.DeleteAsync($"api/projects/{Id}");
-
-            if (response.IsSuccessStatusCode)
-            {
-            Navigation.NavigateTo("/projects");
-            toastService.ShowSuccess("Project was deleted");
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.DeleteProject(Id);
         if (response.IsSuccess)
         {
@@ -654,23 +576,13 @@ else
             toastService.ShowError(response.ErrorMessage);
         }
     }
+    private async Task UpdateContent()
+    {
+        await UpdateReports();
+        await UpdateDashboards();
+    }
     private async Task UpdateReports()
     {
-        /*
-        var response = await httpClient.GetAsync($"api/reports/{Id}/update");
-
-            if (response.IsSuccessStatusCode)
-            {
-            toastService.ShowSuccess("Reports updated");
-            await LoadData();
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.UpdateReportsForProject(Id);
         if (response.IsSuccess)
         {
@@ -684,21 +596,6 @@ else
     }
     private async Task UpdateDashboards()
     {
-        /*
-        var response = await httpClient.GetAsync($"api/dashboards/{Id}/update");
-
-            if (response.IsSuccessStatusCode)
-            {
-            toastService.ShowSuccess("Dashboards updated");
-            await LoadData();
-            }
-            else
-            {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
-        }
-        */
         var response = await _projectService.UpdateDashboardsForProject(Id);
         if (response.IsSuccess)
         {
@@ -752,6 +649,8 @@ else
             if (respose.IsSuccess)
             {
                 toastService.ShowSuccess("Report added");
+                addContentId = string.Empty;
+                addContentName = string.Empty;
                 await LoadData();
             }
             else
@@ -765,7 +664,9 @@ else
 
             if (respose.IsSuccess)
             {
-                toastService.ShowSuccess("Report added");
+                toastService.ShowSuccess("Dashboard added");
+                addContentId = string.Empty;
+                addContentName = string.Empty;
                 await LoadData();
             }
             else
@@ -803,5 +704,9 @@ else
         {
             toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
         }
+    }
+    private void GoToProjects()
+    {
+        Navigation.NavigateTo("/projects");
     }
 }

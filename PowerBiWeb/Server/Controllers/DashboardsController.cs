@@ -21,16 +21,20 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{projectId:int}/{reportId:Guid}")]
         public async Task<ActionResult<EmbedContentDTO>> GetByIdAsync(int projectId, Guid reportId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var embed = await _dashboardService.GetByIdAsync(projectId, reportId);
+
+            if (embed is null) return NotFound("Dashboard was not found");
 
             return Ok(embed);
         }
         [HttpGet("{projectId}/update")]
         public async Task<ActionResult<string>> UpdateDashboardsAsync(int projectId)
         {
-            if (await _authService.GetProjectRole(projectId) >= ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var result = await _dashboardService.UpdateDashboardsAsync(projectId);
 

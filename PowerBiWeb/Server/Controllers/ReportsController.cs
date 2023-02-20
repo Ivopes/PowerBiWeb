@@ -18,19 +18,15 @@ namespace PowerBiWeb.Server.Controllers
             _reportService = reportService;
             _authService = authService;
         }
-
-        [HttpGet("{projectId:int}")]
-        public ActionResult<EmbedParams> GetAsync(int projectId)
-        {
-            //var result = await _reportService.GetAsync(projectId);
-            return Ok();
-        }
         [HttpGet("{projectId:int}/{reportId:Guid}")]
         public async Task<ActionResult<EmbedContentDTO>> GetByIdAsync(int projectId, Guid reportId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var embed = await _reportService.GetByIdAsync(projectId, reportId);
+
+            if (embed is null) return NotFound("Report was not found");
 
             return Ok(embed);
         }
@@ -42,7 +38,6 @@ namespace PowerBiWeb.Server.Controllers
             var result = await _reportService.UpdateReportsAsync(projectId);
 
             return Ok(result);
-
         }
     }
 }
