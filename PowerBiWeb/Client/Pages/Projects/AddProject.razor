@@ -13,20 +13,6 @@
                         <InputText id="name" @bind-Value="project.Name" class="form-control"  />
                         <ValidationMessage For="@(() => project.Name)" />
                     </div>
-                    <div class="form-group">
-                        <label for="url">Metric project names</label>
-                        <InputText id="url" @bind-Value="project.ConnectedMetricsIds" class="form-control" />
-                        <small id="emailHelp" class="form-text text-muted">Name under which are metrics loaded from metric server (separate by ';' if multiple)</small>
-
-                        <ValidationMessage For="@(() => project.ConnectedMetricsIds)" />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="biName">Power BI prefix</label>
-                        <InputText id="biName" @bind-Value="project.PowerBiPrefix" class="form-control" />
-                        <small id="emailHelp" class="form-text text-muted">Prefix under which is content loaded from Power BI</small>
-                        <ValidationMessage For="@(() => project.PowerBiPrefix)" />
-                    </div>
 
                     <div class="form-group">
                         <label class="form-check-label" for="downloadContent">Download already created content from PowerBI?</label>

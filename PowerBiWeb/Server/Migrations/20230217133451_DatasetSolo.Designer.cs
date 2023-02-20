@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PowerBiWeb.Server.Models.Contexts;
 
@@ -11,9 +12,11 @@ using PowerBiWeb.Server.Models.Contexts;
 namespace PowerBiWeb.Server.Migrations
 {
     [DbContext(typeof(PowerBiContext))]
-    partial class PowerBiContextModelSnapshot : ModelSnapshot
+    [Migration("20230217133451_DatasetSolo")]
+    partial class DatasetSolo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,7 +143,12 @@ namespace PowerBiWeb.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PBIDatasetId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PBIDatasetId");
 
                     b.ToTable("Projects");
                 });
@@ -228,6 +236,13 @@ namespace PowerBiWeb.Server.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.Project", b =>
+                {
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.PBIDataset", null)
+                        .WithMany("Projects")
+                        .HasForeignKey("PBIDatasetId");
+                });
+
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectDashboard", b =>
                 {
                     b.HasOne("PowerBiWeb.Server.Models.Entities.Project", "Project")
@@ -257,6 +272,11 @@ namespace PowerBiWeb.Server.Migrations
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ApplUser", b =>
                 {
                     b.Navigation("AppUserProjects");
+                });
+
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.PBIDataset", b =>
+                {
+                    b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.Project", b =>

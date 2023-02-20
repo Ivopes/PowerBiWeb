@@ -50,10 +50,6 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
-            dto.ConnectedMetricsIds = string.Join(';', p.Datasets.Select(d => d.MetricFilesId));
-
-            dto.PowerBiPrefix = p.PowerBiPrefix;
-
             return dto;
         }
         public static Project ToBO(this ProjectDTO p)
@@ -62,22 +58,8 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             {
                 Id = p.Id,
                 Name = p.Name,
-                PowerBiPrefix = p.PowerBiPrefix,
                 DownloadContent = p.DownloadContent,
-                
             };
-
-            created.Datasets = new List<PBIDataset>();
-
-            var ids = p.ConnectedMetricsIds.Split(';');
-
-            foreach (var id in ids)
-            {
-                created.Datasets.Add(new()
-                {
-                    MetricFilesId = id,
-                });
-            }
 
             return created;
         }

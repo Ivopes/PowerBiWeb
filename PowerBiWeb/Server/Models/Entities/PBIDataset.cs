@@ -11,9 +11,5 @@
         public List<string> ColumnTypes { get; set; } = Array.Empty<string>().ToList();
         public List<string> Measures { get; set; } = Array.Empty<string>().ToList();
         public List<string> MeasureDefinitions { get; set; } = Array.Empty<string>().ToList();
-
-        // Other entities
-        public ICollection<Project> Projects { get; set; } = new HashSet<Project>();
-
     }
 }

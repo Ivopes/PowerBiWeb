@@ -34,7 +34,6 @@ namespace PowerBiWeb.Server.Repositories
                 .ThenInclude(aup => aup.AppUser)
                 .Include(p => p.ProjectReports)
                 .Include(p => p.ProjectDashboards)
-                .Include(p => p.Datasets)
                 .SingleAsync(p => p.Id == id);
         }
         public async Task<Project> Post(int userId, Project project)
@@ -105,7 +104,6 @@ namespace PowerBiWeb.Server.Repositories
             if (entity is null) return $"Project with Id: {projectId} was not found";
 
             entity.Name = newProject.Name;
-            entity.Datasets = newProject.Datasets;
 
             await _dbContext.SaveChangesAsync();
 
