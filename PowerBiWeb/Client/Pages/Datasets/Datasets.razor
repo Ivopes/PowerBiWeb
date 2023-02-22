@@ -8,9 +8,9 @@
 
 <h3 id="p">Datasets</h3>
 
-<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddModal(true)">Add new</button>
+<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddModal()">Add new</button>
 
-<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddModal(false)">Add existing</button>
+<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddExistingModal()">Add existing</button>
 
 @if (loading)
 {
@@ -40,7 +40,7 @@ else if (_datasets is not null)
                             </Button>
                         </TableRowCell>
                         <TableRowCell>
-                            <Button Color="Color.Danger" Clicked="() => DeleteDataset(dataset.Id)">
+                            <Button Color="Color.Danger" Clicked="() => ShowDeleteDataset(dataset.Id)">
                                 <Icon Name="IconName.Delete" /> Delete
                             </Button>
                         </TableRowCell>
@@ -51,7 +51,7 @@ else if (_datasets is not null)
         </div>
 }
 
-<Modal @ref="modalAddRef">
+<Modal @ref="modalAddNewRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Add dataset</ModalTitle>
@@ -59,12 +59,8 @@ else if (_datasets is not null)
     </ModalHeader>
     <ModalBody>
             <div class="form-group">
-                <label for="metricsId">Metric Id</label>
-                <InputText id="metricsId" class="form-control" @bind-Value="addDataset.MetricFilesId" />
-            </div>
-            <div class="form-group">
-                <label for="metricsId">Metric custom name</label>
-                <InputText id="metricsId" class="form-control" @bind-Value="addDataset.Name" />
+                <label for="newDatasetId">Dataset Id</label>
+                <InputText id="newDatasetId" class="form-control" @bind-Value="addDataset.MetricFilesId" />
             </div>
         </ModalBody>
         <ModalFooter>
@@ -73,13 +69,52 @@ else if (_datasets is not null)
         </ModalFooter>
     </ModalContent>
 </Modal>
+<Modal @ref="modalAddExistingRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add dataset</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="ExistingPowerId">Power BI Guid</label>
+                <InputText id="ExistingPowerId" class="form-control" @bind-Value="existingGuid" />
+            </div>
+            <div class="form-group">
+                <label for="ExistingDatasetId">Dataset Id</label>
+                <InputText id="ExistingDatasetId" class="form-control" @bind-Value="addDataset.MetricFilesId" />
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideAddExistingModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@AddExistingDataset">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="modalConfirmRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Confirm delete</ModalTitle>
+        </ModalHeader>
+        <ModalBody>This is destructive operation.</ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HideDeleteDataset">Cancel</Button>
+            <Button Color="Color.Danger" Clicked="async () => await DeleteDataset(deleteId)">Confirm</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
     private List<DatasetDTO>? _datasets = null;
-    private Modal? modalAddRef;
+    private Modal? modalAddNewRef;
+    private Modal? modalAddExistingRef;
+    private Modal? modalConfirmRef;
     private DatasetDTO addDataset = new();
-    private bool addNew = false; //Add new or add existing?
     private bool loading = true;
+    private string existingGuid = string.Empty;
+    private int deleteId = -1;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -103,13 +138,36 @@ else if (_datasets is not null)
     }
     private async Task AddDataset()
     {
-        if (string.IsNullOrEmpty(addDataset.Name) || string.IsNullOrWhiteSpace(addDataset.MetricFilesId))
+        if (string.IsNullOrWhiteSpace(addDataset.MetricFilesId))
         {
             toastService.ShowError("Please fill the form");
             return;
         }
 
-        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, addNew);
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, true);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset added");
+
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+    }
+    private async Task AddExistingDataset()
+    {
+        if (string.IsNullOrWhiteSpace(existingGuid) || !Guid.TryParse(existingGuid, out var guid))
+        {
+            toastService.ShowError("Please fill the form in correct format");
+            return;
+        }
+
+        addDataset.PowerBiId = guid;
+
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, false);
 
         if (response.IsSuccess)
         {
@@ -125,12 +183,23 @@ else if (_datasets is not null)
     private async Task HideAddModal()
     {
         addDataset = new();
-        await modalAddRef.Hide();
+        await modalAddNewRef!.Hide();
     }
-    private async Task ShowAddModal(bool addNew)
+    private async Task ShowAddModal()
     {
-        this.addNew = addNew;
-        await modalAddRef.Show();
+        await modalAddNewRef!.Show();
+    }
+    private async Task HideAddExistingModal()
+    {
+        existingGuid = string.Empty;
+        addDataset = new();
+        await modalAddExistingRef!.Hide();
+    }
+    private async Task ShowAddExistingModal()
+    {
+        existingGuid = string.Empty;
+        addDataset = new();
+        await modalAddExistingRef!.Show();
     }
     private void GoToDetail(int datasetId)
     {
@@ -138,17 +207,28 @@ else if (_datasets is not null)
     }
     private async Task DeleteDataset(int datasetId)
     {
+        if (datasetId < 0) return;
         HttpResponse response = await _datasetService.DeleteDatasetAsync(datasetId);
 
         if (response.IsSuccess)
         {
             toastService.ShowSuccess("Dataset deleted");
-            await HideAddModal();
+            await HideDeleteDataset();
             await LoadData();
         }
         else
         {
             toastService.ShowError(response.ErrorMessage);
         }
+    }
+    private async Task ShowDeleteDataset(int datasetId)
+    {
+        deleteId = datasetId;
+        await modalConfirmRef!.Show();
+    }
+    private async Task HideDeleteDataset()
+    {
+        deleteId = -1;
+        await modalConfirmRef!.Hide();
     }
 }

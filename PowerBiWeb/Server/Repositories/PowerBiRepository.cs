@@ -440,6 +440,16 @@ namespace PowerBiWeb.Server.Repositories
             }
             return null;
         }
+        public async Task<Report> CloneReportAsync(Guid reportId, string reportNewName)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new CloneReportRequest(reportNewName);
+
+            var report = await pbiClient.Reports.CloneReportInGroupAsync(_workspaceId, reportId, request);
+
+            return report;
+        }
         private async Task<Dataset?> CreateMetricDataset(PBIDataset dataset, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -552,7 +562,5 @@ namespace PowerBiWeb.Server.Repositories
 
             return embedToken;
         }
-
-        
     }
 }

@@ -21,13 +21,19 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
             _metricsSaverRepository = metricsSaverRepository;
         }
-        public Task<EmbedParams> GetAsync(int projectId)
+
+        public async Task<ProjectReport?> AddReportAsync(ProjectReport report)
         {
-            throw new NotImplementedException();
+            var result = await _dbContext.ProjectReports.AddAsync(report);
+
+            await _dbContext.SaveChangesAsync();
+
+            return result.Entity;
         }
-        public async Task<ProjectReport?> GetByIdAsync(Guid reportId)
+
+        public async Task<ProjectReport?> GetByGuidAsync(Guid reportGuid)
         {
-            var entity = await _dbContext.ProjectReports.Include(r => r.Projects).SingleOrDefaultAsync(r => r.PowerBiId == reportId);
+            var entity = await _dbContext.ProjectReports.Include(r => r.Projects).SingleOrDefaultAsync(r => r.PowerBiId == reportGuid);
 
             return entity;
         }

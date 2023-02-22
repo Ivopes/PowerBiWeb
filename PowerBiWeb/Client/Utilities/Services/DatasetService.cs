@@ -23,11 +23,11 @@ namespace PowerBiWeb.Client.Utilities.Services
 
             if (addNew)
             {
-                response = await _httpClient.PostAsync($"api/datasets/new/{dataset.MetricFilesId}/{dataset.Name}", null);
+                response = await _httpClient.PostAsync($"api/datasets/new/{dataset.MetricFilesId}", null);
             }
             else
             {
-                response = await _httpClient.PostAsync($"api/datasets/existing/{dataset.MetricFilesId}", null);
+                response = await _httpClient.PostAsJsonAsync($"api/datasets/existing", dataset);
             }
 
             if (response.IsSuccessStatusCode)

@@ -39,19 +39,19 @@ namespace PowerBiWeb.Server.Controllers
 
             return Ok();
         }
-        [HttpPost("new/{datasetId}/{name}")]
-        public async Task<ActionResult<DatasetDTO>> AddDatasetById([FromRoute] string datasetId, [FromRoute] string name)
+        [HttpPost("new/{datasetId}")]
+        public async Task<ActionResult<DatasetDTO>> AddDatasetById([FromRoute] string datasetId)
         {
-            var result = await _datasetService.AddDatasetByIdAsync(datasetId, name);
+            var result = await _datasetService.AddDatasetByIdAsync(datasetId);
 
             if (result is null) return NotFound("Dataset was not found");
 
             return Ok(result);
         }
-        [HttpPost("existing/{datasetId}/{datasetPowerBiId}")]
-        public async Task<ActionResult<DatasetDTO>> AddExistingDatasetById([FromRoute] string datasetId, [FromRoute] Guid datasetGuid)
+        [HttpPost("existing")]
+        public async Task<ActionResult<DatasetDTO>> AddExistingDatasetById([FromBody] DatasetDTO dataset)
         {
-            var result = await _datasetService.AddExistingDatasetByIdAsync(datasetId, datasetGuid);
+            var result = await _datasetService.AddExistingDatasetByIdAsync(dataset);
 
             if (result is null) return NotFound("Dataset was not found");
 

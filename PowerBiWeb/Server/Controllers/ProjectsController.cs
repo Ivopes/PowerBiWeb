@@ -42,7 +42,6 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<ProjectDTO>> Post([FromBody] ProjectDTO project)
         {
-            //TODO: Pridat moznost nahrat uz hotove reporty z PowerBI a vypnout automaticke nahrani z MetrikAPI
             return Ok(await _projectService.PostAsync(project));
         }
         [HttpPost("{projectId}/report")]

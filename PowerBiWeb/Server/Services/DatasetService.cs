@@ -26,7 +26,7 @@ namespace PowerBiWeb.Server.Services
             _logger = logger;
         }
 
-        public async Task<DatasetDTO?> AddDatasetByIdAsync(string datasetId, string name)
+        public async Task<DatasetDTO?> AddDatasetByIdAsync(string datasetId)
         {
             PBIDataset dataset;
 
@@ -79,32 +79,32 @@ namespace PowerBiWeb.Server.Services
 
             return dataset.ToDTO();
         }
-        public async Task<DatasetDTO?> AddExistingDatasetByIdAsync(string datasetId, Guid datasetGuid)
+        public async Task<DatasetDTO?> AddExistingDatasetByIdAsync(DatasetDTO dataset)
         {
-            PBIDataset dataset;
+            PBIDataset newDataset;
 
             // nacist definici a pripravit ji k vytvoreni v DB
-            MetricDefinition? definition = await _metricsApiLoaderRepository.GetMetricDefinition(datasetId);
+            MetricDefinition? definition = await _metricsApiLoaderRepository.GetMetricDefinition(dataset.MetricFilesId);
 
             if (definition is null)
             {
                 throw new MessageException { ExcptMessage = "Dataset could not been created. Check the dataset ID" };
             }
 
-            dataset = new PBIDataset
+            newDataset = new PBIDataset
             {
                 Name = definition.Name,
-                PowerBiId = datasetGuid,
-                MetricFilesId = datasetId,
+                PowerBiId = dataset.PowerBiId,
+                MetricFilesId = dataset.MetricFilesId,
                 ColumnNames = definition.ColumnNames,
                 ColumnTypes = definition.ColumnTypes,
                 Measures = definition.Measures,
                 MeasureDefinitions = definition.MeasureDefinitions
             };
 
-            await _datasetRepository.PostAsync(dataset);
+            await _datasetRepository.PostAsync(newDataset);
 
-            return dataset.ToDTO();
+            return newDataset.ToDTO();
         }
 
         public async Task<bool> DeleteByIdAsync(int id)

@@ -39,5 +39,14 @@ namespace PowerBiWeb.Server.Controllers
 
             return Ok(result);
         }
+        [HttpPost("clone/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> CloneReportAsync(int projectId, Guid reportId)
+        {
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+
+            var result = await _reportService.CloneReportAsync(projectId, reportId);
+
+            return Ok(result);
+        }
     }
 }

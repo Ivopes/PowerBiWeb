@@ -68,5 +68,30 @@ namespace PowerBiWeb.Client.Utilities.Services
                 Value = null
             };
         }
+        public async Task<HttpResponse> CloneReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        {
+            var response = await _httpClient.PostAsync($"api/reports/clone/{projectId}/{reportId}", null, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var report = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
+                    return new()
+                    {
+                        IsSuccess = true,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
     }
 }

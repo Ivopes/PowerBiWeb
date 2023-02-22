@@ -7,7 +7,9 @@
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
 @inject IProjectService _projectService
+@inject IReportService _reportService
 @inject ILogger<ProjectDetail> _logger
+@implements IDisposable
 
 
 
@@ -73,7 +75,8 @@ else if (project is not null)
                                 <TableHeaderCell></TableHeaderCell>
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
-                                        <TableHeaderCell></TableHeaderCell>
+                                    <TableHeaderCell></TableHeaderCell>
+                                    <TableHeaderCell></TableHeaderCell>
                                     }
                             </TableRow>
                         </TableHeader>
@@ -82,6 +85,7 @@ else if (project is not null)
                             {
                                 var report = project.Reports.ElementAt(i);
                                 string reportId = project.Reports.ElementAt(i).Id.ToString();
+                                Guid reportIdGuid = project.Reports.ElementAt(i).Id;
                                 var j = i;
                                 <TableRow>
                                     <TableRowCell>@report.Name</TableRowCell>
@@ -92,6 +96,11 @@ else if (project is not null)
                                     </TableRowCell>
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
+                                        <TableRowCell>
+                                            <Button Color="Color.Danger" Clicked="async () => await CloneReport(reportIdGuid)">
+                                                <Icon Name="IconName.Delete" /> Clone
+                                            </Button>
+                                        </TableRowCell>
                                         <TableRowCell>
                                             <Button Color="Color.Danger" Clicked="() => ShowRemoveReportModal(j)">
                                                 <Icon Name="IconName.Delete" /> Remove
@@ -376,6 +385,8 @@ else if (project is not null)
     [Parameter]
     public int Id { get; set; }
 
+    private CancellationTokenSource cts = new CancellationTokenSource();
+
     private ProjectDTO? project;
     private ProjectRoleDTO myRole;
     // reference to the modal component
@@ -617,6 +628,8 @@ else if (project is not null)
     }
     private async Task ChangeProjectSettings()
     {
+        if (project is null) return;
+
         HttpResponse respose = await _projectService.EditProjectSettings(project);
 
         if (respose.IsSuccess)
@@ -708,5 +721,24 @@ else if (project is not null)
     private void GoToProjects()
     {
         Navigation.NavigateTo("/projects");
+    }
+    private async Task CloneReport(Guid reportId)
+    {
+        HttpResponse respose = await _reportService.CloneReportAsync(Id, reportId, cts.Token);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report cloned");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(respose.ErrorMessage);
+        }
+    }
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }

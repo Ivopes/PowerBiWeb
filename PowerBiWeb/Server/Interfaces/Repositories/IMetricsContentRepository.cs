@@ -21,5 +21,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task UploadMetric(PBIDataset dataset, List<MetricPortion> metrics);
         Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition);
         Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data);
+        Task<Report> CloneReportAsync(Guid reportId, string reportNewName);
     }
 }
