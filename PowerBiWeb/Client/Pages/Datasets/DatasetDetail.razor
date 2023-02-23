@@ -6,9 +6,9 @@
 @inject IToastService toastService
 @inject NavigationManager navigation
 
-<div class="d-flex flex-row" style="margin: 15px">
+<div class="d-flex flex-row mt-2 mb-3">
     <NavLink href="/datasets">
-        <button type="button" class="btn btn-outline-secondary"><Icon Name="IconName.ArrowLeft" /> Back</button>
+        <button type="button" class="btn btn-primary mr-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
     </NavLink><br />
 
     @if (false)
@@ -30,7 +30,11 @@
 }
 else if (dataset is not null)
 {
-    <h3>@dataset.Name</h3>
+        <Card Background="Background.Light" Class="mb-2">
+        <CardBody>
+            <CardTitle>
+                <h3 class="mt-1 mb-3">@dataset.Name</h3>
+            </CardTitle>
     <Field>
         <FieldLabel>Dataset identificator</FieldLabel>
         <TextEdit ReadOnly Text="@dataset.MetricFilesId" />
@@ -40,7 +44,8 @@ else if (dataset is not null)
         <TextEdit ReadOnly Text="@dataset.PowerBiId.ToString()" />
     </Field>
 
-    <Table>
+
+    <Table Background="Background.Light">
         <TableHeader>
             <TableRow>
                 <TableHeaderCell>Column name</TableHeaderCell>
@@ -79,6 +84,9 @@ else if (dataset is not null)
             }
         </TableBody>
     </Table>
+
+    </CardBody>
+    </Card>
 }
 
 @code {

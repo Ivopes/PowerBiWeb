@@ -6,11 +6,15 @@
 @inject IToastService toastService
 @inject NavigationManager navigation
 
-<h3 id="p">Datasets</h3>
+<h3 class="mb-3">Datasets</h3>
 
-<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddModal()">Add new</button>
+<div class="d-flex flex-row mb-3">
 
-<button type="button" class="btn btn-primary" @onclick="async () => await ShowAddExistingModal()">Add existing</button>
+    <button type="button" class="btn btn-primary mr-2" @onclick="async () => await ShowAddModal()">Add new</button>
+
+    <button type="button" class="btn btn-primary mx-2" @onclick="async () => await ShowAddExistingModal()">Add existing</button>
+
+</div>
 
 @if (loading)
 {
@@ -18,37 +22,39 @@
 }
 else if (_datasets is not null)
 {
-        <div>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Dataset name</TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                @for (int i = 0; i < _datasets.Count; i++)
-                {
-                    int j = i;
-                    DatasetDTO dataset = _datasets.ElementAt(j);
+    <Card Background="Background.Light">
+        <CardBody>
+            <Table>
+                <TableHeader ThemeContrast="ThemeContrast.Light">
                     <TableRow>
-                        <TableRowHeader>@dataset.Name</TableRowHeader>
-                        <TableRowCell>
-                            <Button Color="Color.Secondary" Clicked="() => GoToDetail(dataset.Id)">
-                                <Icon Name="IconName.ArrowRight" /> Show detail
-                            </Button>
-                        </TableRowCell>
-                        <TableRowCell>
-                            <Button Color="Color.Danger" Clicked="() => ShowDeleteDataset(dataset.Id)">
-                                <Icon Name="IconName.Delete" /> Delete
-                            </Button>
-                        </TableRowCell>
+                        <TableHeaderCell>Dataset name</TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
                     </TableRow>
-                }
-            </TableBody>
-        </Table>
-        </div>
+                </TableHeader>
+                <TableBody>
+                    @for (int i = 0; i < _datasets.Count; i++)
+                    {
+                        int j = i;
+                        DatasetDTO dataset = _datasets.ElementAt(j);
+                        <TableRow>
+                            <TableRowHeader>@dataset.Name</TableRowHeader>
+                            <TableRowCell>
+                                <Button Color="Color.Secondary" Clicked="() => GoToDetail(dataset.Id)">
+                                    <Icon Name="IconName.ArrowRight" /> Show detail
+                                </Button>
+                            </TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Danger" Clicked="() => ShowDeleteDataset(dataset.Id)">
+                                    <Icon Name="IconName.Delete" /> Delete
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+        </CardBody>
+    </Card>
 }
 
 <Modal @ref="modalAddNewRef">

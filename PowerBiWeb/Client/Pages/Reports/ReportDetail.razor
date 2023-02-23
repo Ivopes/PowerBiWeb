@@ -8,23 +8,23 @@
 @inject NavigationManager navigation
 @implements IDisposable
 
+<NavLink href=@($"/projects/{projectId}")>
+    <button type="button" class="btn btn-primary mb-3"><Icon Name="IconName.ArrowLeft" /> Back</button>
+</NavLink>
+
  @if (report is not null)
 {
     <h3>@report.Name</h3>
     <h5>@report.PowerBiName</h5>
 }
 
-<NavLink href=@($"/projects/{projectId}")>
-    <button type="button" class="btn btn-primary m-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
-</NavLink>
-<br />
 
 @if (loading)
 {
     <div>Loading...</div>
 }
 
-<div @ref="@PowerBIElement" style="width:100%;height:75vh;" />
+<div @ref="@PowerBIElement" style="width:100%;height:75vh;" class="mt-3"/>
 
 @code {
     [Parameter]

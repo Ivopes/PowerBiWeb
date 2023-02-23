@@ -6,7 +6,8 @@
 @inject AuthenticationStateProvider authProvider
 @inject IToastService toastService;
 
-<h3>AccDetail</h3>
+<div class="d-flex justify-content-center align-items-center flex-column">
+<Card Style="width: 65vh" Background="Background.Light">
 
 @if (loading)
 {
@@ -14,7 +15,12 @@
 }
 else if (detail is not null)
 {
-  
+  <CardBody>
+        <CardTitle>
+            <h3>
+                Account detail
+            </h3>
+        </CardTitle>
         <Field>
             <FieldLabel>First name</FieldLabel>
             <TextEdit ReadOnly @bind-Text="detail.Firstname" />
@@ -32,9 +38,11 @@ else if (detail is not null)
             <FieldLabel>Email</FieldLabel>
             <TextEdit ReadOnly @bind-Text="detail.Email" />
         </Field>
-  
-}
 
+    </CardBody>
+}
+</Card>
+</div>
 
 @code {
     UserDetail? detail;
