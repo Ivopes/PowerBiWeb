@@ -24,23 +24,22 @@
         <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
             <Icon Name="IconName.Sync" /> Reload
         </Button>
+        @if (myRole <= ProjectRoleDTO.Editor)
+        {
+            <Button Color="Color.Secondary" Clicked="async () => await UpdateContent()" class="mx-2">
+                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI by prefix
+            </Button>
+
+            <Button Color="Color.Secondary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="mx-2">
+                    <Icon Name="IconName.Add" /> Add from PowerBI manually
+            </Button>
+        }
         @if (myRole <= ProjectRoleDTO.Creator)
         {
             <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">
                 <Icon Name="IconName.Delete" /> Delete project
             </Button>
         }
-        @if (myRole <= ProjectRoleDTO.Editor)
-        {
-            <Button Color="Color.Primary" Clicked="async () => await UpdateContent()" class="mx-2">
-                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI by prefix
-            </Button>
-
-            <Button Color="Color.Primary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="mx-2">
-                    <Icon Name="IconName.Add" /> Add from PowerBI manually
-            </Button>
-        }
-
         //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
@@ -98,13 +97,13 @@ else if (project is not null)
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
                                         <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="async () => await CloneReport(reportIdGuid)">
-                                                <Icon Name="IconName.Delete" /> Clone
+                                            <Button Color="Color.Secondary" Clicked="async () => await CloneReport(reportIdGuid)">
+                                                <Icon Name="IconName.PlusSquare" /> Clone
                                             </Button>
                                         </TableRowCell>
                                         <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="async () => ShowRebindModal(reportIdGuid)">
-                                                <Icon Name="IconName.Delete" /> Rebind
+                                            <Button Color="Color.Secondary" Clicked="async () => await ShowRebindModal(reportIdGuid)">
+                                                <Icon Name="IconName.Book" /> Rebind
                                             </Button>
                                         </TableRowCell>
                                         <TableRowCell>
@@ -388,20 +387,22 @@ else if (project is not null)
 </Modal>          
 
 
-  <Modal>
-    <ModalHeader>
-        <ModalTitle>Rebind report</ModalTitle>
-    </ModalHeader>
-    <ModalBody>
-        <div class="form-group">
-            <label>Dataset Id</label>
-            <InputText class="form-control" @bind-Value="rebindDatasetId" />
-        </div>
-    </ModalBody>
-  <ModalFooter>
-      <Button Color="Color.Secondary" Clicked="HideRebindModal">Cancel</Button>
-      <Button Color="Color.Primary" Clicked="async () => await RebindReport(rebindReportId, rebindDatasetId)">Add</Button>
-  </ModalFooter>
+  <Modal @ref="modalRebindReportRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Rebind report</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label>Dataset Id</label>
+                <InputText class="form-control" @bind-Value="rebindDatasetId" />
+            </div>
+        </ModalBody>
+      <ModalFooter>
+          <Button Color="Color.Secondary" Clicked="HideRebindModal">Cancel</Button>
+          <Button Color="Color.Primary" Clicked="async () => await RebindReport(rebindReportId, rebindDatasetId)">Add</Button>
+      </ModalFooter>
+  </ModalContent>
 </Modal>
 
 
@@ -433,7 +434,7 @@ else if (project is not null)
     private int deleteIndex = -1;
     private Guid rebindReportId = Guid.Empty;
     private string rebindDatasetId = string.Empty;
-    
+
     private bool loading = true;
 
     private bool addReport = true; //false = is dashboard; true = is report
@@ -531,8 +532,8 @@ else if (project is not null)
         rebindReportId = Guid.Empty;
         await modalRebindReportRef!.Hide();
     }
-    
-    
+
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -791,6 +792,7 @@ else if (project is not null)
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Report rebind complete");
+            await HideRebindModal();
             await LoadData();
         }
         else

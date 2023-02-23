@@ -92,6 +92,7 @@ namespace PowerBiWeb.Server.Repositories
 
                         if (entityInDb is not null)
                         {
+                            entityInDb.PowerBIName = r.Name;
                             if (!entityInDb.Projects.Contains(projectEntity))
                             {
                                 entityInDb.Projects.Add(projectEntity);
@@ -143,6 +144,7 @@ namespace PowerBiWeb.Server.Repositories
 
                 if (entityInDb is not null)
                 {
+                    entityInDb.PowerBIName = reportResponse.Name;
                     if (!entityInDb.Projects.Contains(projectEntity))
                     {
                         entityInDb.Projects.Add(projectEntity);
@@ -441,15 +443,20 @@ namespace PowerBiWeb.Server.Repositories
             }
             return null;
         }
-        public async Task<Report> CloneReportAsync(Guid reportId, string reportNewName)
+        public async Task<Report?> CloneReportAsync(Guid reportId, string reportNewName)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             var request = new CloneReportRequest(reportNewName);
 
-            var report = await pbiClient.Reports.CloneReportInGroupAsync(_workspaceId, reportId, request);
+            var result = await pbiClient.Reports.CloneReportInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+            if (!result.Response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Error while rebinding report :{0}", await result.Response.Content.ReadAsStringAsync());
+                return null;
+            }
 
-            return report;
+            return result.Body;
         }
 
         public async Task<bool> RebindReportAsync(Guid reportId, Guid datasetId)

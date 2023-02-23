@@ -38,13 +38,20 @@ namespace PowerBiWeb.Server.Services
                 return "Report is not part of this project";
             }
 
-            var createdR = await _metricsSaverRepository.CloneReportAsync(reportId, report.PowerBIName);
+            var createdR = await _metricsSaverRepository.CloneReportAsync(reportId, report.PowerBIName + " - Cloned");
+
+            if (createdR is null)
+            {
+                _logger.LogError("Could not clone report {0}", reportId);
+                return "Could not clone project";
+            }
 
             var newR = new ProjectReport
             {
                 Name = report.Name + " - Cloned",
                 PowerBiId = createdR.Id,
-                PowerBIName = report.PowerBIName,
+                PowerBIName = createdR.Name,
+                WorkspaceId = report.WorkspaceId,
                 Projects = new List<Models.Entities.Project> { project }
             };
 
