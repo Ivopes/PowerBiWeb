@@ -52,6 +52,15 @@ namespace PowerBiWeb.Server.Services
 
             return string.Empty;
         }
+        public async Task<string> RebindReportAsync(int projectId, Guid reportId, Guid datasetId)
+        {
+            if (await _metricsSaverRepository.RebindReportAsync(reportId, datasetId))
+            {
+                return string.Empty;
+            }
+
+            return "Could not rebind report. Check the dataset ID and dataset format";
+        }
         public async Task<EmbedContentDTO?> GetByIdAsync(int projectId, Guid reportId)
         {
             // Check if report belongs to project
@@ -73,5 +82,6 @@ namespace PowerBiWeb.Server.Services
         {
             return await _reportRepository.UpdateReportsAsync(projectId);
         }
+
     }
 }

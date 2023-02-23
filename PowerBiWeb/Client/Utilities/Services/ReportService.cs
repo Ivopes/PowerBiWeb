@@ -75,7 +75,6 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 try
                 {
-                    var report = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
                     return new()
                     {
                         IsSuccess = true,
@@ -84,7 +83,32 @@ namespace PowerBiWeb.Client.Utilities.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "");
+                    _logger.LogError(ex, "report could not been cloned");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
+        public async Task<HttpResponse> RebindReportAsync(int projectId, Guid reportId, Guid datasetId, CancellationToken ct)
+        {
+            var response = await _httpClient.PostAsync($"api/reports/rebind/{projectId}/{reportId}/{datasetId}", null, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    return new()
+                    {
+                        IsSuccess = true,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "report could not been rebinded");
                 }
             }
 

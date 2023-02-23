@@ -103,6 +103,7 @@ namespace PowerBiWeb.Server.Repositories
                             {
                                 PowerBiId = r.Id,
                                 Name = r.Name.Substring(projectEntity.Name.Length + 1),
+                                PowerBIName = r.Name,
                                 WorkspaceId = _workspaceId,
                                 Projects = new List<Project>() { projectEntity }
                             };
@@ -450,6 +451,24 @@ namespace PowerBiWeb.Server.Repositories
 
             return report;
         }
+
+        public async Task<bool> RebindReportAsync(Guid reportId, Guid datasetId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new RebindReportRequest(datasetId.ToString());
+            
+            var result = await pbiClient.Reports.RebindReportInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+
+            if (!result.Response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Error while rebinding report :{0}", await result.Response.Content.ReadAsStringAsync());
+                return false;
+            }
+            
+            return true;
+        }
+
         private async Task<Dataset?> CreateMetricDataset(PBIDataset dataset, MetricPortion metric)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);

@@ -10,5 +10,6 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId);
         Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct);
         Task<HttpResponse> CloneReportAsync(int projectId, Guid reportId, CancellationToken ct);
+        Task<HttpResponse> RebindReportAsync(int projectId, Guid reportId, Guid datasetId, CancellationToken ct);
     }
 }

@@ -75,8 +75,9 @@ else if (project is not null)
                                 <TableHeaderCell></TableHeaderCell>
                                     @if (myRole <= ProjectRoleDTO.Editor)
                                     {
-                                    <TableHeaderCell></TableHeaderCell>
-                                    <TableHeaderCell></TableHeaderCell>
+                                        <TableHeaderCell></TableHeaderCell>
+                                        <TableHeaderCell></TableHeaderCell>
+                                        <TableHeaderCell></TableHeaderCell>
                                     }
                             </TableRow>
                         </TableHeader>
@@ -99,6 +100,11 @@ else if (project is not null)
                                         <TableRowCell>
                                             <Button Color="Color.Danger" Clicked="async () => await CloneReport(reportIdGuid)">
                                                 <Icon Name="IconName.Delete" /> Clone
+                                            </Button>
+                                        </TableRowCell>
+                                        <TableRowCell>
+                                            <Button Color="Color.Danger" Clicked="async () => ShowRebindModal(reportIdGuid)">
+                                                <Icon Name="IconName.Delete" /> Rebind
                                             </Button>
                                         </TableRowCell>
                                         <TableRowCell>
@@ -379,7 +385,27 @@ else if (project is not null)
             <Button Color="Color.Primary" Clicked="@AddPowerBIContent">Add</Button>
         </ModalFooter>
     </ModalContent>
+</Modal>          
+
+
+  <Modal>
+    <ModalHeader>
+        <ModalTitle>Rebind report</ModalTitle>
+    </ModalHeader>
+    <ModalBody>
+        <div class="form-group">
+            <label>Dataset Id</label>
+            <InputText class="form-control" @bind-Value="rebindDatasetId" />
+        </div>
+    </ModalBody>
+  <ModalFooter>
+      <Button Color="Color.Secondary" Clicked="HideRebindModal">Cancel</Button>
+      <Button Color="Color.Primary" Clicked="async () => await RebindReport(rebindReportId, rebindDatasetId)">Add</Button>
+  </ModalFooter>
 </Modal>
+
+
+
 
 @code {
     [Parameter]
@@ -399,12 +425,15 @@ else if (project is not null)
     private int removeDashboardIndex = -1;
     private Modal? modalConfirmRef;
     private Modal? modalAddPowerBiRef;
+    private Modal? modalRebindReportRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
     private string editEmail = string.Empty;
     private int deleteIndex = -1;
-
+    private Guid rebindReportId = Guid.Empty;
+    private string rebindDatasetId = string.Empty;
+    
     private bool loading = true;
 
     private bool addReport = true; //false = is dashboard; true = is report
@@ -490,6 +519,20 @@ else if (project is not null)
         editRole = (int) project!.Users.ElementAt(index).Role;
         editEmail = project!.Users.ElementAt(index).Email;
     }
+
+    private async Task ShowRebindModal(Guid reportId)
+    {
+        rebindReportId = reportId;
+        await modalRebindReportRef!.Show();
+    }
+
+    private async Task HideRebindModal()
+    {
+        rebindReportId = Guid.Empty;
+        await modalRebindReportRef!.Hide();
+    }
+    
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -729,6 +772,25 @@ else if (project is not null)
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Report cloned");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(respose.ErrorMessage);
+        }
+    }
+    private async Task RebindReport(Guid reportId, string datasetId)
+    {
+        if (!Guid.TryParse(datasetId, out var datasetGuid))
+        {   
+            toastService.ShowError("Wrong Id format");
+            return;
+        }
+        HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetGuid, cts.Token);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report rebind complete");
             await LoadData();
         }
         else

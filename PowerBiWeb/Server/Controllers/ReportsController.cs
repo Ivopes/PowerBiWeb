@@ -48,5 +48,16 @@ namespace PowerBiWeb.Server.Controllers
 
             return Ok(result);
         }
+        [HttpPost("rebind/{projectId}/{reportId}/{datasetId}")]
+        public async Task<ActionResult<string>> RebindReportAsync(int projectId, Guid reportId, Guid datasetId)
+        {
+            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+
+            var result = await _reportService.RebindReportAsync(projectId, reportId, datasetId);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+            
+            return BadRequest(result);
+        }
     }
 }
