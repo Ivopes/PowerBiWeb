@@ -40,20 +40,16 @@
                 <Icon Name="IconName.Delete" /> Delete project
             </Button>
         }
-        //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
 
-@if (loading)
-{
-    <div> LOADING... </div>
-}
-else if (project is not null)
+<LoadingIndicator @bind-Visible="loading">
+@if (project is not null)
 {
     <Card Background="Background.Light">
         <CardBody>
             <CardTitle>
-                <h3 class="mt-1 mb-3">@project.Name</h3>
+                <h3 class="mt-1 mb-3">@project!.Name</h3>
             </CardTitle>
 
             <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged" Style="mt-3">
@@ -240,7 +236,7 @@ else if (project is not null)
         </CardBody>
     </Card>
 }
-
+</LoadingIndicator>
 
 @*
     Modal add user window
@@ -391,8 +387,7 @@ else if (project is not null)
     </ModalContent>
 </Modal>          
 
-
-  <Modal @ref="modalRebindReportRef">
+ <Modal @ref="modalRebindReportRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Rebind report</ModalTitle>
@@ -409,9 +404,6 @@ else if (project is not null)
       </ModalFooter>
   </ModalContent>
 </Modal>
-
-
-
 
 @code {
     [Parameter]
@@ -575,6 +567,7 @@ else if (project is not null)
             Role = (ProjectRoleDTO)addRole,
             UserEmail = addEmail,
         };
+
         var response = await _projectService.AddUserToProject(dto);
         if (response.IsSuccess)
         {

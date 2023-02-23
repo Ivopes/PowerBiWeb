@@ -10,15 +10,21 @@
 
 <h3>Projects</h3>
 
-<button type="button" class="btn btn-primary mt-2 mb-3" @onclick="@ModalShow">Create new</button>
+<div class="d-flex flex-row mt-2 mb-3">
+    <Button Color="Color.Primary" class="mr-2" @onclick="@ModalShow">Create new</Button>
+    @if (_projects is not null)
+    {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadProjects()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
+    }
+</div>
 
-@if (loading)
+<LoadingIndicator @bind-Visible="loading">
+@if (_projects is not null)
 {
-    <div>Loading...</div>  
-}
-else if (_projects is not null)
-{
-    <Card Background="Background.Light">
+    
+        <Card Background="Background.Light">
         <CardBody>
             <Table>
                 <TableHeader ThemeContrast="ThemeContrast.Light">
@@ -45,8 +51,9 @@ else if (_projects is not null)
             </Table>
         </CardBody>
     </Card>
+   
 }
-
+ </LoadingIndicator>
 @if (showModal)
 {
     <AddProject OnClose="@ModalOk"></AddProject>
@@ -54,6 +61,7 @@ else if (_projects is not null)
 
 
 @code {
+
     private IJSObjectReference? module;
     private AddProject? ModalWindow { get; set; }
     private bool showModal;
@@ -69,6 +77,7 @@ else if (_projects is not null)
         if (response.IsSuccess)
         {
             _projects = response.Value!.ToList();
+            toastService.ShowSuccess("Projects loaded");
         }
         else
         {
