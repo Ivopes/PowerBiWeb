@@ -67,7 +67,7 @@
     private bool showModal;
     void ModalShow() => showModal = true;
     private List<ProjectDTO>? _projects = null;
-    private bool loading = true;
+    private bool loading;
 
     private async Task LoadProjects()
     {
@@ -91,20 +91,9 @@
         showModal = false;
         if (project is not null)
         {
-            /*
-            var response = await httpClient.PostAsJsonAsync("api/projects", project);
-                if (response.IsSuccessStatusCode)
-                {
-                var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
-                toastService.ShowSuccess("Project added");
-                await LoadProjects();
-                }
-                else
-                {
-                toastService.ShowError("Could not create project");
-            }
-            */
+            loading = true;
             var response = await _projectService.CreateProject(project);
+            await Task.Delay(2000);
             if (response.IsSuccess)
             {
                 var p = response.Value;
@@ -115,6 +104,7 @@
             {
                 toastService.ShowError("Could not create project");
             }
+            loading = false;
         }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)

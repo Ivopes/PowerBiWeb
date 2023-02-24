@@ -6,47 +6,44 @@
 @inject AuthenticationStateProvider authProvider
 @inject IToastService toastService;
 
-<div class="d-flex justify-content-center align-items-center flex-column">
-<Card Style="width: 65vh" Background="Background.Light">
-
-@if (loading)
-{
-    <div>Loading...</div>
-}
-else if (detail is not null)
-{
-  <CardBody>
-        <CardTitle>
-            <h3>
-                Account detail
-            </h3>
-        </CardTitle>
-        <Field>
-            <FieldLabel>First name</FieldLabel>
-            <TextEdit ReadOnly @bind-Text="detail.Firstname" />
-        </Field>
-        <Field >
-            <FieldLabel>Last name</FieldLabel>
-            <TextEdit ReadOnly @bind-Text="detail.Lastname" />
+<LoadingIndicator @bind-Visible="loading" Style="height:50vh">
+    <div class="d-flex justify-content-center align-items-center flex-column">
+        <Card Style="width: 65vh" Background="Background.Light">
+            @if (detail is not null)
+        {
+          <CardBody>
+                <CardTitle>
+                    <h3>
+                        Account detail
+                    </h3>
+                </CardTitle>
+                <Field>
+                    <FieldLabel>First name</FieldLabel>
+                    <TextEdit ReadOnly @bind-Text="detail.Firstname" />
+                </Field>
+                <Field >
+                    <FieldLabel>Last name</FieldLabel>
+                    <TextEdit ReadOnly @bind-Text="detail.Lastname" />
  
-        </Field>
-        <Field>
-            <FieldLabel>Username</FieldLabel>
-            <TextEdit ReadOnly @bind-Text="detail.Username" />
-        </Field>
-        <Field >
-            <FieldLabel>Email</FieldLabel>
-            <TextEdit ReadOnly @bind-Text="detail.Email" />
-        </Field>
+                </Field>
+                <Field>
+                    <FieldLabel>Username</FieldLabel>
+                    <TextEdit ReadOnly @bind-Text="detail.Username" />
+                </Field>
+                <Field >
+                    <FieldLabel>Email</FieldLabel>
+                    <TextEdit ReadOnly @bind-Text="detail.Email" />
+                </Field>
 
-    </CardBody>
-}
-</Card>
-</div>
+            </CardBody>
+        }
+        </Card>
+    </div>
+</LoadingIndicator>
 
 @code {
     UserDetail? detail;
-    private bool loading = true;
+    private bool loading;
     protected override async Task OnInitializedAsync()
     {
         loading = true;

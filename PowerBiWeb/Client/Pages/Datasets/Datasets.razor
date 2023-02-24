@@ -8,19 +8,23 @@
 
 <h3 class="mb-3">Datasets</h3>
 
-<div class="d-flex flex-row mb-3">
+<div class="mb-3">
 
-    <button type="button" class="btn btn-primary mr-2" @onclick="async () => await ShowAddModal()">Add new</button>
+    <Button Color="Color.Primary" class="mr-2" @onclick="async () => await ShowAddModal()">Add new</Button>
 
-    <button type="button" class="btn btn-primary mx-2" @onclick="async () => await ShowAddExistingModal()">Add existing</button>
+    <Button Color="Color.Primary" class="mx-2" @onclick="async () => await ShowAddExistingModal()">Add existing</Button>
+
+    @if (_datasets is not null)
+    {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
+    }
 
 </div>
 
-@if (loading)
-{
-        <div>Loading...</div>  
-}
-else if (_datasets is not null)
+<LoadingIndicator @bind-Visible="loading">
+@if (_datasets is not null)
 {
     <Card Background="Background.Light">
         <CardBody>
@@ -56,6 +60,7 @@ else if (_datasets is not null)
         </CardBody>
     </Card>
 }
+</LoadingIndicator>
 
 <Modal @ref="modalAddNewRef">
     <ModalContent Centered>
@@ -117,7 +122,7 @@ else if (_datasets is not null)
     private Modal? modalAddExistingRef;
     private Modal? modalConfirmRef;
     private DatasetDTO addDataset = new();
-    private bool loading = true;
+    private bool loading;
     private string existingGuid = string.Empty;
     private int deleteId = -1;
 

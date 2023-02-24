@@ -22,15 +22,10 @@
 
 </div>
 
-@if (loading)
+<LoadingIndicator @bind-Visible="loading">
+@if (dataset is not null)
 {
-    <div>
-        Loading...
-    </div>
-}
-else if (dataset is not null)
-{
-        <Card Background="Background.Light" Class="mb-2">
+    <Card Background="Background.Light" Class="mb-2">
         <CardBody>
             <CardTitle>
                 <h3 class="mt-1 mb-3">@dataset.Name</h3>
@@ -88,13 +83,14 @@ else if (dataset is not null)
     </CardBody>
     </Card>
 }
+</LoadingIndicator>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
     private DatasetDTO? dataset;
-    private bool loading = true;
+    private bool loading;
 
     protected override async Task OnInitializedAsync()
     {

@@ -30,7 +30,7 @@
                 <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI by prefix
             </Button>
 
-            <Button Color="Color.Secondary" Clicked="async () => await modalAddPowerBiRef!.Show()" class="mx-2">
+            <Button Color="Color.Secondary" Clicked="ShowAddPowerBIModal" class="mx-2">
                     <Icon Name="IconName.Add" /> Add from PowerBI manually
             </Button>
         }
@@ -432,7 +432,7 @@
     private Guid rebindReportId = Guid.Empty;
     private string rebindDatasetId = string.Empty;
 
-    private bool loading = true;
+    private bool loading;
 
     private bool addReport = true; //false = is dashboard; true = is report
     private string addContentId = string.Empty;
@@ -483,6 +483,9 @@
     }
     private Task ShowAddPowerBIModal()
     {
+        addReport = true;
+        addContentId = string.Empty;
+        addContentName = string.Empty;
         return modalAddPowerBiRef!.Show();
     }
     private Task HideAddPowerBIModal()
@@ -561,6 +564,7 @@
     }
     private async Task AddUserToProject()
     {
+        loading = true;
         var dto = new UserToProjectDTO
         {
             ProjectId = Id,
@@ -579,9 +583,11 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task EditUser()
     {
+        loading = true;
         var dto = new UserToProjectDTO
             {
                 ProjectId = Id,
@@ -599,6 +605,7 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task RemoveUser()
     {
@@ -631,8 +638,10 @@
     }
     private async Task UpdateContent()
     {
+        loading = true;
         await UpdateReports();
         await UpdateDashboards();
+        loading = false;
     }
     private async Task UpdateReports()
     {
@@ -672,8 +681,8 @@
     {
         if (project is null) return;
 
+        loading = true;
         HttpResponse respose = await _projectService.EditProjectSettings(project);
-
         if (respose.IsSuccess)
         {
             toastService.ShowSuccess("Changes saved");
@@ -683,6 +692,8 @@
         {
             toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
         }
+        loading = false;
+
     }
     private async Task AddPowerBIContent()
     {
@@ -697,6 +708,7 @@
         content.Id = id;
         content.Name = addContentName;
 
+        loading = true;
         if (addReport)
         {
             respose = await _projectService.AddPowerBiReport(Id, content);
@@ -729,6 +741,7 @@
                 toastService.ShowError(respose.ErrorMessage);
             }
         }
+        loading = false;
     }
     private async Task RemoveReport()
     {
