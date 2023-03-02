@@ -14,14 +14,28 @@
 
  @if (report is not null)
 {
-    <h3>@report.Name</h3>
-    <h5>@report.PowerBiName</h5>
+    <Card Background="Background.Light">
+        <CardBody>
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Report name</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is10">
+                    <TextEdit ReadOnly @bind-Text="report.Name" />
+                </FieldBody>
+            </Field>
+            <Field Horizontal>
+                <FieldLabel ColumnSize="ColumnSize.Is2">Report power BI name</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is10">
+                    <TextEdit ReadOnly @bind-Text="report.PowerBiName" />
+                </FieldBody>
+            </Field>
+        </CardBody>
+    </Card>
 }
 
 <LoadingIndicator @bind-Visible="loading">
 </LoadingIndicator>
 
-<div @ref="@PowerBIElement" style="width:100%;height:75vh;" class="mt-3"/>
+<div @ref="@PowerBIElement" style="width:100%;height:67vh;" class="mt-3"/>
 
 @code {
     [Parameter]

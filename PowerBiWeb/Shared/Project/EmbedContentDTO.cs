@@ -11,7 +11,6 @@ namespace PowerBiWeb.Shared.Project
         public string Name { get; set; } = string.Empty;
         // Name of the content
         public string PowerBiName { get; set; } = string.Empty;
-
         // Embed URL for the Power BI report
         public string EmbedUrl { get; set; } = string.Empty;
         // Embed Token for the Power BI report
