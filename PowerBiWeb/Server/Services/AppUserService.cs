@@ -1,6 +1,7 @@
 ﻿using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Shared.User;
 
 namespace PowerBiWeb.Server.Services
@@ -13,7 +14,6 @@ namespace PowerBiWeb.Server.Services
         {
             _appUserRepository = appUserRepository;
         }
-
         public async Task<string> ChangeUsernameAsync(int userId, string newUsername)
         {
             return await _appUserRepository.ChangeUsernameAsync(userId, newUsername);
@@ -56,6 +56,23 @@ namespace PowerBiWeb.Server.Services
                 AppRole = AppRoles.User
             };
             return await _appUserRepository.PostAsync(u);
+        }
+        public async Task<string> ChangePasswordAsync(int userId, ChangePasswordRequest request)
+        {
+            var user = await _appUserRepository.GetByIdAsync(userId);
+
+            if (user is null) return "User not found";
+
+            var controlHash = PasswordUtility.HashPassword(request.OldPassword, user.PasswordSalt);
+
+            if (!user.PasswordHash.SequenceEqual(controlHash))
+            {
+                return "Wrong password";
+            }
+
+            var newPasswordHash = PasswordUtility.HashPassword(request.NewPassword, user.PasswordSalt);
+
+            return await _appUserRepository.ChangePasswordAsync(userId, newPasswordHash);
         }
     }
 }

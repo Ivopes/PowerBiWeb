@@ -5,6 +5,7 @@ namespace PowerBiWeb.Server.Interfaces.Services
 {
     public interface IAppUserService
     {
+        Task<string> ChangePasswordAsync(int userId, ChangePasswordRequest request);
         Task<string> ChangeUsernameAsync(int userId, string newUsername);
         Task<IEnumerable<ApplUser>> GetAsync();
         Task<UserDetail?> GetByIdAsync(int id);

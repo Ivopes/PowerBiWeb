@@ -16,11 +16,39 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
+
+        public async Task<HttpResponse> ChangePassword(string oldPassword, string newPassword)
+        {
+            return await ChangePassword(oldPassword, newPassword, CancellationToken.None);
+        }
+
+        public async Task<HttpResponse> ChangePassword(string oldPassword, string newPassword, CancellationToken ct)
+        {
+            var request = new ChangePasswordRequest
+            {
+                NewPassword = newPassword,
+                OldPassword = oldPassword
+            };
+            var response = await _httpClient.PostAsJsonAsync($"api/appusers/password", request, ct);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            };
+            return new()
+            {
+                IsSuccess = false,
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
         public async Task<HttpResponse<UserDetail>> ChangeUsername(string username)
         {
             return await ChangeUsername(username, CancellationToken.None);
         }
-
         public async Task<HttpResponse<UserDetail>> ChangeUsername(string username, CancellationToken ct)
         {
             var response = await _httpClient.PostAsync($"api/appusers/username/{username}", null, ct);

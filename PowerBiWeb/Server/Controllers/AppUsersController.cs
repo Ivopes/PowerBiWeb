@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Services;
 using PowerBiWeb.Shared.User;
 using System.Security.Claims;
 
@@ -55,7 +56,7 @@ namespace PowerBiWeb.Server.Controllers
             return BadRequest(response);
         }
         [HttpPost("username/{newUsername}")]
-        public async Task<ActionResult<UserDetail>> PostAsync([FromRoute] string newUsername)
+        public async Task<ActionResult<UserDetail>> ChangeUsernameAsync([FromRoute] string newUsername)
         {
             if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
@@ -69,6 +70,20 @@ namespace PowerBiWeb.Server.Controllers
             var newUser = await _appUserService.GetByIdAsync(userId);
 
             return Ok(newUser);
+        }
+        [HttpPost("password")]
+        public async Task<ActionResult<UserDetail>> ChangePasswordAsync([FromBody] ChangePasswordRequest request)
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            string response = await _appUserService.ChangePasswordAsync(userId, request);
+
+            if (!string.IsNullOrEmpty(response)) return BadRequest(response);
+
+            return Ok();
         }
     }
 }

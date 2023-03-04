@@ -1,6 +1,7 @@
 ﻿@page "/account"
 @using PowerBiWeb.Client.Utilities.Auth;
 @using System.Security.Claims;
+@using PowerBiWeb.Client.Utilities.Http;
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.User;
 @inject HttpClient httpClient
@@ -38,7 +39,7 @@
                 </Field>
                 
                 <Button Color="Color.Secondary" Clicked="ShowUsernameModal">Change username</Button>
-                <Button Color="Color.Secondary">Change password</Button>
+                <Button Color="Color.Secondary" Clicked="ShowPasswordModal">Change password</Button>
 
             </CardBody>
         }
@@ -66,17 +67,43 @@
         </ModalFooter>
     </ModalContent>
 </Modal>
+<Modal @ref="modalPasswordRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Change password</ModalTitle>
+            <CloseButton />
+           
+    </ModalHeader>
+    <ModalBody>
+            <div class="form-group">
+                <label>Old password</label>
+                <InputText class="form-control" type="password" @bind-Value="oldPassword" />
+
+                <label>New password</label>
+                <InputText class="form-control" type="password" @bind-Value="newPassword" />
+
+                <label>New password again</label>
+                <InputText class="form-control" type="password" @bind-Value="newPasswordCheck" />
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HidePasswordModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="ChangePassword">Change</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
-    [CascadingParameter]
-    protected MainLayout? MainLayout { get; set; }
     UserDetail? detail;
     private bool loading;
 
     private Modal? modalUsernameRef;
+    private Modal? modalPasswordRef;
 
     private string newUsername = string.Empty;
+    private string oldPassword = string.Empty;
     private string newPassword = string.Empty;
+    private string newPasswordCheck = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,6 +134,16 @@
         newUsername = string.Empty;
         await modalUsernameRef!.Show();
     }
+    private async Task HidePasswordModal()
+    {
+        oldPassword = newPassword = newPasswordCheck = string.Empty;
+        await modalPasswordRef!.Hide();
+    }
+    private async Task ShowPasswordModal()
+    {
+        oldPassword = newPassword = newPasswordCheck = string.Empty;
+        await modalPasswordRef!.Show();
+    }
     private async Task ChangeUsername()
     {
         if (string.IsNullOrEmpty(newUsername))
@@ -131,6 +168,32 @@
                 await aProvider.RemoveToken();
             }
             await authProvider.GetAuthenticationStateAsync();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+            await HideUsernameModal();
+        }
+    }
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(newPasswordCheck))
+        {
+            toastService.ShowError("Fill the form");
+            return;
+        }
+
+        if (newPassword != newPasswordCheck)
+        {
+            toastService.ShowError("Password does not match");
+            return;
+        }
+
+        HttpResponse response = await userService.ChangePassword(oldPassword, newPassword);
+        if (response.IsSuccess)
+        {
+            await HidePasswordModal();
+            toastService.ShowSuccess("Password changed");
         }
         else
         {

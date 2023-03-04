@@ -16,6 +16,19 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<string> ChangePasswordAsync(int userId, byte[] controlHash)
+        {
+            var user = await _dbContext.AppUsers.FindAsync(userId);
+
+            if (user is null) return "User not found";
+
+            user.PasswordHash = controlHash;
+
+            await _dbContext.SaveChangesAsync();
+
+            return string.Empty;
+        }
+
         public async Task<string> ChangeUsernameAsync(int userId, string newUsername)
         {
             var user = await _dbContext.AppUsers.FindAsync(userId);

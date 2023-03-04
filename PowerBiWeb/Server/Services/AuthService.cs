@@ -16,7 +16,6 @@ namespace PowerBiWeb.Server.Services
         private readonly IConfiguration _config;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IProjectRepository _projectRepository;
-
         public AuthService(IAuthRepository authRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository)
         {
             _authRepository = authRepository;
@@ -67,6 +66,8 @@ namespace PowerBiWeb.Server.Services
 
             return join.Role;
         }
+        
+        #region Private Methods
         private List<Claim> CreateRoleClaims(AppRoles role)
         {
             var roleClaims = new List<Claim>();
@@ -86,7 +87,6 @@ namespace PowerBiWeb.Server.Services
 
             return roleClaims;
         }
-        #region Private Methods
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
