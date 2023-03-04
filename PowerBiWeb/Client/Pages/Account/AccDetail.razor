@@ -1,15 +1,17 @@
 ﻿@page "/account"
 @using PowerBiWeb.Client.Utilities.Auth;
 @using System.Security.Claims;
+@using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.User;
 @inject HttpClient httpClient
 @inject AuthenticationStateProvider authProvider
-@inject IToastService toastService;
+@inject IToastService toastService
+@inject IUserService userService
 
 <LoadingIndicator @bind-Visible="loading" Style="height:50vh">
     <div class="d-flex justify-content-center align-items-center flex-column">
         <Card Style="width: 65vh" Background="Background.Light">
-            @if (detail is not null)
+        @if (detail is not null)
         {
           <CardBody>
                 <CardTitle>
@@ -34,6 +36,9 @@
                     <FieldLabel>Email</FieldLabel>
                     <TextEdit ReadOnly @bind-Text="detail.Email" />
                 </Field>
+                
+                <Button Color="Color.Secondary" Clicked="ShowUsernameModal">Change username</Button>
+                <Button Color="Color.Secondary">Change password</Button>
 
             </CardBody>
         }
@@ -41,9 +46,38 @@
     </div>
 </LoadingIndicator>
 
+<Modal @ref="modalUsernameRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Change username</ModalTitle>
+            <CloseButton />
+           
+    </ModalHeader>
+    <ModalBody>
+            <div class="form-group">
+                <label for="newDatasetId">New username</label>
+                <InputText id="newDatasetId" class="form-control" @bind-Value="newUsername" />
+            </div>
+            <h3> You will need to relog after!!!</h3>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HideUsernameModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="ChangeUsername">Change</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
 @code {
+    [CascadingParameter]
+    protected MainLayout? MainLayout { get; set; }
     UserDetail? detail;
     private bool loading;
+
+    private Modal? modalUsernameRef;
+
+    private string newUsername = string.Empty;
+    private string newPassword = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         loading = true;
@@ -62,5 +96,46 @@
             toastService.ShowError("Could not load account detail information");
         }
         loading = false;
+    }
+    private async Task HideUsernameModal()
+    {
+        newUsername = string.Empty;
+        await modalUsernameRef!.Hide();
+    }
+    private async Task ShowUsernameModal()
+    {
+        newUsername = string.Empty;
+        await modalUsernameRef!.Show();
+    }
+    private async Task ChangeUsername()
+    {
+        if (string.IsNullOrEmpty(newUsername))
+        {
+            toastService.ShowError("Fill the form");
+            return;
+        }
+
+        if (newUsername == detail!.Username)
+        {
+            toastService.ShowError("New username is the same as old one");
+            return;
+        }
+
+        var response = await userService.ChangeUsername(newUsername);
+        if (response.IsSuccess)
+        {
+            detail = response.Value;
+            await HideUsernameModal();
+            if (authProvider is TokenAuthStateProvider aProvider)
+            {
+                await aProvider.RemoveToken();
+            }
+            await authProvider.GetAuthenticationStateAsync();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+            await HideUsernameModal();
+        }
     }
 }

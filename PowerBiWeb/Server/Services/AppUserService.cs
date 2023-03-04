@@ -14,6 +14,11 @@ namespace PowerBiWeb.Server.Services
             _appUserRepository = appUserRepository;
         }
 
+        public async Task<string> ChangeUsernameAsync(int userId, string newUsername)
+        {
+            return await _appUserRepository.ChangeUsernameAsync(userId, newUsername);
+        }
+
         public async Task<IEnumerable<ApplUser>> GetAsync()
         {
             return await _appUserRepository.GetAllAsync();

@@ -4,6 +4,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
 {
     public interface IAppUserRepository
     {
+        Task<string> ChangeUsernameAsync(int userId, string newUsername);
         Task<IEnumerable<ApplUser>> GetAllAsync();
         Task<ApplUser?> GetByIdAsync(int id);
         Task<string> PostAsync(ApplUser user);

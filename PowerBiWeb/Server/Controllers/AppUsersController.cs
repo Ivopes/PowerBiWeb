@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared.User;
@@ -10,6 +11,7 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AppUsersController : ControllerBase
     {
         private readonly IAppUserService _appUserService;
@@ -18,23 +20,19 @@ namespace PowerBiWeb.Server.Controllers
         {
             _appUserService = appUserService;
         }
-
-        // GET: api/<AppUserController>
-        [HttpGet]
+        //[HttpGet]
         public async Task<ActionResult<IEnumerable<ApplUser>>> GetAsync()
         {
             return Ok(await _appUserService.GetAsync());
         }
-
-        // GET api/<AppUserController>/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDetail>> GetByIdAsync(int id)
         {
-            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int jwtUserId))
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
                 return Unauthorized();
             }
-            if (jwtUserId != id)
+            if (userId != id)
             {
                 return Forbid();
             }
@@ -48,8 +46,6 @@ namespace PowerBiWeb.Server.Controllers
 
             return Ok(result);
         }
-
-        // POST api/<AppUserController>
         [HttpPost]
         public async Task<ActionResult> PostAsync([FromBody] UserRegisterInformation user)
         {
@@ -58,17 +54,21 @@ namespace PowerBiWeb.Server.Controllers
 
             return BadRequest(response);
         }
-
-        // PUT api/<AppUserController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPost("username/{newUsername}")]
+        public async Task<ActionResult<UserDetail>> PostAsync([FromRoute] string newUsername)
         {
-        }
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized();
+            }
 
-        // DELETE api/<AppUserController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            string response = await _appUserService.ChangeUsernameAsync(userId, newUsername);
+            
+            if (!string.IsNullOrEmpty(response)) return BadRequest(response);
+
+            var newUser = await _appUserService.GetByIdAsync(userId);
+
+            return Ok(newUser);
         }
     }
 }

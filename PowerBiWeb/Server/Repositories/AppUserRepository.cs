@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
@@ -14,11 +15,27 @@ namespace PowerBiWeb.Server.Repositories
         {
             _dbContext = dbContext;
         }
+
+        public async Task<string> ChangeUsernameAsync(int userId, string newUsername)
+        {
+            var user = await _dbContext.AppUsers.FindAsync(userId);
+
+            if (user is null)
+            {
+                return "User not found";
+            }
+
+            user.Username = newUsername;
+
+            await _dbContext.SaveChangesAsync();
+
+            return string.Empty;
+        }
+
         public async Task<IEnumerable<ApplUser>> GetAllAsync()
         {
             return await _dbContext.AppUsers.Include(a => a.AppUserProjects).ToListAsync();
         }
-
         public async Task<ApplUser?> GetByIdAsync(int id)
         {
             return await _dbContext.AppUsers.FindAsync(id);
