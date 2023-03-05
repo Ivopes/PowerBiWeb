@@ -850,7 +850,7 @@
         var reportDataset = project!.Reports.SingleOrDefault(r => r.Id == reportId)!.Dataset;
         if (reportDataset is not null && datasetId == reportDataset.PowerBiId)
         {
-            toastService.ShowError("Select different value");
+            toastService.ShowError("Already binded");
             return;
         }
 

@@ -30,7 +30,6 @@ namespace PowerBiWeb.Server.Repositories
 
             return result.Entity;
         }
-
         public async Task<ProjectReport?> GetByGuidAsync(Guid reportGuid)
         {
             var entity = await _dbContext.ProjectReports.Include(r => r.Projects).Include(r => r.Dataset).SingleOrDefaultAsync(r => r.PowerBiId == reportGuid);

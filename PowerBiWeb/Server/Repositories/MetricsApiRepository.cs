@@ -21,7 +21,6 @@ namespace PowerBiWeb.Server.Repositories
             _clientFactory = factory;
             _logger = logger;
         }
-
         public async Task<MetricPortion?> GetMetric(string projectName, string metricName, bool isTotal)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
@@ -49,7 +48,6 @@ namespace PowerBiWeb.Server.Repositories
             }
             return result;
         }
-
         public async Task<List<MetricPortion>> GetMetricAllAsync(string projectName, bool isTotal)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
@@ -76,7 +74,6 @@ namespace PowerBiWeb.Server.Repositories
             }
             return result;
         }
-
         public async Task<List<MetricPortion>> GetMetricLatestAll(string projectName)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
@@ -99,7 +96,6 @@ namespace PowerBiWeb.Server.Repositories
             }
             return result;
         }
-
         public async Task<MetricPortion?> GetMetricLatest(string projectName, string metricName)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
@@ -122,7 +118,6 @@ namespace PowerBiWeb.Server.Repositories
             }
             return result;
         }
-
         public async Task<MetricDefinition?> GetMetricDefinition(string datasetId)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);
@@ -146,7 +141,6 @@ namespace PowerBiWeb.Server.Repositories
 
             return result;
         }
-
         public async Task<MetricData?> GetMetricTotalNew(string datasetId)
         {
             var httpClient = _clientFactory.CreateClient(HttpClientTypes.MetricsApi);

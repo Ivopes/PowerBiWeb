@@ -36,7 +36,6 @@ namespace PowerBiWeb.Server.Repositories
             _logger = logger;
             _dbContext = dbContext;
         }
-
         public async Task<EmbedContentDTO> GetEmbededReportAsync(Guid reportId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -305,8 +304,6 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data)
         {
-            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
-
             PostRowsRequest request = new PostRowsRequest
             {
                 Rows = data.Rows.ToArray(),
@@ -333,10 +330,7 @@ namespace PowerBiWeb.Server.Repositories
                     _logger.LogError($"Could not post rows: {r}");
                     return false;
                 }
-                
-
                 //var response = await pbiClient.Datasets.PostRowsInGroupWithHttpMessagesAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
-
                 //await pbiClient.Datasets.PostRowsInGroupAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
 
                 var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
@@ -355,86 +349,6 @@ namespace PowerBiWeb.Server.Repositories
             }
 
             return false;
-        }
-        public async Task UploadMetric(PBIDataset dataset, MetricPortion metric)
-        {
-            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
-
-            var datasets = await pbiClient.Datasets.GetDatasetsInGroupAsync(_workspaceId);
-
-            var datasetName = $"{dataset.MetricFilesId}_{metric.Name}";
-
-            string datasetId = string.Empty;
-            foreach (var d in datasets.Value)
-            {
-                if (d.Name == datasetName)
-                {
-                    datasetId = d.Id;
-
-                    break;
-                }
-            }
-
-            if (string.IsNullOrEmpty(datasetId)) // Create new dataset
-            {
-                var dt = await CreateMetricDataset(dataset, metric);
-                if (dt is null)
-                {
-                    return;
-                }
-                datasetId = dt.Id;
-            }
-
-            //Add rows
-            var serializeOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Converters =
-                    {
-                        new PowerBiRowJsonConverter()
-                    }
-            };
-
-            var json = JsonSerializer.Serialize(metric, serializeOptions);
-            
-            try
-            {
-                // Must use HttpClient because power bi SDK cant handle custom serialization
-                var httpClient = new HttpClient();
-                var url = $"https://api.powerbi.com/v1.0/myorg/groups/{_workspaceId}/datasets/{datasetId}/tables/{metric.Name}/rows";
-
-                httpClient.BaseAddress = new Uri(url);
-
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _aadService.GetAccessToken());
-
-                var response = await httpClient.PostAsync(string.Empty, content);
-                if (!response.IsSuccessStatusCode)
-                {
-                    string r = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Could not post rows: {r}");
-                }
-
-                var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
-                entityDataset!.LastUpdate = DateTime.UtcNow;
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Microsoft.Rest.HttpOperationException httpEx)
-            {
-                _logger.LogError(httpEx, httpEx.Response.Content);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "General error");
-            }
-        }
-        public async Task UploadMetric(PBIDataset dataset, List<MetricPortion> metrics)
-        {
-            foreach (var metric in metrics)
-            {
-                await UploadMetric(dataset, metric);
-            }
         }
         public async Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition)
         {
@@ -496,7 +410,6 @@ namespace PowerBiWeb.Server.Repositories
 
             return result.Body;
         }
-
         public async Task<bool> RebindReportAsync(Guid reportId, Guid datasetId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -512,86 +425,6 @@ namespace PowerBiWeb.Server.Repositories
             }
             
             return true;
-        }
-
-        private async Task<Dataset?> CreateMetricDataset(PBIDataset dataset, MetricPortion metric)
-        {
-            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
-
-            var tables = new List<Table>();
-            var table = new Table()
-            {
-                Name = metric.Name,
-                Description = metric.Description
-            };
-            
-            var columns = new List<Column> //Int64, Double, Boolean, Datetime, String
-            {
-                new Column("Datum", "Datetime"),
-                new Column(metric.AdditionWithSignName, TypeToPowerBiType(metric.AdditionWithSignType)),
-                new Column(metric.AdditionWithoutSignName, TypeToPowerBiType(metric.AdditionWithoutSignType)),
-                new Column("Release", "String"),
-            };
-
-            var measures = new List<Measure>
-            {
-                new Measure("SumCelkem", $"CALCULATE (SUM({metric.Name}[{metric.AdditionWithoutSignName}]), FILTER( ALL( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
-                new Measure("SumCelkemByRelease", $"CALCULATE (SUM ({metric.Name}[{metric.AdditionWithoutSignName}] ), FILTER(ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )), VALUES({metric.Name}[Release]))"),
-
-                new Measure("SumPriznak", $"CALCULATE ( SUM({metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
-                new Measure("SumPriznakByRelease", $"CALCULATE ( SUM ( {metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum])), VALUES({metric.Name}[Release]))"),
-
-                new Measure("Podil", $"{metric.Name}[SumPriznak] / {metric.Name}[SumCelkem]"),
-                new Measure("PodilPodleRelease", $"{metric.Name}[SumPriznakByRelease] / {metric.Name}[SumCelkemByRelease]"),
-
-                //new Measure("AktualniPodil", $"LASTNONBLANK({metric.Name}[Podil], 1)"),
-                //new Measure("AktualniPodilPodleRelease", $"LASTNONBLANK({metric.Name}[PodilPodleRelease], 1)")
-
-                //new Measure("AktualniPodil", $"CALCULATE(MIN({metric.Name}[SumPriznak]), FILTER({metric.Name}, {metric.Name}[Datum] == MAX({metric.Name}[Datum])))"),
-                //new Measure("AktualniPodilPodleRelease", $"CALCULATE(MIN({metric.Name}[PodilPodleRelease]), FILTER({metric.Name}, {metric.Name}[Datum] == MAX({metric.Name}[Datum])))")
-            
-                //new Measure("PosledniDatum", $"LASTDATE({metric.Name}[Datum])"),
-                //new Measure("PosledniDatumNotBlank", $"LASTNONBLANK({metric.Name}[Datum], 1)"),
-                new Measure("PosledniPodil", $"CALCULATE([Podil], {metric.Name}[Datum] == MAX({metric.Name}[Datum]))"),
-                new Measure("PosledniPodilPodleRelease", $"CALCULATE([PodilPodleRelease], {metric.Name}[Datum] == MAX({metric.Name}[Datum]))"),
-
-            };
-
-            table.Columns = columns;
-            table.Measures = measures;
-     
-            tables.Add(table);
-
-            var pushDatasetRequest = new CreateDatasetRequest($"{dataset.MetricFilesId}_{metric.Name}", tables, defaultMode: DatasetMode.Push);
-
-            try
-            {
-                Dataset datasetResult = await pbiClient.Datasets.PostDatasetInGroupAsync(_workspaceId, pushDatasetRequest);
-                return datasetResult;
-
-            }
-            catch (Microsoft.Rest.HttpOperationException httpEx)
-            {
-                _logger.LogError(httpEx, httpEx.Response.Content);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "General error");
-            }
-            return null;
-        }
-        private string TypeToPowerBiType(string type)
-        {
-            return type switch //Int64, Double, Boolean, Datetime, String
-            {
-                "System.Int32" => "Int64",
-                "System.Single" => "Double",
-                "System.Double" => "Double",
-                "System.Boolean" => "Boolean",
-                "System.DateTime" => "Datetime",
-                "System.String" => "String",
-                _ => throw new NotImplementedException(),
-            };
         }
         private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
