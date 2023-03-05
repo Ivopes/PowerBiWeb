@@ -616,7 +616,17 @@
         {
             toastService.ShowSuccess("User was removed");
             await HideRemoveUserModal();
-            await LoadData();
+            var state = await AuthState.GetAuthenticationStateAsync();
+
+            if (userId.ToString() == state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value)
+            {
+                Navigation.NavigateTo("/projects");
+                toastService.ShowSuccess("Project leaved");
+            }
+            else
+            {
+                await LoadData();
+            }
         }
         else
         {

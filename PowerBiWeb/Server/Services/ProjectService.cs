@@ -103,6 +103,12 @@ namespace PowerBiWeb.Server.Services
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
+            var project = await _projectRepository.GetAsync(projectId);
+
+            if (project is null) return "Project not found";
+
+            if (project.AppUserProjects.Count == 1) return "Cant leave project when alone. Delete it instead";
+
             return await _projectRepository.RemoveUserAsync(userId, projectId);
         }
         public async Task<ProjectRoles?> GetProjectRole(int projectId)
