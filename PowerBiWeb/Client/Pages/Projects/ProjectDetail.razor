@@ -1,6 +1,7 @@
 ﻿@page "/projects/{Id:int}"
 @using PowerBiWeb.Client.Utilities.Http;
 @using PowerBiWeb.Client.Utilities.Interfaces;
+@using PowerBiWeb.Shared.Datasets;
 @using PowerBiWeb.Shared.Project;
 @using System.Security.Claims;
 @inject IToastService toastService
@@ -8,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IProjectService _projectService
 @inject IReportService _reportService
+@inject IDatasetService _datasetService
 @inject ILogger<ProjectDetail> _logger
 @implements IDisposable
 
@@ -393,10 +395,24 @@
             <ModalTitle>Rebind report</ModalTitle>
         </ModalHeader>
         <ModalBody>
+            @*
+
             <div class="form-group">
                 <label>Dataset Id</label>
-                <InputText class="form-control" @bind-Value="rebindDatasetId" />
+                <InputText class="form-control" />
             </div>
+            *@
+            @if (datasets is not null && datasets.Length > 0)
+            {
+                <Select TValue="Guid" @bind-SelectedValue="rebindDatasetId">
+                    <SelectItem Value="Guid.Empty"></SelectItem>
+                    @for (int i = 0; i < datasets.Length; i++)
+                    {
+                        var dataset = datasets[i];
+                        <SelectItem Value="dataset.PowerBiId">@dataset.Name</SelectItem>
+                    }
+                </Select>
+            }
         </ModalBody>
       <ModalFooter>
           <Button Color="Color.Secondary" Clicked="HideRebindModal">Cancel</Button>
@@ -412,6 +428,7 @@
     private CancellationTokenSource cts = new CancellationTokenSource();
 
     private ProjectDTO? project;
+    private DatasetDTO[]? datasets;
     private ProjectRoleDTO myRole;
     // reference to the modal component
     private Modal? modalAddRef;
@@ -430,7 +447,7 @@
     private string editEmail = string.Empty;
     private int deleteIndex = -1;
     private Guid rebindReportId = Guid.Empty;
-    private string rebindDatasetId = string.Empty;
+    private Guid rebindDatasetId = Guid.Empty;
 
     private bool loading;
 
@@ -520,20 +537,16 @@
         editRole = (int) project!.Users.ElementAt(index).Role;
         editEmail = project!.Users.ElementAt(index).Email;
     }
-
     private async Task ShowRebindModal(Guid reportId)
     {
         rebindReportId = reportId;
         await modalRebindReportRef!.Show();
     }
-
     private async Task HideRebindModal()
     {
         rebindReportId = Guid.Empty;
         await modalRebindReportRef!.Hide();
     }
-
-
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -553,14 +566,30 @@
 
             myRole = project!.Users.Single(u => u.Username == username).Role;
 
-            toastService.ShowSuccess("Project loaded");
+            await LoadDatasets();
+
+            toastService.ShowSuccess("Data loaded");
         }
         else
         {
             Navigation.NavigateTo("/projects");
             toastService.ShowError(response.ErrorMessage);
         }
+
         loading = false;
+    }
+    private async Task LoadDatasets()
+    {
+        var response = await _datasetService.GetAllAsync();
+
+        if (response.IsSuccess)
+        {
+            datasets = response.Value!.ToArray();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        } 
     }
     private async Task AddUserToProject()
     {
@@ -801,14 +830,14 @@
             toastService.ShowError(respose.ErrorMessage);
         }
     }
-    private async Task RebindReport(Guid reportId, string datasetId)
+    private async Task RebindReport(Guid reportId, Guid datasetId)
     {
-        if (!Guid.TryParse(datasetId, out var datasetGuid))
+        if (datasetId == Guid.Empty)
         {   
-            toastService.ShowError("Wrong Id format");
+            toastService.ShowError("Select value");
             return;
         }
-        HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetGuid, cts.Token);
+        HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetId, cts.Token);
 
         if (respose.IsSuccess)
         {
