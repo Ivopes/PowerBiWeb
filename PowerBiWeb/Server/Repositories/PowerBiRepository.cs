@@ -86,7 +86,14 @@ namespace PowerBiWeb.Server.Repositories
 
                 foreach (var r in reportsReponse.Value)
                 {
-                    if (r.Name.StartsWith(projectEntity.Name))
+                    // Zkontrolovat jestli je report soucasti projektu. Pokud ano, tak jenom update udaju
+                    var reportToUpdate = projectEntity.ProjectReports.SingleOrDefault(report => report.PowerBiId == r.Id);
+                    if (reportToUpdate is not null)
+                    {
+                        reportToUpdate.PowerBIName = r.Name;
+                    }
+                    // Zkontrolovat jestli je report novy podle jmena a pridat ho do projektu
+                    else if (r.Name.StartsWith(projectEntity.Name))
                     {
                         var entityInDb = await _dbContext.ProjectReports.FindAsync(r.Id);
 
@@ -196,7 +203,14 @@ namespace PowerBiWeb.Server.Repositories
 
                 foreach (var d in dashboradsResponse.Value)
                 {
-                    if (d.DisplayName.StartsWith(projectEntity.Name))
+                    // Zkontrolovat jestli je dashboard soucasti projektu. Pokud ano, tak jenom update udaju
+                    var dashboardToUpdate = projectEntity.ProjectDashboards.SingleOrDefault(dashboard => dashboard.PowerBiId == d.Id);
+                    if (dashboardToUpdate is not null)
+                    {
+                        dashboardToUpdate.PowerBiName = d.DisplayName;
+                    }
+                    // Zkontrolovat jestli je dashboard novy podle jmena a pridat ho do projektu
+                    else if (d.DisplayName.StartsWith(projectEntity.Name))
                     {
                         var entityInDb = await _dbContext.ProjectDashboards.FindAsync(d.Id);
 
