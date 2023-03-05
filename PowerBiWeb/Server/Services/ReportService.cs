@@ -52,7 +52,9 @@ namespace PowerBiWeb.Server.Services
                 PowerBiId = createdR.Id,
                 PowerBIName = createdR.Name,
                 WorkspaceId = report.WorkspaceId,
-                Projects = new List<Models.Entities.Project> { project }
+                Projects = new List<Models.Entities.Project> { project },
+                Dataset = report.Dataset,
+                DatasetId = report.DatasetId
             };
 
             await _reportRepository.AddReportAsync(newR);

@@ -33,6 +33,7 @@ namespace PowerBiWeb.Server.Repositories
                 .Include(p => p.AppUserProjects)
                 .ThenInclude(aup => aup.AppUser)
                 .Include(p => p.ProjectReports)
+                .ThenInclude(r => r.Dataset)
                 .Include(p => p.ProjectDashboards)
                 .SingleOrDefaultAsync(p => p.Id == id);
         }

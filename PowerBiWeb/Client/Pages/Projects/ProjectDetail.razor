@@ -29,7 +29,7 @@
         @if (myRole <= ProjectRoleDTO.Editor)
         {
             <Button Color="Color.Secondary" Clicked="async () => await UpdateContent()" class="mx-2">
-                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI by prefix
+                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI
             </Button>
 
             <Button Color="Color.Secondary" Clicked="ShowAddPowerBIModal" class="mx-2">
@@ -405,7 +405,10 @@
             @if (datasets is not null && datasets.Length > 0)
             {
                 <Select TValue="Guid" @bind-SelectedValue="rebindDatasetId">
-                    <SelectItem Value="Guid.Empty"></SelectItem>
+                    @if (rebindDatasetId == Guid.Empty)
+                    {
+                        <SelectItem Value="Guid.Empty">UNKNOWN</SelectItem>
+                    }
                     @for (int i = 0; i < datasets.Length; i++)
                     {
                         var dataset = datasets[i];
@@ -540,6 +543,12 @@
     private async Task ShowRebindModal(Guid reportId)
     {
         rebindReportId = reportId;
+        rebindDatasetId = Guid.Empty;
+        var reportDataset = project!.Reports.SingleOrDefault(r => r.Id == reportId)!.Dataset;
+        if (reportDataset is not null)
+        {
+            rebindDatasetId = reportDataset.PowerBiId;
+        }
         await modalRebindReportRef!.Show();
     }
     private async Task HideRebindModal()
@@ -837,6 +846,14 @@
             toastService.ShowError("Select value");
             return;
         }
+
+        var reportDataset = project!.Reports.SingleOrDefault(r => r.Id == reportId)!.Dataset;
+        if (reportDataset is not null && datasetId == reportDataset.PowerBiId)
+        {
+            toastService.ShowError("Select different value");
+            return;
+        }
+
         HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetId, cts.Token);
 
         if (respose.IsSuccess)

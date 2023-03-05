@@ -28,14 +28,15 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
-            dto.Reports = new List<EmbedContentDTO>();
+            dto.Reports = new List<ReportDTO>();
 
             foreach (var report in p.ProjectReports)
             {
                 dto.Reports.Add(new()
                 {
                     Name = report.Name,
-                    Id = report.PowerBiId
+                    Id = report.PowerBiId,
+                    Dataset = report.Dataset?.ToDTO()
                 });
             }
 

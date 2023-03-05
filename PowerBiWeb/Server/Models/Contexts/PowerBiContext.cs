@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Newtonsoft.Json;
 using PowerBiWeb.Server.Models.Entities;
+using System.Diagnostics;
 
 namespace PowerBiWeb.Server.Models.Contexts
 {
@@ -51,6 +52,13 @@ namespace PowerBiWeb.Server.Models.Contexts
                   v => JsonConvert.SerializeObject(v),
                   v => JsonConvert.DeserializeObject<List<string>>(v)!
                );
+
+            modelBuilder.Entity<ProjectReport>()
+               .HasOne(r => r.Dataset)
+               .WithMany(d => d.Reports)
+               .HasForeignKey(r => r.DatasetId)
+               .OnDelete(DeleteBehavior.SetNull);
+
         }
     }
 }

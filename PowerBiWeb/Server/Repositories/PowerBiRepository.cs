@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
@@ -86,8 +87,9 @@ namespace PowerBiWeb.Server.Repositories
 
                 foreach (var r in reportsReponse.Value)
                 {
+                    ProjectReport? reportToUpdate;
                     // Zkontrolovat jestli je report soucasti projektu. Pokud ano, tak jenom update udaju
-                    var reportToUpdate = projectEntity.ProjectReports.SingleOrDefault(report => report.PowerBiId == r.Id);
+                    reportToUpdate = projectEntity.ProjectReports.SingleOrDefault(report => report.PowerBiId == r.Id);
                     if (reportToUpdate is not null)
                     {
                         reportToUpdate.PowerBIName = r.Name;
@@ -95,19 +97,19 @@ namespace PowerBiWeb.Server.Repositories
                     // Zkontrolovat jestli je report novy podle jmena a pridat ho do projektu
                     else if (r.Name.StartsWith(projectEntity.Name))
                     {
-                        var entityInDb = await _dbContext.ProjectReports.FindAsync(r.Id);
+                        reportToUpdate = await _dbContext.ProjectReports.FindAsync(r.Id);
 
-                        if (entityInDb is not null)
+                        if (reportToUpdate is not null)
                         {
-                            entityInDb.PowerBIName = r.Name;
-                            if (!entityInDb.Projects.Contains(projectEntity))
+                            reportToUpdate.PowerBIName = r.Name;
+                            if (!reportToUpdate.Projects.Contains(projectEntity))
                             {
-                                entityInDb.Projects.Add(projectEntity);
+                                reportToUpdate.Projects.Add(projectEntity);
                             }
                         }
                         else
                         {
-                            var report = new ProjectReport()
+                            reportToUpdate = new ProjectReport()
                             {
                                 PowerBiId = r.Id,
                                 Name = r.Name.Substring(projectEntity.Name.Length + 1),
@@ -115,9 +117,20 @@ namespace PowerBiWeb.Server.Repositories
                                 WorkspaceId = _workspaceId,
                                 Projects = new List<Project>() { projectEntity }
                             };
-                            await _dbContext.ProjectReports.AddAsync(report);
+                            await _dbContext.ProjectReports.AddAsync(reportToUpdate);
                         }
 
+                    }
+                    if (reportToUpdate is not null)
+                    {
+                        //Check jestli zname dataset
+                        var rGuid = Guid.Parse(r.DatasetId);
+                        var datasetEntity = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == rGuid);
+                        if (datasetEntity is not null)
+                        {
+                            reportToUpdate.Dataset = datasetEntity;
+                            reportToUpdate.DatasetId = datasetEntity.Id;
+                        }
                     }
                 }
 
@@ -147,23 +160,25 @@ namespace PowerBiWeb.Server.Repositories
             {
                 var reportResponse = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, report.PowerBiId);
 
-                var entityInDb = await _dbContext.ProjectReports.FindAsync(reportResponse.Id);
+                var entityUpdate = await _dbContext.ProjectReports.FindAsync(reportResponse.Id);
 
-                if (entityInDb is not null)
+                if (entityUpdate is not null)
                 {
-                    entityInDb.PowerBIName = reportResponse.Name;
-                    if (!entityInDb.Projects.Contains(projectEntity))
+                    if (!entityUpdate.Projects.Contains(projectEntity))
                     {
-                        entityInDb.Projects.Add(projectEntity);
+                        entityUpdate.Projects.Add(projectEntity);
                     }
                     else
                     {
                         return "Content is already in project";
                     }
+
+                    //a update udaju
+                    entityUpdate.PowerBIName = reportResponse.Name;
                 }
                 else
                 {
-                    var entityCreated = new ProjectReport()
+                    entityUpdate = new ProjectReport()
                     {
                         PowerBiId = reportResponse.Id,
                         PowerBIName = reportResponse.Name,
@@ -171,7 +186,16 @@ namespace PowerBiWeb.Server.Repositories
                         WorkspaceId = _workspaceId,
                         Projects = new List<Project>() { projectEntity }
                     };
-                    await _dbContext.ProjectReports.AddAsync(entityCreated);
+
+                    await _dbContext.ProjectReports.AddAsync(entityUpdate);
+                }
+                //Check jestli zname dataset
+                var rGuid = Guid.Parse(reportResponse.DatasetId);
+                var datasetEntity = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == rGuid);
+                if (datasetEntity is not null) 
+                {
+                    entityUpdate.Dataset = datasetEntity;
+                    entityUpdate.DatasetId = datasetEntity.Id;
                 }
 
                 await _dbContext.SaveChangesAsync();
