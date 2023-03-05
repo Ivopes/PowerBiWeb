@@ -9,5 +9,6 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse<UserDetail>> ChangeUsername(string username, CancellationToken ct);
         Task<HttpResponse> ChangePassword(string oldPassword, string newPassword);
         Task<HttpResponse> ChangePassword(string oldPassword, string newPassword, CancellationToken ct);
+        Task<HttpResponse<UserDetail>> GetById(int userId);
     }
 }

@@ -1,8 +1,10 @@
-﻿using PowerBiWeb.Client.Pages.Projects;
+﻿using Blazored.Toast.Services;
+using PowerBiWeb.Client.Pages.Projects;
 using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
 using PowerBiWeb.Shared.Project;
 using PowerBiWeb.Shared.User;
+using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace PowerBiWeb.Client.Utilities.Services
@@ -66,6 +68,28 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 IsSuccess = false,
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
+        public async Task<HttpResponse<UserDetail>> GetById(int userId)
+        {
+            var response = await _httpClient.GetAsync($"api/appusers/{userId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<UserDetail>();
+
+                return new()
+                {
+                    Value = result,
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+            return new()
+            {
+                IsSuccess = false,
+                ErrorMessage = await response.Content.ReadAsStringAsync()
             };
         }
     }

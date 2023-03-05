@@ -1,4 +1,5 @@
 ﻿@page "/login"
+@using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.User;
 @layout EmptyLayout
 @using Blazored.LocalStorage
@@ -7,8 +8,8 @@
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider authProvider
 @inject ILogger<Login> _logger
-@inject HttpClient httpClient
 @inject IToastService toastService
+@inject IAuthService _authService
 @attribute [AllowAnonymous]
 
 <LoadingIndicator @bind-Visible="loading">
@@ -157,10 +158,10 @@
 
         loading = true;
 
-        var response = await httpClient.PostAsJsonAsync("api/auth", userLoginData);
-        if (response.IsSuccessStatusCode)
+        var response = await _authService.LoginAsync(userLoginData);
+        if (response.IsSuccess)
         {
-            var token = await response.Content.ReadAsStringAsync();
+            string token = response.Value!;
 
             if (authProvider is TokenAuthStateProvider aProvider)
             {
@@ -182,14 +183,14 @@
 
         loading = true;
 
-        var response = await httpClient.PostAsJsonAsync("api/appusers", userRegisterData);
-        if (response.IsSuccessStatusCode)
+        var response = await _authService.RegisterAsync(userRegisterData);
+        if (response.IsSuccess)
         {
-            response = await httpClient.PostAsJsonAsync("api/auth", userRegisterData);
+            var loginResponse = await _authService.LoginAsync(userRegisterData.Username, userRegisterData.Password);
 
             if (authProvider is TokenAuthStateProvider aProvider)
             {
-                await aProvider.SaveToken(await response.Content.ReadAsStringAsync());
+                await aProvider.SaveToken(loginResponse.Value!);
             }
 
             await authProvider.GetAuthenticationStateAsync();
@@ -197,8 +198,9 @@
         }
         else
         {
-            toastService.ShowError(await response.Content.ReadAsStringAsync());
+            toastService.ShowError(response.ErrorMessage);
         }
+
         loading = false;
     }
 }

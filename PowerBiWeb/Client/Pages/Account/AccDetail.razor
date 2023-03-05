@@ -4,7 +4,6 @@
 @using PowerBiWeb.Client.Utilities.Http;
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.User;
-@inject HttpClient httpClient
 @inject AuthenticationStateProvider authProvider
 @inject IToastService toastService
 @inject IUserService userService
@@ -112,15 +111,15 @@
 
         int id = int.Parse(state.User.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
 
-        var response = await httpClient.GetAsync($"api/appusers/{id}");
+        var response = await userService.GetById(id);
 
-        if (response.IsSuccessStatusCode)
+        if (response.IsSuccess)
         {
-            detail = (await response.Content.ReadFromJsonAsync<UserDetail>())!;
+            detail = response.Value;
         }
         else
         {
-            toastService.ShowError("Could not load account detail information");
+            toastService.ShowError(response.ErrorMessage);
         }
         loading = false;
     }
