@@ -13,11 +13,6 @@
                         <InputText id="name" @bind-Value="project.Name" class="form-control"  />
                         <ValidationMessage For="@(() => project.Name)" />
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-check-label" for="downloadContent">Download already created content from PowerBI?</label>
-                        <InputCheckbox id="downloadContent" @bind-Value="project.DownloadContent" class="form-check-input" />
-                    </div>
                         
                 </div>
                 <div class="modal-footer">

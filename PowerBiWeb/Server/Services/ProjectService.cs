@@ -70,13 +70,10 @@ namespace PowerBiWeb.Server.Services
 
             project.Id = created.Id;
 
-            if (created.DownloadContent)
-            {
-                //Download content from Power BI
-                await _reportRepository.UpdateReportsAsync(created.Id);
-                await _dashboardRepository.UpdateDashboardsAsync(created.Id);
-            }
-
+            //Download content from Power BI
+            await _reportRepository.UpdateReportsAsync(created.Id);
+            await _dashboardRepository.UpdateDashboardsAsync(created.Id);
+            
             return project;
         }
         public async Task<string> AddToUserAsync(UserToProjectDTO dto)

@@ -57,8 +57,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             var created = new Project
             {
                 Id = p.Id,
-                Name = p.Name,
-                DownloadContent = p.DownloadContent,
+                Name = p.Name
             };
 
             return created;
