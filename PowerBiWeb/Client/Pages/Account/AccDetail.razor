@@ -156,7 +156,7 @@
             toastService.ShowError("New username is the same as old one");
             return;
         }
-
+        loading = true;
         var response = await userService.ChangeUsername(newUsername);
         if (response.IsSuccess)
         {
@@ -173,6 +173,7 @@
             toastService.ShowError(response.ErrorMessage);
             await HideUsernameModal();
         }
+        loading = false;
     }
     private async Task ChangePassword()
     {
@@ -188,6 +189,8 @@
             return;
         }
 
+        loading = true;
+
         HttpResponse response = await userService.ChangePassword(oldPassword, newPassword);
         if (response.IsSuccess)
         {
@@ -199,5 +202,7 @@
             toastService.ShowError(response.ErrorMessage);
             await HideUsernameModal();
         }
+
+        loading = false;
     }
 }

@@ -648,7 +648,7 @@
     private async Task RemoveUser()
     {
         int userId = project!.Users.ElementAt(deleteIndex).Id;
-
+        loading = true;
         var response = await _projectService.RemoveUserFromProject(Id, userId);
         if (response.IsSuccess)
         {
@@ -670,9 +670,11 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task DeleteProject()
     {
+        loading = true;
         var response = await _projectService.DeleteProject(Id);
         if (response.IsSuccess)
         {
@@ -683,6 +685,7 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task UpdateContent()
     {
@@ -793,6 +796,7 @@
     }
     private async Task RemoveReport()
     {
+        loading = true;
         HttpResponse respose = await _projectService.RemoveReportFromProject(Id, project!.Reports.ElementAt(removeReportIndex).Id);
 
         if (respose.IsSuccess)
@@ -805,9 +809,11 @@
         {
             toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
         }
+        loading = false;
     }
     private async Task RemoveDashboard()
     {
+        loading = true;
         HttpResponse respose = await _projectService.RemoveDashboardFromProject(Id, project!.Dashboards.ElementAt(removeDashboardIndex).Id);
 
         if (respose.IsSuccess)
@@ -820,6 +826,7 @@
         {
             toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
         }
+        loading = false;
     }
     private void GoToProjects()
     {
@@ -827,6 +834,7 @@
     }
     private async Task CloneReport(Guid reportId)
     {
+        loading = true;
         HttpResponse respose = await _reportService.CloneReportAsync(Id, reportId, cts.Token);
 
         if (respose.IsSuccess)
@@ -838,6 +846,7 @@
         {
             toastService.ShowError(respose.ErrorMessage);
         }
+        loading = false;
     }
     private async Task RebindReport(Guid reportId, Guid datasetId)
     {
@@ -853,7 +862,7 @@
             toastService.ShowError("Already binded");
             return;
         }
-
+        loading = true;
         HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetId, cts.Token);
 
         if (respose.IsSuccess)
@@ -866,6 +875,7 @@
         {
             toastService.ShowError(respose.ErrorMessage);
         }
+        loading = false;
     }
     public void Dispose()
     {

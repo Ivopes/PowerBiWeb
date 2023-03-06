@@ -154,7 +154,7 @@
             toastService.ShowError("Please fill the form");
             return;
         }
-
+        loading = true;
         HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, true);
 
         if (response.IsSuccess)
@@ -167,6 +167,7 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task AddExistingDataset()
     {
@@ -177,7 +178,7 @@
         }
 
         addDataset.PowerBiId = guid;
-
+        loading = true;
         HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, false);
 
         if (response.IsSuccess)
@@ -190,6 +191,7 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task HideAddModal()
     {
@@ -219,6 +221,7 @@
     private async Task DeleteDataset(int datasetId)
     {
         if (datasetId < 0) return;
+        loading = true;
         HttpResponse response = await _datasetService.DeleteDatasetAsync(datasetId);
 
         if (response.IsSuccess)
@@ -231,6 +234,7 @@
         {
             toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task ShowDeleteDataset(int datasetId)
     {
