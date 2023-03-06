@@ -1,35 +1,75 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
+using PowerBiWeb.Server.Utilities.ConfigOptions;
 
 namespace PowerBiWeb.Server.Services
 {
     public class BackgroundUpdateMetricsAPIService : BackgroundService
     {
-        private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(1)); // upravit na 1 hour
+        private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(1));
         private readonly ILogger<BackgroundUpdateMetricsAPIService> _logger;
         private readonly IServiceProvider _serviceProvider;
-
-        public BackgroundUpdateMetricsAPIService(ILogger<BackgroundUpdateMetricsAPIService> logger, IServiceProvider serviceProvider)
+        private readonly DatasetsUpdateOptions _updateOptions;
+        public BackgroundUpdateMetricsAPIService(ILogger<BackgroundUpdateMetricsAPIService> logger, IServiceProvider serviceProvider, IOptions<DatasetsUpdateOptions> opt)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
+
+            if (opt.Value is not null)
+            {
+                _updateOptions = new()
+                {
+                    DayOfWeek = opt.Value.DayOfWeek,
+                    Hour = opt.Value.Hour,
+                    UpdateFrequency = opt.Value.UpdateFrequency,
+                    Enabled = opt.Value.Enabled
+                };
+            }
+            else
+            {
+                _updateOptions = new()
+                {
+                    Enabled = false
+                };
+            }
+
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            if (!_updateOptions.Enabled) return;
+
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
 
-            //await UpdateMetricsForProjectsAsync();
+            var diffToZeroMinutes = (48 - DateTime.UtcNow.Minute) % 60;
+            await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
+
+            if (ShouldUpdate()) 
+                await UpdateMetricsForProjectsAsync();
 
             while (await _timer.WaitForNextTickAsync(stoppingToken)
                     && !stoppingToken.IsCancellationRequested)
             {
-                var day = DateTime.UtcNow.DayOfWeek;
-                var hour = DateTime.UtcNow.Hour;
-                if (day == DayOfWeek.Sunday && hour == 3) // Update every sunday at 3 oclock (lowest usage)
+                if (ShouldUpdate())
                 {
                     await UpdateMetricsForProjectsAsync();
                 }
+            }
+        }
+        private bool ShouldUpdate()
+        {
+            var now = DateTime.UtcNow;
+            switch (_updateOptions.UpdateFrequency)
+            {
+                case UpdateFrequency.Hour:
+                    return true;
+                case UpdateFrequency.Day:
+                    return now.Hour == _updateOptions.Hour;
+                case UpdateFrequency.Week:
+                    return now.Hour == _updateOptions.Hour && now.DayOfWeek == _updateOptions.DayOfWeek;
+                default:
+                    return false;
             }
         }
         private async Task UpdateMetricsForProjectsAsync()

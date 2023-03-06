@@ -37,6 +37,7 @@ builder.Services.AddTransient<IDashboardRepository, DashboardRepository>();
 builder.Services.AddTransient<IDatasetRepository, DatasetRepository>();
 builder.Services.AddTransient<IDatasetService, DatasetService>();
 
+builder.Services.Configure<DatasetsUpdateOptions>(builder.Configuration.GetSection(DatasetsUpdateOptions.DatasetsUpdate));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
