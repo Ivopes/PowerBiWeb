@@ -49,7 +49,7 @@ namespace PowerBiWeb.Server.Services
             };
 
             // Nacist metric data z metric serveru
-            MetricData? data = await _metricsApiLoaderRepository.GetMetricTotalNew(datasetId);
+            MetricData? data = await _metricsApiLoaderRepository.GetMetricTotal(datasetId);
 
             if (data is null)
             {

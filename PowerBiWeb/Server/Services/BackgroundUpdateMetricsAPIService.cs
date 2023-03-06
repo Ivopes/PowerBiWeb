@@ -42,7 +42,7 @@ namespace PowerBiWeb.Server.Services
 
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
 
-            var diffToZeroMinutes = (48 - DateTime.UtcNow.Minute) % 60;
+            var diffToZeroMinutes = (44 - DateTime.UtcNow.Minute) % 60;
             await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 
             if (ShouldUpdate()) 
@@ -83,20 +83,15 @@ namespace PowerBiWeb.Server.Services
             var datasets = await dbContext.Datasets.ToListAsync();
             foreach (var dataset in datasets)
             {
-                // Projekt byl zalozen a nejnovejsi data se stahli pri zalozeni
-                if (dataset.LastUpdate.DayOfWeek == DayOfWeek.Saturday && DateTime.UtcNow.Subtract(dataset.LastUpdate).TotalHours < 24) continue;
-
                 try
                 {
+                    var result = await metricApiRepository.GetMetricIncrement(dataset.MetricFilesId);
 
-                    var result = await metricApiRepository.GetMetricLatestAll(dataset.MetricFilesId);
-
-                    if (result is not null && result.Count > 0)
+                    if (result is not null)
                     {
                         // TODO: Smazat komentare pro produkci
-                        //var metricSaver = scope.ServiceProvider.GetRequiredService<IMetricsSaverRepository>();
-                        //await metricSaver.UploadMetric(result);
-                        //project.LastUpdate = DateTime.UtcNow;
+                        var metricSaver = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
+                        await metricSaver.AddRowsToDataset(dataset, result);
                     }
                 }
                 catch (Exception ex)
@@ -105,7 +100,7 @@ namespace PowerBiWeb.Server.Services
                 }
             }
 
-            //await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 }
