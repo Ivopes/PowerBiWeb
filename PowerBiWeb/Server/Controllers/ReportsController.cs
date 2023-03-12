@@ -64,6 +64,19 @@ namespace PowerBiWeb.Server.Controllers
             
             return BadRequest(result);
         }
+        [HttpPut]
+        public async Task<ActionResult<string>> UpdateReportSettingsAsync([FromBody] ReportDTO report)
+        {
+            var projectId = report.Projects[0].Id;
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
+
+            var result = await _reportService.UpdateReportSettingsAsync(report);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+            
+            return BadRequest(result);
+        }
         [HttpGet("export/{projectId}/{reportId}")]
         public async Task<ActionResult<string>> ExportReportAsync(int projectId, Guid reportId)
         {

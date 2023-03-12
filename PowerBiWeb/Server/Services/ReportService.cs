@@ -3,6 +3,7 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Exceptions;
+using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Shared;
 using PowerBiWeb.Shared.Project;
 
@@ -70,7 +71,7 @@ namespace PowerBiWeb.Server.Services
 
             return "Could not rebind report. Check the dataset ID and dataset format";
         }
-        public async Task<EmbedContentDTO?> GetByIdAsync(int projectId, Guid reportId)
+        public async Task<ReportDTO?> GetByIdAsync(int projectId, Guid reportId)
         {
             // Check if report belongs to project
             var report = await _reportRepository.GetByGuidAsync(reportId);
@@ -83,6 +84,11 @@ namespace PowerBiWeb.Server.Services
 
             var result = await _metricsSaverRepository.GetEmbededReportAsync(reportId);
             result.Name = report.Name;
+
+            result.Projects = new()
+            {
+                report.Projects.Single(p => p.Id == projectId).ToDTO()
+            };
 
             return result;
         }
@@ -106,6 +112,13 @@ namespace PowerBiWeb.Server.Services
             var result = await _metricsSaverRepository.GetExportedReportAsync(reportId);
 
             return result;
+        }
+
+        public async Task<string> UpdateReportSettingsAsync(ReportDTO report)
+        {
+            var r = report.ToBO();
+
+            return await _reportRepository.EditReport(r);
         }
     }
 }

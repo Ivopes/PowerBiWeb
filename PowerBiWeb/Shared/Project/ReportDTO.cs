@@ -10,5 +10,6 @@ namespace PowerBiWeb.Shared.Project
     public class ReportDTO : EmbedContentDTO
     {
         public DatasetDTO? Dataset { get; set; }
+        public List<ProjectDTO> Projects { get; set; } = Array.Empty<ProjectDTO>().ToList();
     }
 }

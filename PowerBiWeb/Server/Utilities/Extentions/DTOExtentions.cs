@@ -79,5 +79,25 @@ namespace PowerBiWeb.Server.Utilities.Extentions
 
             return dataset;
         }
+
+        public static ProjectReport ToBO(this ReportDTO report)
+        {
+            var r = new ProjectReport
+            {
+                PowerBiId = report.Id,
+                Name = report.Name,
+                DatasetId = report.Dataset?.Id,
+                PowerBIName = report.PowerBiName
+            };
+
+            r.Projects = new List<Project>();
+
+            if (report.Projects.Count > 0)
+            {
+                r.Projects.Add(report.Projects[0].ToBO());
+            }
+
+            return r;
+        }
     }
 }

@@ -15,16 +15,16 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
-        public async Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId)
+        public async Task<HttpResponse<ReportDTO[]?>> GetReportsAsync(int projectId)
         {
             return await GetReportsAsync(projectId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedContentDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct)
+        public async Task<HttpResponse<ReportDTO[]?>> GetReportsAsync(int projectId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/reports/{projectId}", ct);
             if (response.IsSuccessStatusCode)
             {
-                var reports = await response.Content.ReadFromJsonAsync<EmbedContentDTO[]>();
+                var reports = await response.Content.ReadFromJsonAsync<ReportDTO[]>();
                 return new()
                 {
                     IsSuccess = true,
@@ -38,18 +38,18 @@ namespace PowerBiWeb.Client.Utilities.Services
                 Value = null
             };
         }
-        public async Task<HttpResponse<EmbedContentDTO?>> GetReportAsync(int projectId, Guid reportId)
+        public async Task<HttpResponse<ReportDTO?>> GetReportAsync(int projectId, Guid reportId)
         {
             return await GetReportAsync(projectId, reportId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedContentDTO?>> GetReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        public async Task<HttpResponse<ReportDTO?>> GetReportAsync(int projectId, Guid reportId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/reports/{projectId}/{reportId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 try
                 {
-                    var report = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
+                    var report = await response.Content.ReadFromJsonAsync<ReportDTO>();
                     return new()
                     {
                         IsSuccess = true,
@@ -97,6 +97,36 @@ namespace PowerBiWeb.Client.Utilities.Services
         public async Task<HttpResponse> RebindReportAsync(int projectId, Guid reportId, Guid datasetId, CancellationToken ct)
         {
             var response = await _httpClient.PostAsync($"api/reports/rebind/{projectId}/{reportId}/{datasetId}", null, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    return new()
+                    {
+                        IsSuccess = true,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "report could not been rebinded");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
+        public async Task<HttpResponse> UpdateReportSettingsAsync(ReportDTO report)
+        {
+            return await UpdateReportSettingsAsync(report, CancellationToken.None);
+        }
+
+        public async Task<HttpResponse> UpdateReportSettingsAsync(ReportDTO report, CancellationToken ct)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/reports", report, ct);
             if (response.IsSuccessStatusCode)
             {
                 try

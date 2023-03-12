@@ -36,7 +36,7 @@ namespace PowerBiWeb.Server.Repositories
             _logger = logger;
             _dbContext = dbContext;
         }
-        public async Task<EmbedContentDTO> GetEmbededReportAsync(Guid reportId)
+        public async Task<ReportDTO> GetEmbededReportAsync(Guid reportId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 

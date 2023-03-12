@@ -30,6 +30,20 @@ namespace PowerBiWeb.Server.Repositories
 
             return result.Entity;
         }
+
+        public async Task<string> EditReport(ProjectReport report)
+        {
+            var entity = await _dbContext.ProjectReports.FindAsync(report.PowerBiId);
+
+            if (entity is null) return "Report not found";
+            
+            entity.Name = report.Name;
+
+            await _dbContext.SaveChangesAsync();
+            
+            return string.Empty;;
+        }
+
         public async Task<ProjectReport?> GetByGuidAsync(Guid reportGuid)
         {
             var entity = await _dbContext.ProjectReports.Include(r => r.Projects).Include(r => r.Dataset).SingleOrDefaultAsync(r => r.PowerBiId == reportGuid);

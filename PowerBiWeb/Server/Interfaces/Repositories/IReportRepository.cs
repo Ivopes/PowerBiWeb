@@ -8,5 +8,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<ProjectReport?> GetByGuidAsync(Guid reportGuid);
         Task<string> UpdateReportsAsync(int projectId);
         Task<ProjectReport?> AddReportAsync(ProjectReport report);
+        Task<string> EditReport(ProjectReport report);
     }
 }
