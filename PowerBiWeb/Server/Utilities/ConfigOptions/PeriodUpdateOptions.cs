@@ -1,8 +1,7 @@
 ﻿namespace PowerBiWeb.Server.Utilities.ConfigOptions
 {
-    public class DatasetsUpdateOptions
+    public class PeriodUpdateOptions
     {
-        public const string DatasetsUpdate = "DatasetsUpdate";
         public UpdateFrequency UpdateFrequency { get; set; }
         public bool Enabled { get; set; }
         public DayOfWeek DayOfWeek { get; set; }

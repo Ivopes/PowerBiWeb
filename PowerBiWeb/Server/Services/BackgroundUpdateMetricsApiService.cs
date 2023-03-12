@@ -6,13 +6,13 @@ using PowerBiWeb.Server.Utilities.ConfigOptions;
 
 namespace PowerBiWeb.Server.Services
 {
-    public class BackgroundUpdateMetricsAPIService : BackgroundService
+    public class BackgroundUpdateMetricsApiService : BackgroundService
     {
         private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(1));
-        private readonly ILogger<BackgroundUpdateMetricsAPIService> _logger;
+        private readonly ILogger<BackgroundUpdateMetricsApiService> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly DatasetsUpdateOptions _updateOptions;
-        public BackgroundUpdateMetricsAPIService(ILogger<BackgroundUpdateMetricsAPIService> logger, IServiceProvider serviceProvider, IOptions<DatasetsUpdateOptions> opt)
+        private readonly PeriodUpdateOptions _updateOptions;
+        public BackgroundUpdateMetricsApiService(ILogger<BackgroundUpdateMetricsApiService> logger, IServiceProvider serviceProvider, IOptions<DatasetUpdateOptions> opt)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -40,7 +40,7 @@ namespace PowerBiWeb.Server.Services
         {
             if (!_updateOptions.Enabled) return;
 
-            _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
+            _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsApiService)}...");
             return;
             var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
             await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
@@ -74,6 +74,8 @@ namespace PowerBiWeb.Server.Services
         }
         private async Task UpdateMetricsForProjectsAsync()
         {
+            _logger.LogInformation($"Starting {nameof(BackgroundUpdateMetricsApiService)} update...");
+
             await using var scope = _serviceProvider.CreateAsyncScope();
 
             var metricApiRepository = scope.ServiceProvider.GetRequiredService<IMetricsApiLoaderRepository>();

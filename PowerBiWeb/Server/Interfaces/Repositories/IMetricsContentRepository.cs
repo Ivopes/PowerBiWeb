@@ -15,7 +15,7 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<ReportDTO> GetEmbededReportAsync(Guid reportId);
         Task<string> UpdateDashboardsAsync(int projectId);
         Task<string> AddDashboardsAsync(int projectId, ProjectDashboard dashboard);
-        Task<string> UpdateReportsAsync(int reportId);
+        Task<string> UpdateReportsAsync(int projectId);
         Task<string> AddReportsAsync(int projectId, ProjectReport report);
         Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition);
         Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data);

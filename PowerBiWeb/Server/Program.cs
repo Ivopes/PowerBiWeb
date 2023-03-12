@@ -37,7 +37,8 @@ builder.Services.AddTransient<IDashboardRepository, DashboardRepository>();
 builder.Services.AddTransient<IDatasetRepository, DatasetRepository>();
 builder.Services.AddTransient<IDatasetService, DatasetService>();
 
-builder.Services.Configure<DatasetsUpdateOptions>(builder.Configuration.GetSection(DatasetsUpdateOptions.DatasetsUpdate));
+builder.Services.Configure<DatasetUpdateOptions>(builder.Configuration.GetSection("DatasetsUpdate"));
+builder.Services.Configure<ContentUpdateOptions>(builder.Configuration.GetSection("ContentUpdate"));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -63,7 +64,8 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHostedService<BackgroundUpdateMetricsAPIService>();
+builder.Services.AddHostedService<BackgroundUpdateMetricsApiService>();
+builder.Services.AddHostedService<BackgroundUpdateContentService>();
 
 var app = builder.Build();
 
