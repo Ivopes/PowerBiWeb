@@ -18,7 +18,10 @@
 
 
 @if (report is not null)
-{
+{ 
+    <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+      <Icon Name="IconName.Sync" /> Reload
+    </Button>
     <Tooltip Text="Requires different Power BI licence">
         <Button Color="Color.Primary" Disabled="@true" class="mx-2" Clicked="ExportReport">Export to PDF</Button>
     </Tooltip>
