@@ -4,7 +4,8 @@ namespace PowerBiWeb.Server.Interfaces.Services
 {
     public interface IDashboardService
     {
-        Task<EmbedContentDTO?> GetByIdAsync(int projectId, Guid reportId);
+        Task<DashboardDTO?> GetByIdAsync(int projectId, Guid reportId);
         Task<string> UpdateDashboardsAsync(int projectId);
+        Task<string> UpdateDashboardSettingsAsync(DashboardDTO dashboard);
     }
 }

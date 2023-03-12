@@ -15,18 +15,18 @@ namespace PowerBiWeb.Client.Utilities.Services
             _httpClient = httpClient;
             _logger = logger;
         }
-        public async Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId)
+        public async Task<HttpResponse<DashboardDTO?>> GetDashboardAsync(int projectId, Guid dashboardId)
         {
             return await GetDashboardAsync(projectId, dashboardId, CancellationToken.None);
         }
-        public async Task<HttpResponse<EmbedContentDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct)
+        public async Task<HttpResponse<DashboardDTO?>> GetDashboardAsync(int projectId, Guid dashboardId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"api/dashboards/{projectId}/{dashboardId}", ct);
             if (response.IsSuccessStatusCode)
             {
                 try
                 {
-                    var dashboard = await response.Content.ReadFromJsonAsync<EmbedContentDTO>();
+                    var dashboard = await response.Content.ReadFromJsonAsync<DashboardDTO>();
                     return new()
                     {
                         IsSuccess = true,
@@ -44,6 +44,35 @@ namespace PowerBiWeb.Client.Utilities.Services
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
                 Value = null
+            };
+        }
+
+        public async Task<HttpResponse> UpdateDashboardSettingsAsync(DashboardDTO dashboard)
+        {
+            return await UpdateDashboardSettingsAsync(dashboard, CancellationToken.None);
+        }
+        public async Task<HttpResponse> UpdateDashboardSettingsAsync(DashboardDTO dashboard, CancellationToken ct)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/dashboards", dashboard, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    return new()
+                    {
+                        IsSuccess = true,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "dashboard could not been changed");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
             };
         }
     }

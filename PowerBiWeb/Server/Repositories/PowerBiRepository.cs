@@ -52,7 +52,7 @@ namespace PowerBiWeb.Server.Repositories
                 EmbedUrl = report.EmbedUrl
             };
         }
-        public async Task<EmbedContentDTO> GetEmbededDashboardAsync(Guid dashboardId)
+        public async Task<DashboardDTO> GetEmbededDashboardAsync(Guid dashboardId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
@@ -207,13 +207,13 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
-        public async Task<string> UpdateDashboardsAsync(int dashboardId)
+        public async Task<string> UpdateDashboardsAsync(int projectId)
         {
-            var projectEntity = await _dbContext.Projects.FindAsync(dashboardId);
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
 
             if (projectEntity is null)
             {
-                _logger.LogError("Project with id: {0} was not found", dashboardId);
+                _logger.LogError("Project with id: {0} was not found", projectId);
                 return "Project was not found";
             }
 
@@ -235,19 +235,29 @@ namespace PowerBiWeb.Server.Repositories
                     // Zkontrolovat jestli je dashboard novy podle jmena a pridat ho do projektu
                     else if (d.DisplayName.StartsWith(projectEntity.Name))
                     {
-                        var entityInDb = await _dbContext.ProjectDashboards.FindAsync(d.Id);
+                        dashboardToUpdate = await _dbContext.ProjectDashboards.FindAsync(d.Id);
 
-                        if (entityInDb is not null) continue;
-
-                        var dashboard = new ProjectDashboard()
+                        if (dashboardToUpdate is not null)
                         {
-                            PowerBiId = d.Id,
-                            Name = d.DisplayName.Substring(projectEntity.Name.Length + 1),
-                            WorkspaceId = _workspaceId,
-                            Project = projectEntity
-                        };
+                            dashboardToUpdate.PowerBiName = d.DisplayName;
+                            if (!dashboardToUpdate.Projects.Contains(projectEntity))
+                            {
+                                dashboardToUpdate.Projects.Add(projectEntity);
+                            }
+                        }
+                        else
+                        {
+                            var dashboard = new ProjectDashboard()
+                            {
+                                PowerBiId = d.Id,
+                                Name = d.DisplayName.Substring(projectEntity.Name.Length + 1),
+                                PowerBiName = d.DisplayName,
+                                WorkspaceId = _workspaceId,
+                                Projects = new List<Project>() {projectEntity}
+                            };
 
-                        await _dbContext.ProjectDashboards.AddAsync(dashboard);
+                            await _dbContext.ProjectDashboards.AddAsync(dashboard);
+                        }
                     }
                 }
 
@@ -255,7 +265,7 @@ namespace PowerBiWeb.Server.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Could not update dashboards for project id: {0}", dashboardId);
+                _logger.LogError(ex, "Could not update dashboards for project id: {0}", projectId);
                 return "Could not update dashboards for project";
             }
 
@@ -287,7 +297,7 @@ namespace PowerBiWeb.Server.Repositories
                     Name = dashboard.Name,
                     PowerBiName = dashboardResponse.DisplayName,
                     WorkspaceId = _workspaceId,
-                    Project = projectEntity
+                    Projects = new List<Project>() {projectEntity}
                 };
 
                 await _dbContext.ProjectDashboards.AddAsync(entityCreated);

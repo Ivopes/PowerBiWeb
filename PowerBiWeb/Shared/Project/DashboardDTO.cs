@@ -2,7 +2,7 @@
 
 namespace PowerBiWeb.Shared.Project
 {
-    public class EmbedContentDTO
+    public class DashboardDTO
     {
         // Id of Power BI report to be embedded
         public Guid Id { get; set; }
@@ -15,6 +15,7 @@ namespace PowerBiWeb.Shared.Project
         public string EmbedUrl { get; set; } = string.Empty;
         // Embed Token for the Power BI report
         public string EmbedToken { get; set; } = string.Empty;
-
+        
+        public List<ProjectDTO> Projects { get; set; } = Array.Empty<ProjectDTO>().ToList();
     }
 }

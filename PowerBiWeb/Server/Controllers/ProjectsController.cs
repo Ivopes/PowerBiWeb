@@ -45,7 +45,7 @@ namespace PowerBiWeb.Server.Controllers
             return Ok(await _projectService.PostAsync(project));
         }
         [HttpPost("{projectId}/report")]
-        public async Task<ActionResult<ProjectDTO>> AddReport(int projectId, [FromBody] EmbedContentDTO report)
+        public async Task<ActionResult<ProjectDTO>> AddReport(int projectId, [FromBody] DashboardDTO report)
         {
             var role = await _authService.GetProjectRole(projectId);
             if (role is null || role > ProjectRoles.Editor) return Forbid();
@@ -69,7 +69,7 @@ namespace PowerBiWeb.Server.Controllers
             return BadRequest(result);
         }
         [HttpPost("{projectId}/dashboard")]
-        public async Task<ActionResult<ProjectDTO>> AddDashboard(int projectId, [FromBody] EmbedContentDTO dashboard)
+        public async Task<ActionResult<ProjectDTO>> AddDashboard(int projectId, [FromBody] DashboardDTO dashboard)
         {
             var role = await _authService.GetProjectRole(projectId);
             if (role is null || role > ProjectRoles.Editor) return Forbid();

@@ -749,7 +749,7 @@
     private async Task AddPowerBIContent()
     {
         HttpResponse respose;
-        EmbedContentDTO content = new();
+        DashboardDTO content = new();
 
         if (!Guid.TryParse(addContentId, out var id))
         {

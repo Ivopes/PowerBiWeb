@@ -19,7 +19,7 @@ namespace PowerBiWeb.Server.Controllers
             _authService = authService;
         }
         [HttpGet("{projectId:int}/{reportId:Guid}")]
-        public async Task<ActionResult<EmbedContentDTO>> GetByIdAsync(int projectId, Guid reportId)
+        public async Task<ActionResult<DashboardDTO>> GetByIdAsync(int projectId, Guid reportId)
         {
             var role = await _authService.GetProjectRole(projectId);
             if (role is null || role > ProjectRoles.Viewer) return Forbid();
@@ -39,6 +39,19 @@ namespace PowerBiWeb.Server.Controllers
             var result = await _dashboardService.UpdateDashboardsAsync(projectId);
 
             return Ok(result);
+        }
+        [HttpPut]
+        public async Task<ActionResult<string>> UpdateDashboardSettingsAsync([FromBody] DashboardDTO dashboard)
+        {
+            var projectId = dashboard.Projects[0].Id;
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
+
+            var result = await _dashboardService.UpdateDashboardSettingsAsync(dashboard);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+            
+            return BadRequest(result);
         }
     }
 }

@@ -15,15 +15,28 @@ namespace PowerBiWeb.Server.Repositories
             _dbContext = dbContext;
             _metricsSaverRepository = metricsSaverRepository;
         }
-        public async Task<ProjectDashboard?> GetByIdAsync(int projectId, Guid dashboardId)
+        public async Task<ProjectDashboard?> GetByIdAsync(Guid dashboardId)
         {
-            var entity = await _dbContext.ProjectDashboards.Include(d => d.Project).SingleOrDefaultAsync(d => d.PowerBiId == dashboardId && d.Project.Id == projectId);
+            var entity = await _dbContext.ProjectDashboards.Include(d => d.Projects).SingleOrDefaultAsync(d => d.PowerBiId == dashboardId);
 
             return entity;
         }
         public async Task<string> UpdateDashboardsAsync(int projectId)
         {
             return await _metricsSaverRepository.UpdateDashboardsAsync(projectId);
+        }
+
+        public async Task<string> EditDashboard(ProjectDashboard dashboard)
+        {
+            var entity = await _dbContext.ProjectDashboards.FindAsync(dashboard.PowerBiId);
+
+            if (entity is null) return "Dashboard not found";
+            
+            entity.Name = dashboard.Name;
+
+            await _dbContext.SaveChangesAsync();
+            
+            return string.Empty;
         }
     }
 }

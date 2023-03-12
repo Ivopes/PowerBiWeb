@@ -59,6 +59,9 @@ namespace PowerBiWeb.Server.Models.Contexts
                .HasForeignKey(r => r.DatasetId)
                .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<ProjectDashboard>()
+               .HasMany(d => d.Projects)
+               .WithMany(p => p.ProjectDashboards);
         }
     }
 }

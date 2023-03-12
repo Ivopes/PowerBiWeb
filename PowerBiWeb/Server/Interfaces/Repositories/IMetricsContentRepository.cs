@@ -11,9 +11,9 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     /// </summary>
     public interface IMetricsContentRepository
     {
-        Task<EmbedContentDTO> GetEmbededDashboardAsync(Guid dashboardId);
+        Task<DashboardDTO> GetEmbededDashboardAsync(Guid dashboardId);
         Task<ReportDTO> GetEmbededReportAsync(Guid reportId);
-        Task<string> UpdateDashboardsAsync(int dashboardId);
+        Task<string> UpdateDashboardsAsync(int projectId);
         Task<string> AddDashboardsAsync(int projectId, ProjectDashboard dashboard);
         Task<string> UpdateReportsAsync(int reportId);
         Task<string> AddReportsAsync(int projectId, ProjectReport report);

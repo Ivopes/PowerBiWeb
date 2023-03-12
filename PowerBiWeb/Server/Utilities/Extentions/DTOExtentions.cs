@@ -40,7 +40,7 @@ namespace PowerBiWeb.Server.Utilities.Extentions
                 });
             }
 
-            dto.Dashboards = new List<EmbedContentDTO>();
+            dto.Dashboards = new List<DashboardDTO>();
 
             foreach (var dashboard in p.ProjectDashboards)
             {
@@ -79,7 +79,6 @@ namespace PowerBiWeb.Server.Utilities.Extentions
 
             return dataset;
         }
-
         public static ProjectReport ToBO(this ReportDTO report)
         {
             var r = new ProjectReport
@@ -98,6 +97,24 @@ namespace PowerBiWeb.Server.Utilities.Extentions
             }
 
             return r;
+        }
+        public static ProjectDashboard ToBO(this DashboardDTO dashboard)
+        {
+            var d = new ProjectDashboard
+            {
+                PowerBiId = dashboard.Id,
+                Name = dashboard.Name,
+                PowerBiName = dashboard.PowerBiName
+            };
+
+            d.Projects = new List<Project>();
+
+            if (dashboard.Projects.Count > 0)
+            {
+                d.Projects.Add(dashboard.Projects[0].ToBO());
+            }
+
+            return d;
         }
     }
 }

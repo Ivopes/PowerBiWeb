@@ -126,7 +126,7 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveProject(projectId);
         }
-        public async Task<string> AddReportAsync(int projectId, EmbedContentDTO report)
+        public async Task<string> AddReportAsync(int projectId, DashboardDTO report)
         {
             ProjectReport r = new()
             {
@@ -140,7 +140,7 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveReportsAsync(projectId, reportId);
         }
-        public async Task<string> AddDashboardAsync(int projectId, EmbedContentDTO dashboard)
+        public async Task<string> AddDashboardAsync(int projectId, DashboardDTO dashboard)
         {
             ProjectDashboard d = new()
             {
@@ -155,6 +155,7 @@ namespace PowerBiWeb.Server.Services
             return await _projectRepository.RemoveDashboardsAsync(projectId, dashboardId);
         }
         #region Private Methods
+        
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);

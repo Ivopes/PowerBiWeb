@@ -202,7 +202,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
-        public async Task<HttpResponse> AddPowerBiReport(int projectId, EmbedContentDTO report)
+        public async Task<HttpResponse> AddPowerBiReport(int projectId, DashboardDTO report)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/report", report);
 
@@ -220,7 +220,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 IsSuccess = false
             };
         }
-        public async Task<HttpResponse> AddPowerBiDashboard(int projectId, EmbedContentDTO dashboard)
+        public async Task<HttpResponse> AddPowerBiDashboard(int projectId, DashboardDTO dashboard)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/projects/{projectId}/dashboard", dashboard);
 

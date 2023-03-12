@@ -139,7 +139,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "report could not been rebinded");
+                    _logger.LogError(ex, "report could not been changed");
                 }
             }
 

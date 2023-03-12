@@ -41,7 +41,7 @@ namespace PowerBiWeb.Server.Repositories
 
             await _dbContext.SaveChangesAsync();
             
-            return string.Empty;;
+            return string.Empty;
         }
 
         public async Task<ProjectReport?> GetByGuidAsync(Guid reportGuid)
