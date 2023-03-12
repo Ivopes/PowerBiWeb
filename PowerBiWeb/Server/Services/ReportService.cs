@@ -92,5 +92,20 @@ namespace PowerBiWeb.Server.Services
             return await _reportRepository.UpdateReportsAsync(projectId);
         }
 
+        public async Task<Stream?> ExportReportAsync(int projectId, Guid reportId)
+        {
+            // Check if report belongs to project
+            var report = await _reportRepository.GetByGuidAsync(reportId);
+
+            if (report == null || report.Projects.All(p => p.Id != projectId))
+            {
+                _logger.LogError("Report with id: {0} for project id: {1} was not found", reportId, projectId);
+                return null;
+            }
+
+            var result = await _metricsSaverRepository.GetExportedReportAsync(reportId);
+
+            return result;
+        }
     }
 }

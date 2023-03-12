@@ -1,6 +1,7 @@
 ﻿using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
 using PowerBiWeb.Shared.Project;
+using System.IO;
 using System.Net.Http.Json;
 
 namespace PowerBiWeb.Client.Utilities.Services
@@ -115,6 +116,38 @@ namespace PowerBiWeb.Client.Utilities.Services
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
+        public async Task<HttpResponse<Stream>> ExportReportAsync(int projectId, Guid reportId)
+        {
+            return await ExportReportAsync(projectId, reportId, CancellationToken.None);
+        }
+
+        public async Task<HttpResponse<Stream>> ExportReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        {
+            var response = await _httpClient.GetAsync($"api/reports/export/{projectId}/{reportId}", ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    return new()
+                    {
+                        IsSuccess = true,
+                        Value = stream,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "report could not been downloaded");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = "Could not download a file",
             };
         }
     }

@@ -426,6 +426,40 @@ namespace PowerBiWeb.Server.Repositories
             
             return true;
         }
+        public async Task<Stream?> GetExportedReportAsync(Guid reportId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new ExportReportRequest
+            {
+                Format = FileFormat.PPTX
+            };
+
+            var result = await pbiClient.Reports.ExportToFileInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+
+            if (result.Response.IsSuccessStatusCode)
+            {
+                do
+                {
+                    await Task.Delay(100);
+                    result = await pbiClient.Reports.GetExportToFileStatusInGroupWithHttpMessagesAsync(_workspaceId, reportId, result.Body.Id);
+
+                } while (result.Body.Status == ExportState.Running && result.Response.IsSuccessStatusCode);
+
+                if (result.Response.IsSuccessStatusCode && result.Body.Status == ExportState.Succeeded)
+                {
+                    var streamResult = await pbiClient.Reports.GetFileOfExportToFileInGroupWithHttpMessagesAsync(_workspaceId, reportId, result.Body.Id);
+                    if (streamResult.Response.IsSuccessStatusCode)
+                    {
+                        return streamResult.Body;
+                    }
+                }
+
+            }
+            
+            _logger.LogError("Error while exporting report :{0}", await result.Response.Content.ReadAsStringAsync());
+            return null;
+        }
         private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
@@ -459,5 +493,6 @@ namespace PowerBiWeb.Server.Repositories
 
             return embedToken;
         }
+
     }
 }

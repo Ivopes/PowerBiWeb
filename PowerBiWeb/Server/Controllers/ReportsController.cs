@@ -4,6 +4,8 @@ using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared;
 using PowerBiWeb.Shared.Project;
+using System.Data;
+using System.IO;
 
 namespace PowerBiWeb.Server.Controllers
 {
@@ -33,7 +35,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpGet("{projectId}/update")]
         public async Task<ActionResult<string>> UpdateReportsAsync(int projectId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var result = await _reportService.UpdateReportsAsync(projectId);
 
@@ -42,7 +45,8 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("clone/{projectId}/{reportId}")]
         public async Task<ActionResult<string>> CloneReportAsync(int projectId, Guid reportId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _reportService.CloneReportAsync(projectId, reportId);
 
@@ -51,13 +55,32 @@ namespace PowerBiWeb.Server.Controllers
         [HttpPost("rebind/{projectId}/{reportId}/{datasetId}")]
         public async Task<ActionResult<string>> RebindReportAsync(int projectId, Guid reportId, Guid datasetId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Editor) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
             var result = await _reportService.RebindReportAsync(projectId, reportId, datasetId);
 
             if (string.IsNullOrEmpty(result)) return Ok();
             
             return BadRequest(result);
+        }
+        [HttpGet("export/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> ExportReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.ExportReportAsync(projectId, reportId);
+
+            if (result is null) return NotFound();
+
+            var s = new MemoryStream();
+
+            await result.CopyToAsync(s);
+
+            s.Seek(0, SeekOrigin.Begin);
+
+            return new FileStreamResult(s, "application/octet-stream");
         }
     }
 }

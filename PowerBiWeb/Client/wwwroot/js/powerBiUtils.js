@@ -23,9 +23,6 @@ export  function changeText(id, text) {
 }
 export  function showReport(reportContainer, accessToken, embedUrl) {
     var models = window['powerbi-client'].models;
-    console.log(reportContainer);
-    console.log(accessToken);
-    console.log(embedUrl);
     var config = {
         type: 'report',
         tokenType: models.TokenType.Embed,
@@ -52,3 +49,17 @@ export function showDashboard(dashboardContainer, accessToken, embedUrl) {
     // Embed the dashboard.
     powerbi.embed(dashboardContainer, embedConfiguration);
 }
+
+async function downloadFileFromStream(fileName, contentStreamReference) {
+    const arrayBuffer = await contentStreamReference.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
+    const url = URL.createObjectURL(blob);
+    const anchorElement = document.createElement('a');
+    anchorElement.href = url;
+    anchorElement.download = fileName ?? '';
+    anchorElement.click();
+    anchorElement.remove();
+    URL.revokeObjectURL(url);
+}
+
+window.downloadFileFromStream = downloadFileFromStream;

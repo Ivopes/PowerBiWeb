@@ -16,5 +16,6 @@ namespace PowerBiWeb.Server.Interfaces.Services
         /// <param name="datasetId"></param>
         /// <returns></returns>
         Task<string> RebindReportAsync(int projectId, Guid reportId, Guid datasetId);
+        Task<Stream?> ExportReportAsync(int projectId, Guid reportId);
     }
 }

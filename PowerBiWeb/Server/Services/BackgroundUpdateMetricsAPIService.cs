@@ -41,8 +41,8 @@ namespace PowerBiWeb.Server.Services
             if (!_updateOptions.Enabled) return;
 
             _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateMetricsAPIService)}...");
-
-            var diffToZeroMinutes = (44 - DateTime.UtcNow.Minute) % 60;
+            return;
+            var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
             await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 
             if (ShouldUpdate()) 
