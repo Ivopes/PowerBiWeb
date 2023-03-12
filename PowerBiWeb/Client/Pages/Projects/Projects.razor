@@ -1,13 +1,13 @@
 ﻿@page "/projects"
 @using PowerBiWeb.Client.Utilities.Interfaces;
 @using PowerBiWeb.Shared.Project;
-@using System.Text.Json;
 @inject IJSRuntime JS
 @inject ILogger<Projects> _logger;
 @inject IToastService toastService;
 @inject IProjectService _projectService
 @inject NavigationManager navigation
 @implements IAsyncDisposable
+@implements IDisposable
 
 <h3>Projects</h3>
 
@@ -65,11 +65,15 @@
 
     private IJSObjectReference? module;
     private AddProject? ModalWindow { get; set; }
+    private CancellationTokenSource cts = new CancellationTokenSource();
     private bool showModal;
     void ModalShow() => showModal = true;
     private List<ProjectDTO>? _projects = null;
     private bool loading;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+    
     private async Task LoadProjects()
     {
         _projects = null;
@@ -83,6 +87,7 @@
         else
         {
             _logger.LogError(response.ErrorMessage);
+            toastService.ShowError(response.ErrorMessage);
             _projects = Array.Empty<ProjectDTO>().ToList();
         }
         loading = false;
@@ -122,7 +127,7 @@
             _logger.LogInformation("Js loaded");
         }
     }
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await LoadProjects();
     }
@@ -133,10 +138,18 @@
     
     public async ValueTask DisposeAsync()
     {
+        cts.Cancel();
+        cts.Dispose();
         if (module is not null)
         {
             await module.DisposeAsync();
         }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
 }

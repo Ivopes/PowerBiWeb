@@ -5,6 +5,7 @@
 @inject IDatasetService _datasetService
 @inject IToastService toastService
 @inject NavigationManager navigation
+@attribute [Authorize(Roles = "Admin")]
 
 <h3 class="mb-3">Datasets</h3>
 
