@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 namespace PowerBiWeb.Client.Utilities.Auth
 {
@@ -33,7 +34,12 @@ namespace PowerBiWeb.Client.Utilities.Auth
             JwtSecurityToken securityToken;
             try
             {
-                securityToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+                securityToken = handler.ReadJwtToken(token);
+                if (securityToken.ValidTo < DateTime.UtcNow)
+                {
+                    NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
+                    return _anonymousState;
+                }  
             }
             catch (ArgumentException)
             {

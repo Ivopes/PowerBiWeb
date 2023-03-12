@@ -109,6 +109,9 @@
         loading = true;
         var state = await authProvider.GetAuthenticationStateAsync();
 
+        if (state.User.Identity is null || !state.User.Identity.IsAuthenticated)
+            return;
+        
         int id = int.Parse(state.User.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
 
         var response = await userService.GetById(id);
