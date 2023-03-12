@@ -9,6 +9,7 @@
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider AuthState
 @implements IDisposable
+@implements IAsyncDisposable
 
 <NavLink href=@($"/projects/{projectId}")>
     <button type="button" class="btn btn-primary mb-3"><Icon Name="IconName.ArrowLeft" /> Back</button>
@@ -181,4 +182,14 @@
         cts.Cancel();
         cts.Dispose();
     }
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+}
 }
