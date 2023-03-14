@@ -470,6 +470,22 @@ namespace PowerBiWeb.Server.Repositories
             _logger.LogError("Error while exporting report :{0}", await result.Response.Content.ReadAsStringAsync());
             return null;
         }
+
+        public async Task<Stream?> GetDownloadedReportAsync(Guid reportId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+            
+            var result = await pbiClient.Reports.ExportReportInGroupWithHttpMessagesAsync(_workspaceId, reportId);
+
+            if (result.Response.IsSuccessStatusCode)
+            {
+                return result.Body;
+            }
+            
+            _logger.LogError("Error while exporting report :{0}", await result.Response.Content.ReadAsStringAsync());
+            return null;
+        }
+
         private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);

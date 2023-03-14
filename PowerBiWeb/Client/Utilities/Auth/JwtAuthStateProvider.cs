@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 namespace PowerBiWeb.Client.Utilities.Auth
 {
@@ -22,13 +23,29 @@ namespace PowerBiWeb.Client.Utilities.Auth
         {
             var token = await _localStorage.GetItemAsync<string>(TokenKey);
 
-            if (token is null)
+            var handler = new JwtSecurityTokenHandler();
+            
+            if (token is null || !handler.CanReadToken(token))
             {
                 NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
                 return _anonymousState;
             }
 
-            var securityToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            JwtSecurityToken securityToken;
+            try
+            {
+                securityToken = handler.ReadJwtToken(token);
+                if (securityToken.ValidTo < DateTime.UtcNow)
+                {
+                    NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
+                    return _anonymousState;
+                }  
+            }
+            catch (ArgumentException)
+            {
+                NotifyAuthenticationStateChanged(Task.FromResult(_anonymousState));
+                return _anonymousState;
+            }
 
             var identity = new ClaimsIdentity(new List<Claim>(securityToken.Claims), AuthType);
 

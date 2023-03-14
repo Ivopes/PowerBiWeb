@@ -9,11 +9,20 @@
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider AuthState
 @implements IDisposable
+@implements IAsyncDisposable
 
-<NavLink href=@($"/projects/{projectId}")>
-    <button type="button" class="btn btn-primary mb-3"><Icon Name="IconName.ArrowLeft" /> Back</button>
-</NavLink>
+<div class="d-flex flex-row mt-2 mb-3">
+    <NavLink href=@($"/projects/{projectId}")>
+        <button type="button" class="btn btn-primary mr-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
+    </NavLink>
 
+    @if (dashboard is not null)
+    {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+            <Icon Name="IconName.Sync"/> Reload
+        </Button>
+    }
+</div>
 <LoadingIndicator @bind-Visible="loading">
 </LoadingIndicator>
 
@@ -180,5 +189,14 @@
     {
         cts.Cancel();
         cts.Dispose();
+    }
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
     }
 }

@@ -12,7 +12,6 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class AppUsersController : ControllerBase
     {
         private readonly IAppUserService _appUserService;
@@ -27,6 +26,7 @@ namespace PowerBiWeb.Server.Controllers
             return Ok(await _appUserService.GetAsync());
         }
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<UserDetail>> GetByIdAsync(int id)
         {
             if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))

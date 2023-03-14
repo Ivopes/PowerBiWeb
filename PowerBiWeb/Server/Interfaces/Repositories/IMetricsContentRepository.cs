@@ -22,5 +22,6 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
         Task<Report?> CloneReportAsync(Guid reportId, string reportNewName);
         Task<bool> RebindReportAsync(Guid reportId, Guid datasetId);
         Task<Stream?> GetExportedReportAsync(Guid reportId);
+        Task<Stream?> GetDownloadedReportAsync(Guid reportId);
     }
 }

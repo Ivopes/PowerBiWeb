@@ -1,4 +1,5 @@
-﻿using Blazored.Toast.Services;
+﻿using System.Net;
+using Blazored.Toast.Services;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Client.Pages.Projects;
 using PowerBiWeb.Client.Utilities.Http;
@@ -30,7 +31,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                     Value = projects,
                     ErrorMessage = string.Empty
                 };
-            };
+            }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
@@ -50,7 +51,7 @@ namespace PowerBiWeb.Client.Utilities.Services
                     Value = project,
                     ErrorMessage = string.Empty
                 };
-            };
+            }
             return new()
             {
                 ErrorMessage = await response.Content.ReadAsStringAsync(),

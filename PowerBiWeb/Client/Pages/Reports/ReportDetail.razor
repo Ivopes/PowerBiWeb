@@ -9,16 +9,23 @@
 @inject NavigationManager navigation
 @inject AuthenticationStateProvider AuthState
 @implements IDisposable
+@implements IAsyncDisposable
 
 <div class="d-flex flex-row mt-2 mb-3">
 <NavLink href=@($"/projects/{projectId}")>
-    <button type="button" class="btn btn-primary mb-3"><Icon Name="IconName.ArrowLeft" /> Back</button>
+    <button type="button" class="btn btn-primary mr-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
 </NavLink>
 
 
-@if (loading)
-{
-    <Button Color="Color.Primary" Clicked="ExportReport">Export to PDF</Button>
+@if (report is not null)
+{ 
+    <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+      <Icon Name="IconName.Sync" /> Reload
+    </Button>
+    <Button Color="Color.Primary" class="mx-2" Clicked="DownloadReport">Download PBIX</Button>
+    <Tooltip Text="Requires different Power BI licence">
+        <Button Color="Color.Primary" Disabled="@true" class="mx-2" Clicked="ExportReport">Export to PDF</Button>
+    </Tooltip>
 }
 
 </div>
@@ -176,11 +183,7 @@
         if (module is null) return;
         await module.InvokeVoidAsync("showReport", PowerBIElement, report!.EmbedToken, report.EmbedUrl, report.Id);
     }
-    public void Dispose()
-    {
-        cts.Cancel();
-        cts.Dispose();
-    }
+    
     private async Task ExportReport()
     {
         loading = true;
@@ -191,7 +194,7 @@
             Stream stream = response.Value!;
             stream.Seek(0, SeekOrigin.Begin);
             using var streamRef = new DotNetStreamReference(stream);
-            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, "mujSoubor", streamRef);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pdf", streamRef);
         }
         else
         {
@@ -199,7 +202,24 @@
         }
         loading = false;
     }
+    private async Task DownloadReport()
+    {
+        loading = true;
+        var response = await _reportService.DownloadReportAsync(projectId, reportId, cts.Token);
 
+        if (response.IsSuccess)
+        {
+            Stream stream = response.Value!;
+            stream.Seek(0, SeekOrigin.Begin);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pbix", streamRef);
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
     private async Task ChangeReportSettings()
     {
         loading = true;
@@ -215,5 +235,20 @@
             toastService.ShowError(response.ErrorMessage);
         }
         loading = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }

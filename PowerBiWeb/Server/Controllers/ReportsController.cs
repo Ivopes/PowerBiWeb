@@ -11,6 +11,7 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ReportsController : ControllerBase
     {
         private readonly IReportService _reportService;
@@ -84,6 +85,24 @@ namespace PowerBiWeb.Server.Controllers
             if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var result = await _reportService.ExportReportAsync(projectId, reportId);
+
+            if (result is null) return NotFound();
+
+            var s = new MemoryStream();
+
+            await result.CopyToAsync(s);
+
+            s.Seek(0, SeekOrigin.Begin);
+
+            return new FileStreamResult(s, "application/octet-stream");
+        }
+        [HttpGet("download/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> DownloadReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.DownloadReportAsync(projectId, reportId);
 
             if (result is null) return NotFound();
 

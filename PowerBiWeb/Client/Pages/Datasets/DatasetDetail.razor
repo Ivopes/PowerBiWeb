@@ -5,6 +5,7 @@
 @inject IDatasetService _datasetService
 @inject IToastService toastService
 @inject NavigationManager navigation
+@attribute [Authorize(Roles = "Admin")]
 
 <div class="d-flex flex-row mt-2 mb-3">
     <NavLink href="/datasets">
