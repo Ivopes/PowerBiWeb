@@ -96,5 +96,23 @@ namespace PowerBiWeb.Server.Controllers
 
             return new FileStreamResult(s, "application/octet-stream");
         }
+        [HttpGet("download/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> DownloadReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.DownloadReportAsync(projectId, reportId);
+
+            if (result is null) return NotFound();
+
+            var s = new MemoryStream();
+
+            await result.CopyToAsync(s);
+
+            s.Seek(0, SeekOrigin.Begin);
+
+            return new FileStreamResult(s, "application/octet-stream");
+        }
     }
 }

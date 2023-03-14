@@ -149,6 +149,38 @@ namespace PowerBiWeb.Client.Utilities.Services
             };
         }
 
+        public async Task<HttpResponse<Stream>> DownloadReportAsync(int projectId, Guid reportId)
+        {
+            return await DownloadReportAsync(projectId, reportId, CancellationToken.None);
+        }
+
+        public async Task<HttpResponse<Stream>> DownloadReportAsync(int projectId, Guid reportId, CancellationToken ct)
+        {
+            var response = await _httpClient.GetAsync($"api/reports/download/{projectId}/{reportId}", ct);
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    return new()
+                    {
+                        IsSuccess = true,
+                        Value = stream,
+                        ErrorMessage = string.Empty
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "report could not been downloaded");
+                }
+            }
+
+            return new()
+            {
+                ErrorMessage = "Could not download a file",
+            };
+        }
+
         public async Task<HttpResponse<Stream>> ExportReportAsync(int projectId, Guid reportId)
         {
             return await ExportReportAsync(projectId, reportId, CancellationToken.None);
@@ -171,13 +203,13 @@ namespace PowerBiWeb.Client.Utilities.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "report could not been downloaded");
+                    _logger.LogError(ex, "report could not been exported");
                 }
             }
 
             return new()
             {
-                ErrorMessage = "Could not download a file",
+                ErrorMessage = "Could not export a file",
             };
         }
     }

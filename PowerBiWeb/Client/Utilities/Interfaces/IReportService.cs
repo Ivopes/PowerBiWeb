@@ -15,5 +15,7 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse> RebindReportAsync(int projectId, Guid reportId, Guid datasetId, CancellationToken ct);
         Task<HttpResponse> UpdateReportSettingsAsync(ReportDTO report);
         Task<HttpResponse> UpdateReportSettingsAsync(ReportDTO report, CancellationToken ct);
+        Task<HttpResponse<Stream>> DownloadReportAsync(int projectId, Guid reportId);
+        Task<HttpResponse<Stream>> DownloadReportAsync(int projectId, Guid reportId, CancellationToken ct);
     }
 }

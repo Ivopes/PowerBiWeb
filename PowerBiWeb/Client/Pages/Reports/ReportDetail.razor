@@ -22,6 +22,7 @@
     <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
       <Icon Name="IconName.Sync" /> Reload
     </Button>
+    <Button Color="Color.Primary" class="mx-2" Clicked="DownloadReport">Download PBIX</Button>
     <Tooltip Text="Requires different Power BI licence">
         <Button Color="Color.Primary" Disabled="@true" class="mx-2" Clicked="ExportReport">Export to PDF</Button>
     </Tooltip>
@@ -193,7 +194,7 @@
             Stream stream = response.Value!;
             stream.Seek(0, SeekOrigin.Begin);
             using var streamRef = new DotNetStreamReference(stream);
-            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, "mujSoubor", streamRef);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pdf", streamRef);
         }
         else
         {
@@ -201,7 +202,24 @@
         }
         loading = false;
     }
+    private async Task DownloadReport()
+    {
+        loading = true;
+        var response = await _reportService.DownloadReportAsync(projectId, reportId, cts.Token);
 
+        if (response.IsSuccess)
+        {
+            Stream stream = response.Value!;
+            stream.Seek(0, SeekOrigin.Begin);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pbix", streamRef);
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
     private async Task ChangeReportSettings()
     {
         loading = true;
