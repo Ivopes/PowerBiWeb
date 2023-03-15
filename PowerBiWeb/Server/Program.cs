@@ -39,6 +39,7 @@ builder.Services.AddTransient<IDatasetService, DatasetService>();
 
 builder.Services.Configure<DatasetUpdateOptions>(builder.Configuration.GetSection("DatasetsUpdate"));
 builder.Services.Configure<ContentUpdateOptions>(builder.Configuration.GetSection("ContentUpdate"));
+builder.Services.Configure<DownloadPbixOptions>(builder.Configuration.GetSection("DownloadPbix"));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -66,6 +67,7 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<BackgroundUpdateMetricsApiService>();
 builder.Services.AddHostedService<BackgroundUpdateContentService>();
+builder.Services.AddHostedService<BackgroundDownloadMetricsService>();
 
 var app = builder.Build();
 
