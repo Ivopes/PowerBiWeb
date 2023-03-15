@@ -31,15 +31,16 @@
                 IPublicClientApplication clientApp = PublicClientApplicationBuilder.Create(azureAd.Value.ClientId).WithAuthority(azureAd.Value.AuthorityUrl).Build();
                 try
                 {
-                    authenticationResult = clientApp.AcquireTokenByUsernamePassword(
+                    /*
+                     authenticationResult = clientApp.AcquireTokenByUsernamePassword(
                         azureAd.Value.ScopeBase,
                         azureAd.Value.PbiUsername,
                         azureAd.Value.PbiPassword)
                         .ExecuteAsync().Result;
-
-                    //var userAccounts = clientApp.GetAccountsAsync().Result;
+                    */
+                    var userAccounts = clientApp.GetAccountsAsync().Result;
                     // Retrieve Access token from cache if available
-                    //authenticationResult = clientApp.AcquireTokenSilent(azureAd.Value.ScopeBase, userAccounts.FirstOrDefault()).ExecuteAsync().Result;
+                    authenticationResult = clientApp.AcquireTokenSilent(azureAd.Value.ScopeBase, userAccounts.FirstOrDefault()).ExecuteAsync().Result;
                 }
                 catch (Exception)
                 {

@@ -91,9 +91,9 @@ public class BackgroundDownloadMetricsService : BackgroundService
             {
                 var stream = (await powerBiRepository.GetDownloadedReportAsync(report.PowerBiId))!;
 
-                path = Path.Combine(path, report.Name + ".pbix");
+                var filePath = Path.Combine(path, report.Name + ".pbix");
                 
-                await using var filestream = new FileStream(path, FileMode.Create);
+                await using var filestream = new FileStream(filePath, FileMode.Create);
 
                 await stream.CopyToAsync(filestream);
                 
