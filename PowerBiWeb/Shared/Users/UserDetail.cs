@@ -1,4 +1,4 @@
-﻿namespace PowerBiWeb.Shared.User
+﻿namespace PowerBiWeb.Shared.Users
 {
     public class UserDetail : UserRegisterInformation
     {

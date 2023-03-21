@@ -1,6 +1,6 @@
 ﻿using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 using System.Net.Http;
 using System.Net.Http.Json;
 

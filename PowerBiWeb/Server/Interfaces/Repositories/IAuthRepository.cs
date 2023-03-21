@@ -1,5 +1,5 @@
 ﻿using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared.User;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {

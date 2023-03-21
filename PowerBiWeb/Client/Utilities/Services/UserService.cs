@@ -2,10 +2,9 @@
 using PowerBiWeb.Client.Pages.Projects;
 using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
-using PowerBiWeb.Shared.Project;
-using PowerBiWeb.Shared.User;
 using System.Net.Http;
 using System.Net.Http.Json;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Client.Utilities.Services
 {

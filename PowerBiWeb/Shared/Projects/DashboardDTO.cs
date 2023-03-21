@@ -1,6 +1,4 @@
-﻿using Microsoft.PowerBI.Api.Models;
-
-namespace PowerBiWeb.Shared.Project
+﻿namespace PowerBiWeb.Shared.Projects
 {
     public class DashboardDTO
     {

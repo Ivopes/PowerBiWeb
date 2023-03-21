@@ -3,7 +3,7 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Extentions;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 using System.Security.Claims;
 
 namespace PowerBiWeb.Server.Services

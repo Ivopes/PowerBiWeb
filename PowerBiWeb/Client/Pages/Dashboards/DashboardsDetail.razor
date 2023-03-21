@@ -1,7 +1,7 @@
 ﻿@page "/projects/{projectId:int}/dashboards/{dashboardId:guid}"
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project
 @using System.Security.Claims
+@using PowerBiWeb.Shared.Projects
 @inject IDashboardService _dashboardService 
 @inject IToastService toastService
 @inject IJSRuntime JS

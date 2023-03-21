@@ -5,7 +5,7 @@ using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Exceptions;
 using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Shared;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 
 namespace PowerBiWeb.Server.Services
 {

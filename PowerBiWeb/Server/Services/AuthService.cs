@@ -3,10 +3,10 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Repositories;
-using PowerBiWeb.Shared.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Server.Services
 {

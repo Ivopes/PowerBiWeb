@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Services;
-using PowerBiWeb.Shared.User;
 using System.Security.Claims;
+using PowerBiWeb.Shared.Users;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 

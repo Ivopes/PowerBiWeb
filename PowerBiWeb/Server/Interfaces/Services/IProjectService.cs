@@ -1,5 +1,5 @@
 ﻿using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 
 namespace PowerBiWeb.Server.Interfaces.Services
 {

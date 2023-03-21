@@ -2,7 +2,7 @@
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
-using PowerBiWeb.Shared.User;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Server.Services
 {

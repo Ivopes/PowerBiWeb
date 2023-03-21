@@ -2,7 +2,6 @@
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
-using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Server.Repositories
 {

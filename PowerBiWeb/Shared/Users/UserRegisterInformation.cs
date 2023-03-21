@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PowerBiWeb.Shared.User
+namespace PowerBiWeb.Shared.Users
 {
     public class UserRegisterInformation : UserLoginInformation
     {

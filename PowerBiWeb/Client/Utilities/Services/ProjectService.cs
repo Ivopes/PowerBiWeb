@@ -4,9 +4,9 @@ using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Client.Pages.Projects;
 using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Client.Utilities.Interfaces;
-using PowerBiWeb.Shared.Project;
 using System.Net.Http;
 using System.Net.Http.Json;
+using PowerBiWeb.Shared.Projects;
 
 namespace PowerBiWeb.Client.Utilities.Services
 {

@@ -1,7 +1,7 @@
 ﻿@page "/projects/{projectId:int}/reports/{reportId:guid}"
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project
 @using System.Security.Claims
+@using PowerBiWeb.Shared.Projects
 @inject IReportService _reportService 
 @inject IToastService toastService
 @inject IJSRuntime JS

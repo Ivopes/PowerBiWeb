@@ -1,4 +1,4 @@
-﻿namespace PowerBiWeb.Shared.Project
+﻿namespace PowerBiWeb.Shared.Projects
 {
     public class UserToProjectDTO
     {

@@ -1,5 +1,5 @@
 ﻿using PowerBiWeb.Client.Utilities.Http;
-using PowerBiWeb.Shared.User;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Client.Utilities.Interfaces
 {

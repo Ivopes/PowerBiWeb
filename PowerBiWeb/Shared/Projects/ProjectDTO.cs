@@ -1,7 +1,6 @@
-﻿using PowerBiWeb.Shared.Datasets;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace PowerBiWeb.Shared.Project
+namespace PowerBiWeb.Shared.Projects
 {
     public class ProjectDTO
     {

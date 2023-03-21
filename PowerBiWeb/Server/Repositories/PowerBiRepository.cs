@@ -12,7 +12,7 @@ using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 using System.Data;
 using System.Dynamic;
 using System.Net.Http.Headers;

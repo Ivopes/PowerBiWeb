@@ -1,6 +1,5 @@
 ﻿using PowerBiWeb.Client.Utilities.Http;
 using PowerBiWeb.Shared.Datasets;
-using PowerBiWeb.Shared.Project;
 
 namespace PowerBiWeb.Client.Utilities.Interfaces
 {

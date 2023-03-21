@@ -3,7 +3,7 @@ using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Repositories;
 using PowerBiWeb.Server.Utilities.Exceptions;
 using PowerBiWeb.Server.Utilities.Extentions;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 
 namespace PowerBiWeb.Server.Services
 {

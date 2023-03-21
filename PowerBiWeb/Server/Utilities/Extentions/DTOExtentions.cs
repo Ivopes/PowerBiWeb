@@ -1,7 +1,7 @@
 ﻿using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared.Datasets;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 
 namespace PowerBiWeb.Server.Utilities.Extentions
 {
