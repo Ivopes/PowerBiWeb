@@ -12,7 +12,8 @@
         private readonly IOptions<PowerBiOptions> azureAd;
         public string WorkspaceId => azureAd.Value.WorkspaceId;
         public string PowerBiUrl => azureAd.Value.PowerBiApiUrl;
-
+        private AuthenticationResult? _authenticationResult;
+        private readonly object _accessLock = new object();
         public AadService(IOptions<PowerBiOptions> azureAd)
         {
             this.azureAd = azureAd;
@@ -25,10 +26,21 @@
         public string GetAccessToken()
         {
             AuthenticationResult? authenticationResult = null;
-            if (azureAd.Value.AuthenticationMode.Equals("masteruser", StringComparison.InvariantCultureIgnoreCase))
+
+            if (_authenticationResult is not null && DateTime.UtcNow < _authenticationResult.ExpiresOn)
             {
-                // Create a public client to authorize the app with the AAD app
+                return _authenticationResult.AccessToken;
+            }
+                
+            lock (_accessLock)
+            {
+                // Druha kontrola, v pripade ze vice vlaken se chce prihlasit najednou. 
+                if (_authenticationResult is not null && DateTime.UtcNow < _authenticationResult.ExpiresOn)
+                {
+                    return _authenticationResult.AccessToken;
+                }
                 IPublicClientApplication clientApp = PublicClientApplicationBuilder.Create(azureAd.Value.ClientId).WithAuthority(azureAd.Value.AuthorityUrl).Build();
+                // Create a public client to authorize the app with the AAD app
                 try
                 {
                     /*
@@ -42,7 +54,7 @@
                     // Retrieve Access token from cache if available
                     authenticationResult = clientApp.AcquireTokenSilent(azureAd.Value.ScopeBase, userAccounts.FirstOrDefault()).ExecuteAsync().Result;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     authenticationResult = clientApp.AcquireTokenByUsernamePassword(
                         azureAd.Value.ScopeBase, 
@@ -50,25 +62,10 @@
                         azureAd.Value.PbiPassword)
                         .ExecuteAsync().Result;
                 }
+
+                _authenticationResult = authenticationResult;
+                return authenticationResult!.AccessToken;
             }
-
-            // Service Principal auth is the recommended by Microsoft to achieve App Owns Data Power BI embedding
-            else if (azureAd.Value.AuthenticationMode.Equals("serviceprincipal", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // For app only authentication, we need the specific tenant id in the authority url
-                var tenantSpecificUrl = azureAd.Value.AuthorityUrl.Replace("organizations", azureAd.Value.TenantId);
-
-                // Create a confidential client to authorize the app with the AAD app
-                IConfidentialClientApplication clientApp = ConfidentialClientApplicationBuilder
-                                                                                .Create(azureAd.Value.ClientId)
-                                                                                .WithClientSecret(azureAd.Value.ClientSecret)
-                                                                                .WithAuthority(tenantSpecificUrl)
-                                                                                .Build();
-                // Make a client call if Access token is not available in cache
-                authenticationResult = clientApp.AcquireTokenForClient(azureAd.Value.ScopeBase).ExecuteAsync().Result;
-            }
-
-            return authenticationResult!.AccessToken;
         }
     }
 }

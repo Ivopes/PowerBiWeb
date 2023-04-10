@@ -27,6 +27,8 @@ namespace PowerBiWeb.Client.Utilities.Http
             
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
+                _navigation.NavigateTo("/login");
+                //return null;
                 var content = new StringContent("You are not authenticated. Try re-login");
 
                 response.Content = content;
