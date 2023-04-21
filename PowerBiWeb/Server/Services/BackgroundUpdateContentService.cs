@@ -42,7 +42,7 @@ public class BackgroundUpdateContentService : BackgroundService
         if (!_updateOptions.Enabled) return;
 
         _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateContentService)}...");
-        return;
+        
         var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
         await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 

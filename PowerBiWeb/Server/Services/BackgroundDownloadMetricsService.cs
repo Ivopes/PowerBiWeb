@@ -53,9 +53,7 @@ public class BackgroundDownloadMetricsService : BackgroundService
         {
             path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, _updateOptions.SavePath);
         }
-
-        await DownloadPbixAsync(path);
-        return;
+        
         var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
         await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 
