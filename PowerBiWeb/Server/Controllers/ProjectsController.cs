@@ -24,13 +24,13 @@ namespace PowerBiWeb.Server.Controllers
             _authService = authService;
         }
         [HttpGet]
-        public async Task<ActionResult<List<ProjectDTO>>> Get()
+        public async Task<ActionResult<List<ProjectDTO>>> GetAll()
         {
 
             return Ok(await _projectService.GetAllAsync());
         }
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectDTO>> Get(int id)
+        public async Task<ActionResult<ProjectDTO>> GetById(int id)
         {
             var role = await _authService.GetProjectRole(id);
             if (role is null || role > ProjectRoles.Viewer) return Forbid();

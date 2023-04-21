@@ -21,13 +21,13 @@ namespace PowerBiWeb.Server.Controllers
             _dashboardService = dashboardService;
             _authService = authService;
         }
-        [HttpGet("{projectId:int}/{reportId:Guid}")]
-        public async Task<ActionResult<DashboardDTO>> GetByIdAsync(int projectId, Guid reportId)
+        [HttpGet("{projectId:int}/{dashboardId:Guid}")]
+        public async Task<ActionResult<DashboardDTO>> GetByIdAsync(int projectId, Guid dashboardId)
         {
             var role = await _authService.GetProjectRole(projectId);
             if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
-            var embed = await _dashboardService.GetByIdAsync(projectId, reportId);
+            var embed = await _dashboardService.GetByIdAsync(projectId, dashboardId);
 
             if (embed is null) return NotFound("Dashboard was not found");
 

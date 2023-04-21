@@ -3,7 +3,6 @@
     public class PowerBiOptions
     {
         public string WorkspaceId { get; set; } = string.Empty;
-        public string ReportId { get; set; } = string.Empty;
 
         // Can be set to 'MasterUser' or 'ServicePrincipal'
         public string AuthenticationMode { get; set; } = string.Empty;
