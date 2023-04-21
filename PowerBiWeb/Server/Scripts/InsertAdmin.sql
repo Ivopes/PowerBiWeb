@@ -1,0 +1,8 @@
+USE [powerBiDb]
+GO
+SET IDENTITY_INSERT [dbo].[AppUsers] ON 
+GO
+INSERT [dbo].[AppUsers] ([Id], [Firstname], [Lastname], [Username], [PasswordHash], [PasswordSalt], [Email], [Created], [AppRole]) VALUES (1, N'adminF', N'adminL', N'admin', 0x88D84F549BAC68409A31876C3AAD3C316FED0FA66B1AD21CF1E233406C38A785, 0x507D7F1425FE44B7EAEB49314C632C460E0B6FD0C8570764CC935DEF8CF9DA0C, N'admin@admin.com', CAST(N'2023-04-21T12:59:43.3733092' AS DateTime2), 0)
+GO
+SET IDENTITY_INSERT [dbo].[AppUsers] OFF
+GO
