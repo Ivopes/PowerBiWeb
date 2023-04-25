@@ -142,7 +142,6 @@ namespace PowerBiWeb.Server.Services
         {
             ProjectReport r = new()
             {
-                Name = report.Name,
                 PowerBiId = report.Id
             };
 
@@ -156,7 +155,6 @@ namespace PowerBiWeb.Server.Services
         {
             ProjectDashboard d = new()
             {
-                Name = dashboard.Name,
                 PowerBiId = dashboard.Id
             };
 

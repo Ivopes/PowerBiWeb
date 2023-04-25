@@ -287,20 +287,35 @@ namespace PowerBiWeb.Server.Repositories
             {
                 var dashboardResponse = await pbiClient.Dashboards.GetDashboardInGroupAsync(_workspaceId, dashboard.PowerBiId);
 
-                var entityInDb = await _dbContext.ProjectDashboards.FindAsync(dashboardResponse.Id);
+                var entityUpdate = await _dbContext.ProjectDashboards.FindAsync(dashboardResponse.Id);
 
-                if (entityInDb is not null) return "Content is already in project";
-
-                var entityCreated = new ProjectDashboard()
+                if (entityUpdate is not null)
                 {
-                    PowerBiId = dashboardResponse.Id,
-                    Name = dashboard.Name,
-                    PowerBiName = dashboardResponse.DisplayName,
-                    WorkspaceId = _workspaceId,
-                    Projects = new List<Project>() {projectEntity}
-                };
+                    if (!entityUpdate.Projects.Contains(projectEntity))
+                    {
+                        entityUpdate.Projects.Add(projectEntity);
+                    }
+                    else
+                    {
+                        return "Content is already in project";
+                    }
 
-                await _dbContext.ProjectDashboards.AddAsync(entityCreated);
+                    //a update udaju
+                    entityUpdate.PowerBiName = dashboardResponse.DisplayName;
+                }
+                else
+                {
+                    var entityCreated = new ProjectDashboard()
+                    {
+                        PowerBiId = dashboardResponse.Id,
+                        Name = dashboard.Name,
+                        PowerBiName = dashboardResponse.DisplayName,
+                        WorkspaceId = _workspaceId,
+                        Projects = new List<Project>() {projectEntity}
+                    };
+
+                    await _dbContext.ProjectDashboards.AddAsync(entityCreated);
+                }
 
                 await _dbContext.SaveChangesAsync();
             }
