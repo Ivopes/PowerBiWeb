@@ -106,7 +106,19 @@ namespace PowerBiWeb.Server.Services
 
             if (project.AppUserProjects.Count == 1) return "Cant leave project when alone. Delete it instead";
 
-            return await _projectRepository.RemoveUserAsync(userId, projectId);
+            string result = await _projectRepository.RemoveUserAsync(userId, projectId);
+
+            if (!string.IsNullOrEmpty(result)) return result;
+
+            project = await _projectRepository.GetAsync(projectId);
+            
+            // Set last user to creator, so he is not locked in project
+            if (project!.AppUserProjects.Count == 1)
+            {
+                var lastUser = project.AppUserProjects.First();
+                result = await _projectRepository.EditUserAsync(lastUser.AppUser.Email, projectId, ProjectRoles.Creator);
+            }
+            return result;
         }
         public async Task<ProjectRoles?> GetProjectRole(int projectId)
         {
