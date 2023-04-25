@@ -53,7 +53,10 @@ namespace PowerBiWeb.Server.Repositories
         {
             return await _dbContext.AppUsers.FindAsync(id);
         }
-
+        public async Task<ApplUser?> GetByEmailAsync(string email)
+        {
+            return await _dbContext.AppUsers.SingleOrDefaultAsync(u => u.Email == email);
+        }
         public async Task<string> PostAsync(ApplUser user)
         {
             string response = string.Empty;

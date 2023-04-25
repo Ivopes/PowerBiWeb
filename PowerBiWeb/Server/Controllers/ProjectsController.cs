@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
+using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
@@ -99,6 +100,7 @@ namespace PowerBiWeb.Server.Controllers
         {
             var role = await _authService.GetProjectRole(dto.ProjectId);
             if (role is null || role > ProjectRoles.Editor) return Forbid();
+            if ((int)dto.Role < (int)role!) return BadRequest("Cannot add with higher role");
 
             var result = await _projectService.AddToUserAsync(dto);
 
@@ -111,6 +113,10 @@ namespace PowerBiWeb.Server.Controllers
         {
             var role = await _authService.GetProjectRole(dto.ProjectId);
             if (role is null || role > ProjectRoles.Editor) return Forbid();
+            if ((int)dto.Role < (int)role!) return BadRequest("Cannot set higher role");
+            
+            var editedRole = await _authService.GetProjectRole(dto.ProjectId, dto.UserEmail);
+            if (editedRole < role) return BadRequest("Cannot edit higher role");
 
             var result = await _projectService.EditUserAsync(dto);
 
@@ -135,6 +141,9 @@ namespace PowerBiWeb.Server.Controllers
         {
             var role = await _authService.GetProjectRole(projectId);
             if (role is null || role > ProjectRoles.Editor) return Forbid();
+            var deleteRole = await _authService.GetProjectRole(projectId, userId);
+
+            if (deleteRole < role) return BadRequest("Cannot delete higher role");
 
             var result = await _projectService.RemoveUserAsync(userId, projectId);
 
