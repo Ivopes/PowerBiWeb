@@ -433,6 +433,16 @@ namespace PowerBiWeb.Server.Repositories
                 _logger.LogError("Error while rebinding report :{0}", await result.Response.Content.ReadAsStringAsync());
                 return false;
             }
+
+            var report = await _dbContext.ProjectReports.FindAsync(reportId);
+            var dataset = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == datasetId);
+
+            if (report is not null && dataset is not null)
+            {
+                report.Dataset = dataset;
+                report.DatasetId = dataset.Id;
+                await _dbContext.SaveChangesAsync();
+            }
             
             return true;
         }
