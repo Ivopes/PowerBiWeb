@@ -368,10 +368,6 @@
                 <InputText id="metricsId" class="form-control" @bind-Value="addContentId" />
             </div>
             <div class="form-group">
-                <label for="metricsId">Content name</label>
-                <InputText id="metricsId" class="form-control" @bind-Value="addContentName" />
-            </div>
-            <div class="form-group">
                 <label for="contentType">Type:</label>
                 <br/>
                 <InputRadioGroup id="contentType" @bind-Value="addReport">
@@ -456,7 +452,6 @@
 
     private bool addReport = true; //false = is dashboard; true = is report
     private string addContentId = string.Empty;
-    private string addContentName = string.Empty;
 
     string selectedTab = "reports";
 
@@ -505,14 +500,12 @@
     {
         addReport = true;
         addContentId = string.Empty;
-        addContentName = string.Empty;
         return modalAddPowerBiRef!.Show();
     }
     private Task HideAddPowerBIModal()
     {
         addReport = true;
         addContentId = string.Empty;
-        addContentName = string.Empty;
         return modalAddPowerBiRef!.Hide();
     }
     private Task ShowRemoveReportModal(int index)
@@ -758,7 +751,6 @@
             return;
         }
         content.Id = id;
-        content.Name = addContentName;
 
         loading = true;
         if (addReport)
@@ -769,7 +761,6 @@
             {
                 toastService.ShowSuccess("Report added");
                 addContentId = string.Empty;
-                addContentName = string.Empty;
                 await LoadData();
             }
             else
@@ -785,7 +776,6 @@
             {
                 toastService.ShowSuccess("Dashboard added");
                 addContentId = string.Empty;
-                addContentName = string.Empty;
                 await LoadData();
             }
             else
