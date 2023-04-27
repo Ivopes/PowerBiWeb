@@ -1,4 +1,4 @@
-﻿@using PowerBiWeb.Shared.Project;
+﻿@using PowerBiWeb.Shared.Projects
 <EditForm Model="@project" OnValidSubmit="@HandleAdd">
     <DataAnnotationsValidator />
     <div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
@@ -8,22 +8,18 @@
                     <h4 class="modal-title">Add Project</h4>
                 </div>
                 <div class="modal-body">
-                        <div class="form-group">
+                    <div class="form-group">
                         <label for="name">Name</label>
-                            <InputText id="name" @bind-Value="project.Name" class="form-control" />
-                            <ValidationMessage For="@(() => project.Name)" />
-                        </div>
-                        <div class="form-group">
-                            <label for="url">Metric project name</label>
-                            <InputText id="url" @bind-Value="project.MetricName" class="form-control" />
-                            <ValidationMessage For="@(() => project.MetricName)" />
-                        </div>
+                        <InputText id="name" @bind-Value="project.Name" class="form-control"  />
+                        <ValidationMessage For="@(() => project.Name)" />
+                    </div>
+                        
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Tooltip on top">
                         Add
                     </button>
-                    <button type="button" class="btn btn-light" @onclick=@Cancel>
+                    <button type="button" class="btn btn-outline-secondary" @onclick=@Cancel>
                         Cancel
                     </button>
                 </div>

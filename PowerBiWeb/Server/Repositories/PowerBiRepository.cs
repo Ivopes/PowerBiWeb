@@ -1,15 +1,20 @@
-﻿using MetricsAPI.Models;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
+using Microsoft.Rest;
+using PowerBiWeb.Client.Pages.Datasets;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Models.Entities;
+using PowerBiWeb.Server.Models.Metrics;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.Extentions;
 using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
+using System.Data;
+using System.Dynamic;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,12 +22,13 @@ using System.Text.Json;
 
 namespace PowerBiWeb.Server.Repositories
 {
-    public class PowerBiRepository : IMetricsSaverRepository
+    public class PowerBiRepository : IMetricsContentRepository
     {
         private readonly AadService _aadService;
         private readonly Guid _workspaceId;
         private readonly ILogger<PowerBiRepository> _logger;
         private readonly PowerBiContext _dbContext;
+        private const string TableName = "table1";
         public PowerBiRepository(AadService aadService, ILogger<PowerBiRepository> logger, PowerBiContext dbContext)
         {
             _aadService = aadService;
@@ -30,26 +36,41 @@ namespace PowerBiWeb.Server.Repositories
             _logger = logger;
             _dbContext = dbContext;
         }
-
-        public async Task<EmbedReportDTO> GetEmbededAsync(Guid reportId)
+        public async Task<ReportDTO> GetEmbededReportAsync(Guid reportId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             var report = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, reportId);
 
-            EmbedToken embedToken = GetEmbedToken(reportId, new Guid(report.DatasetId), _workspaceId);
+            EmbedToken embedToken = await GetEmbedReportToken(reportId, new Guid(report.DatasetId), _workspaceId);
 
             return new()
             {
-                ReportName = report.Name,
-                ReportId = reportId,
+                PowerBiName = report.Name,
+                Id = reportId,
                 EmbedToken = embedToken.Token,
                 EmbedUrl = report.EmbedUrl
             };
         }
+        public async Task<DashboardDTO> GetEmbededDashboardAsync(Guid dashboardId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var dashboard = await pbiClient.Dashboards.GetDashboardInGroupAsync(_workspaceId, dashboardId);
+
+            EmbedToken embedToken = await GetEmbedDashboardTokenAsync(dashboardId, _workspaceId);
+
+            return new()
+            {
+                PowerBiName = dashboard.DisplayName,
+                Id = dashboardId,
+                EmbedToken = embedToken.Token,
+                EmbedUrl = dashboard.EmbedUrl
+            };
+        }
         public async Task<string> UpdateReportsAsync(int projectId)
         {
-            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+            var projectEntity = await _dbContext.Projects.Include(p => p.ProjectReports).Include(p => p.ProjectDashboards).SingleOrDefaultAsync(p => p.Id == projectId);
 
             if (projectEntity is null)
             {
@@ -63,27 +84,52 @@ namespace PowerBiWeb.Server.Repositories
             {
                 var reportsReponse = await pbiClient.Reports.GetReportsInGroupAsync(_workspaceId);
 
-                var reports = new List<Report>();
-
                 foreach (var r in reportsReponse.Value)
                 {
-                    if (r.Name.StartsWith(projectEntity.Name))
+                    ProjectReport? reportToUpdate;
+                    // Zkontrolovat jestli je report soucasti projektu. Pokud ano, tak jenom update udaju
+                    reportToUpdate = projectEntity.ProjectReports.SingleOrDefault(report => report.PowerBiId == r.Id);
+                    if (reportToUpdate is not null)
                     {
-                        var entityInDb = await _dbContext.ProjectReports.FindAsync(r.Id);
+                        reportToUpdate.PowerBIName = r.Name;
+                    }
+                    // Zkontrolovat jestli je report novy podle jmena a pridat ho do projektu
+                    else if (r.Name.StartsWith(projectEntity.Name))
+                    {
+                        reportToUpdate = await _dbContext.ProjectReports.FindAsync(r.Id);
 
-                        if (entityInDb is not null) continue;
-
-                        reports.Add(r);
-
-                        var report = new ProjectReport()
+                        if (reportToUpdate is not null)
                         {
-                            PowerBiId = r.Id,
-                            Name = r.Name.Substring(projectEntity.Name.Length + 1),
-                            WorkspaceId = _workspaceId,
-                            Project = projectEntity
-                        };
+                            reportToUpdate.PowerBIName = r.Name;
+                            if (!reportToUpdate.Projects.Contains(projectEntity))
+                            {
+                                reportToUpdate.Projects.Add(projectEntity);
+                            }
+                        }
+                        else
+                        {
+                            reportToUpdate = new ProjectReport()
+                            {
+                                PowerBiId = r.Id,
+                                Name = r.Name.Substring(projectEntity.Name.Length + 1),
+                                PowerBIName = r.Name,
+                                WorkspaceId = _workspaceId,
+                                Projects = new List<Project>() { projectEntity }
+                            };
+                            await _dbContext.ProjectReports.AddAsync(reportToUpdate);
+                        }
 
-                        await _dbContext.ProjectReports.AddAsync(report);
+                    }
+                    if (reportToUpdate is not null)
+                    {
+                        //Check jestli zname dataset
+                        var rGuid = Guid.Parse(r.DatasetId);
+                        var datasetEntity = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == rGuid);
+                        if (datasetEntity is not null)
+                        {
+                            reportToUpdate.Dataset = datasetEntity;
+                            reportToUpdate.DatasetId = datasetEntity.Id;
+                        }
                     }
                 }
 
@@ -97,52 +143,204 @@ namespace PowerBiWeb.Server.Repositories
 
             return string.Empty;
         }
-        public async Task UploadMetric(Project project, MetricPortion metric)
+        public async Task<string> AddReportsAsync(int projectId, ProjectReport report)
         {
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found or you dont have a permision", projectId);
+                return "Project was not found or you dont have the right permision";
+            }
+
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
-
-            var datasets = await pbiClient.Datasets.GetDatasetsInGroupAsync(_workspaceId);
-
-            var datasetName = $"{project.Name}_{metric.Name}";
-
-            string datasetId = string.Empty;
-            foreach (var dataset in datasets.Value)
-            {
-                if (dataset.Name == datasetName)
-                {
-                    datasetId = dataset.Id;
-
-                    break;
-                }
-            }
-
-            if (string.IsNullOrEmpty(datasetId)) // Create new dataset
-            {
-                var dt = await CreateMetricDataset(project, metric);
-                if (dt is null)
-                {
-                    return;
-                }
-                datasetId = dt.Id;
-            }
-
-            //Add rows
-            var serializeOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Converters =
-                    {
-                        new PowerBiRowJsonConverter()
-                    }
-            };
-
-            var json = JsonSerializer.Serialize(metric, serializeOptions);
 
             try
             {
+                var reportResponse = await pbiClient.Reports.GetReportInGroupAsync(_workspaceId, report.PowerBiId);
+
+                var entityUpdate = await _dbContext.ProjectReports.FindAsync(reportResponse.Id);
+
+                if (entityUpdate is not null)
+                {
+                    if (!entityUpdate.Projects.Contains(projectEntity))
+                    {
+                        entityUpdate.Projects.Add(projectEntity);
+                    }
+                    else
+                    {
+                        return "Content is already in project";
+                    }
+
+                    //a update udaju
+                    entityUpdate.PowerBIName = reportResponse.Name;
+                }
+                else
+                {
+                    entityUpdate = new ProjectReport()
+                    {
+                        PowerBiId = reportResponse.Id,
+                        PowerBIName = reportResponse.Name,
+                        Name = report.Name,
+                        WorkspaceId = _workspaceId,
+                        Projects = new List<Project>() { projectEntity }
+                    };
+
+                    await _dbContext.ProjectReports.AddAsync(entityUpdate);
+                }
+                //Check jestli zname dataset
+                var rGuid = Guid.Parse(reportResponse.DatasetId);
+                var datasetEntity = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == rGuid);
+                if (datasetEntity is not null) 
+                {
+                    entityUpdate.Dataset = datasetEntity;
+                    entityUpdate.DatasetId = datasetEntity.Id;
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not add report with id: {0} for project id: {1}",report.PowerBiId ,projectId);
+                return "Could not add report for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> UpdateDashboardsAsync(int projectId)
+        {
+            var projectEntity = await _dbContext.Projects.Include(p => p.ProjectReports).Include(p => p.ProjectDashboards).SingleOrDefaultAsync(p => p.Id == projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found", projectId);
+                return "Project was not found";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var dashboradsResponse = await pbiClient.Dashboards.GetDashboardsInGroupAsync(_workspaceId);
+
+
+                foreach (var d in dashboradsResponse.Value)
+                {
+                    // Zkontrolovat jestli je dashboard soucasti projektu. Pokud ano, tak jenom update udaju
+                    var dashboardToUpdate = projectEntity.ProjectDashboards.SingleOrDefault(dashboard => dashboard.PowerBiId == d.Id);
+                    if (dashboardToUpdate is not null)
+                    {
+                        dashboardToUpdate.PowerBiName = d.DisplayName;
+                    }
+                    // Zkontrolovat jestli je dashboard novy podle jmena a pridat ho do projektu
+                    else if (d.DisplayName.StartsWith(projectEntity.Name))
+                    {
+                        dashboardToUpdate = await _dbContext.ProjectDashboards.FindAsync(d.Id);
+
+                        if (dashboardToUpdate is not null)
+                        {
+                            dashboardToUpdate.PowerBiName = d.DisplayName;
+                            if (!dashboardToUpdate.Projects.Contains(projectEntity))
+                            {
+                                dashboardToUpdate.Projects.Add(projectEntity);
+                            }
+                        }
+                        else
+                        {
+                            var dashboard = new ProjectDashboard()
+                            {
+                                PowerBiId = d.Id,
+                                Name = d.DisplayName.Substring(projectEntity.Name.Length + 1),
+                                PowerBiName = d.DisplayName,
+                                WorkspaceId = _workspaceId,
+                                Projects = new List<Project>() {projectEntity}
+                            };
+
+                            await _dbContext.ProjectDashboards.AddAsync(dashboard);
+                        }
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not update dashboards for project id: {0}", projectId);
+                return "Could not update dashboards for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<string> AddDashboardsAsync(int projectId, ProjectDashboard dashboard)
+        {
+            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+
+            if (projectEntity is null)
+            {
+                _logger.LogError("Project with id: {0} was not found", projectId);
+                return "Project was not found";
+            }
+
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            try
+            {
+                var dashboardResponse = await pbiClient.Dashboards.GetDashboardInGroupAsync(_workspaceId, dashboard.PowerBiId);
+
+                var entityUpdate = await _dbContext.ProjectDashboards.FindAsync(dashboardResponse.Id);
+
+                if (entityUpdate is not null)
+                {
+                    if (!entityUpdate.Projects.Contains(projectEntity))
+                    {
+                        entityUpdate.Projects.Add(projectEntity);
+                    }
+                    else
+                    {
+                        return "Content is already in project";
+                    }
+
+                    //a update udaju
+                    entityUpdate.PowerBiName = dashboardResponse.DisplayName;
+                }
+                else
+                {
+                    var entityCreated = new ProjectDashboard()
+                    {
+                        PowerBiId = dashboardResponse.Id,
+                        Name = dashboard.Name,
+                        PowerBiName = dashboardResponse.DisplayName,
+                        WorkspaceId = _workspaceId,
+                        Projects = new List<Project>() {projectEntity}
+                    };
+
+                    await _dbContext.ProjectDashboards.AddAsync(entityCreated);
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not add dashboard with id: {0} for project id: {1}", dashboard.PowerBiId, projectId);
+                return "Could not add dashboard for project";
+            }
+
+            return string.Empty;
+        }
+        public async Task<bool> AddRowsToDataset(PBIDataset dataset, MetricData data)
+        {
+            PostRowsRequest request = new PostRowsRequest
+            {
+                Rows = data.Rows.ToArray(),
+            };
+
+            try
+            {
+                string json = JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true });
+                
                 // Must use HttpClient because power bi SDK cant handle custom serialization
                 var httpClient = new HttpClient();
-                var url = $"https://api.powerbi.com/v1.0/myorg/groups/{_workspaceId}/datasets/{datasetId}/tables/{metric.Name}/rows";
+                var url = $"https://api.powerbi.com/v1.0/myorg/groups/{_workspaceId}/datasets/{dataset.PowerBiId}/tables/{TableName}/rows";
 
                 httpClient.BaseAddress = new Uri(url);
 
@@ -155,59 +353,49 @@ namespace PowerBiWeb.Server.Repositories
                 {
                     string r = await response.Content.ReadAsStringAsync();
                     _logger.LogError($"Could not post rows: {r}");
+                    return false;
                 }
+                //var response = await pbiClient.Datasets.PostRowsInGroupWithHttpMessagesAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
+                //await pbiClient.Datasets.PostRowsInGroupAsync(_workspaceId, dataset.PowerBiId.ToString(), TableName, request);
 
-                var entityProject = await _dbContext.Projects.FindAsync(project.Id);
-                entityProject!.LastUpdate = DateTime.UtcNow;
+                var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
+                entityDataset!.LastUpdate = DateTime.UtcNow;
+                entityDataset.LastUpdateName = data.Name;
                 await _dbContext.SaveChangesAsync();
+
+                return true;
             }
-            catch (Microsoft.Rest.HttpOperationException httpEx)
+            catch (HttpOperationException httpEx)
             {
                 _logger.LogError(httpEx, httpEx.Response.Content);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "General error");
+                _logger.LogError(ex, "Could not push rows for dataset with id: {0}", dataset.Id);
             }
-            //return stringData;
+
+            return false;
         }
-        public async Task UploadMetric(Project project, List<MetricPortion> metrics)
-        {
-            foreach (var metric in metrics)
-            {
-                await UploadMetric(project, metric);
-            }
-        }
-        private async Task<Dataset?> CreateMetricDataset(Project project, MetricPortion metric)
+        public async Task<Dataset?> CreateDatasetFromDefinition(MetricDefinition definition)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var columns = new List<Column>();
+            for (int i = 0; i < definition.ColumnNames.Count; i++)
+            {
+                columns.Add(new Column(definition.ColumnNames[i], definition.ColumnTypes[i]));
+            }
+
+            var measures = new List<Measure>();
+            for (int i = 0; i < definition.Measures.Count; i++)
+            {
+                measures.Add(new Measure(definition.Measures[i], definition.MeasureDefinitions[i]));
+            }
 
             var tables = new List<Table>();
             var table = new Table()
             {
-                Name = metric.Name,
-                Description = metric.Description
-            };
-
-            var columns = new List<Column> //Int64, Double, Boolean, Datetime, String
-            {
-                new Column("Datum", "Datetime"),
-                new Column(metric.AdditionWithSignName, TypeToPowerBiType(metric.AdditionWithSignType)),
-                new Column(metric.AdditionWithoutSignName, TypeToPowerBiType(metric.AdditionWithoutSignType)),
-                new Column("Release", "String"),
-            };
-
-            var measures = new List<Measure>
-            {
-                new Measure("SumCelkem", $"CALCULATE (SUM({metric.Name}[{metric.AdditionWithoutSignName}]), FILTER( ALL( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
-                new Measure("SumCelkemByRelease", $"CALCULATE (SUM ({metric.Name}[{metric.AdditionWithoutSignName}] ), FILTER(ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )), VALUES({metric.Name}[Release]))"),
-
-                new Measure("SumPriznak", $"CALCULATE ( SUM({metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum] )))"),
-                new Measure("SumPriznakByRelease", $"CALCULATE ( SUM ( {metric.Name}[{metric.AdditionWithSignName}] ), FILTER ( ALL ( {metric.Name} ), {metric.Name}[Datum] <= MAX ( {metric.Name}[Datum])), VALUES({metric.Name}[Release]))"),
-
-                new Measure("Podil", $"{metric.Name}[SumPriznak] / {metric.Name}[SumCelkem]"),
-                new Measure("PodilPodleRelease", $"{metric.Name}[SumPriznakByRelease] / {metric.Name}[SumCelkemByRelease]"),
-
+                Name = "table1"
             };
 
             table.Columns = columns;
@@ -215,7 +403,7 @@ namespace PowerBiWeb.Server.Repositories
 
             tables.Add(table);
 
-            var pushDatasetRequest = new CreateDatasetRequest($"{project.Name}_{metric.Name}", tables);
+            var pushDatasetRequest = new CreateDatasetRequest($"{definition.Name}", tables, defaultMode: DatasetMode.Push);
 
             try
             {
@@ -233,34 +421,130 @@ namespace PowerBiWeb.Server.Repositories
             }
             return null;
         }
-        private string TypeToPowerBiType(string type)
+        public async Task<Report?> CloneReportAsync(Guid reportId, string reportNewName)
         {
-            return type switch //Int64, Double, Boolean, Datetime, String
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new CloneReportRequest(reportNewName);
+
+            var result = await pbiClient.Reports.CloneReportInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+            if (!result.Response.IsSuccessStatusCode)
             {
-                "System.Int32" => "Int64",
-                "System.Single" => "Double",
-                "System.Double" => "Double",
-                "System.Boolean" => "Boolean",
-                "System.DateTime" => "Datetime",
-                "System.String" => "String",
-            };
+                _logger.LogError("Error while rebinding report :{0}", await result.Response.Content.ReadAsStringAsync());
+                return null;
+            }
+
+            return result.Body;
         }
-        private EmbedToken GetEmbedToken(Guid reportId, Guid datasetId, Guid workspaceId)
+        public async Task<bool> RebindReportAsync(Guid reportId, Guid datasetId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new RebindReportRequest(datasetId.ToString());
+            
+            var result = await pbiClient.Reports.RebindReportInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+
+            if (!result.Response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Error while rebinding report :{0}", await result.Response.Content.ReadAsStringAsync());
+                return false;
+            }
+
+            var report = await _dbContext.ProjectReports.FindAsync(reportId);
+            var dataset = await _dbContext.Datasets.SingleOrDefaultAsync(d => d.PowerBiId == datasetId);
+
+            if (report is not null && dataset is not null)
+            {
+                report.Dataset = dataset;
+                report.DatasetId = dataset.Id;
+                await _dbContext.SaveChangesAsync();
+            }
+            
+            return true;
+        }
+        public async Task<Stream?> GetExportedReportAsync(Guid reportId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            var request = new ExportReportRequest
+            {
+                Format = FileFormat.PPTX
+            };
+
+            var result = await pbiClient.Reports.ExportToFileInGroupWithHttpMessagesAsync(_workspaceId, reportId, request);
+
+            if (result.Response.IsSuccessStatusCode)
+            {
+                do
+                {
+                    await Task.Delay(100);
+                    result = await pbiClient.Reports.GetExportToFileStatusInGroupWithHttpMessagesAsync(_workspaceId, reportId, result.Body.Id);
+
+                } while (result.Body.Status == ExportState.Running && result.Response.IsSuccessStatusCode);
+
+                if (result.Response.IsSuccessStatusCode && result.Body.Status == ExportState.Succeeded)
+                {
+                    var streamResult = await pbiClient.Reports.GetFileOfExportToFileInGroupWithHttpMessagesAsync(_workspaceId, reportId, result.Body.Id);
+                    if (streamResult.Response.IsSuccessStatusCode)
+                    {
+                        return streamResult.Body;
+                    }
+                }
+
+            }
+            
+            _logger.LogError("Error while exporting report :{0}", await result.Response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        public async Task<Stream?> GetDownloadedReportAsync(Guid reportId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+            
+            var result = await pbiClient.Reports.ExportReportInGroupWithHttpMessagesAsync(_workspaceId, reportId);
+
+            if (result.Response.IsSuccessStatusCode)
+            {
+                return result.Body;
+            }
+            
+            _logger.LogError("Error while exporting report :{0}", await result.Response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        private async Task<EmbedToken> GetEmbedReportToken(Guid reportId, Guid datasetId, Guid workspaceId)
         {
             PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
 
             // Create a request for getting Embed token 
             // This method works only with new Power BI V2 workspace experience
-            var tokenRequest = new GenerateTokenRequestV2(
+            /*var tokenRequest = new GenerateTokenRequestV2(
                 reports: new List<GenerateTokenRequestV2Report>() { new GenerateTokenRequestV2Report(reportId) },
                 datasets: new List<GenerateTokenRequestV2Dataset>() { new GenerateTokenRequestV2Dataset(datasetId.ToString()) },
                 targetWorkspaces: new List<GenerateTokenRequestV2TargetWorkspace>() { new GenerateTokenRequestV2TargetWorkspace(workspaceId) }
+            );*/
+
+            var tokenRequest = new GenerateTokenRequest(
+                accessLevel: TokenAccessLevel.View
             );
 
             // Generate Embed token
-            var embedToken = pbiClient.EmbedToken.GenerateToken(tokenRequest);
+            var embedToken = await pbiClient.Reports.GenerateTokenInGroupAsync(workspaceId, reportId, tokenRequest);
 
             return embedToken;
         }
+        private async Task<EmbedToken> GetEmbedDashboardTokenAsync(Guid dashboardId, Guid workspaceId)
+        {
+            PowerBIClient pbiClient = PowerBiUtility.GetPowerBIClient(_aadService);
+
+            // Create a request for getting Embed token 
+            var tokenRequest = new GenerateTokenRequest();
+
+            // Generate Embed token
+            var embedToken = await pbiClient.Dashboards.GenerateTokenInGroupAsync(workspaceId, dashboardId, tokenRequest);
+
+            return embedToken;
+        }
+
     }
 }

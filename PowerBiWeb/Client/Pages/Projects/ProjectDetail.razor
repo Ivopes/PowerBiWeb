@@ -1,136 +1,244 @@
 ﻿@page "/projects/{Id:int}"
+@using PowerBiWeb.Client.Utilities.Http;
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project;
+@using PowerBiWeb.Shared.Datasets;
 @using System.Security.Claims;
-@inject HttpClient httpClient
+@using PowerBiWeb.Shared.Projects
 @inject IToastService toastService
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
 @inject IProjectService _projectService
+@inject IReportService _reportService
+@inject IDatasetService _datasetService
+@inject ILogger<ProjectDetail> _logger
+@implements IDisposable
 
 
-<div class="d-flex flex-row" style="margin: 15px">
-    <NavLink href="/projects">
-        <button type="button" class="btn btn-primary">Back</button>
-    </NavLink><br />
+
+<div class="d-flex flex-row mt-2 mb-3">
+    <Button Color="Color.Primary" class="mr-2" Clicked="GoToProjects">
+        <Icon Name="IconName.ArrowLeft" /> 
+        Back
+    </Button>
 
     @if (project is not null)
     {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
+        @if (myRole <= ProjectRoleDTO.Editor)
+        {
+            <Button Color="Color.Secondary" Clicked="async () => await UpdateContent()" class="mx-2">
+                <Icon Name="IconName.CloudDownloadAlt" /> Refresh from PowerBI
+            </Button>
+
+            <Button Color="Color.Secondary" Clicked="ShowAddPowerBIModal" class="mx-2">
+                    <Icon Name="IconName.Add" /> Add from PowerBI manually
+            </Button>
+        }
         @if (myRole <= ProjectRoleDTO.Creator)
         {
-            <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">Delete project</Button>
+            <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">
+                <Icon Name="IconName.Delete" /> Delete project
+            </Button>
         }
-        //<Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateReports()">Update reports</Button>
     }
 </div>
 
+<LoadingIndicator @bind-Visible="loading">
 @if (project is not null)
 {
-    <h3>@project.Name</h3>
-}
+    <Card Background="Background.Light">
+        <CardBody>
+            <CardTitle>
+                <h3 class="mt-1 mb-3">@project!.Name</h3>
+            </CardTitle>
 
-<Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged" Style="margin-top: 10px">
-    <Items>
-        <Tab Name="reports">Reports</Tab>
-        <Tab Name="dashboards">Dashboards</Tab>
-        <Tab Name="users">Users</Tab>
-        <Tab Name="settings">Settings</Tab>
-    </Items>
-    <Content>
-        <TabPanel Name="reports">
-            <div style="margin: 5px">
-                @if (project is null)
-                {
-                    <div>Loading...</div>
-                }
-                else
-                {
-                    <Button Color="Color.Primary" Clicked="async () => await UpdateReports()">Update reports</Button>
-
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Report name</TableHeaderCell>
-                                <TableHeaderCell></TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            @for (int i = 0; i < project.Reports.Count; i++)
-                            {
-                                var report = project.Reports.ElementAt(i);
-                                string reportId = project.Reports.ElementAt(i).ReportId.ToString();
-                                <TableRow>
-                                    <TableRowCell>@report.ReportName</TableRowCell>
-                                    <TableRowCell>
-                                        <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">Show</Button>
-                                    </TableRowCell>
-                                </TableRow>
-                            }
-                        </TableBody>
-                    </Table>
-                }
-            </div>
-
-        </TabPanel>
-        <TabPanel Name="dashboards">
-            Content for dashboards.
-        </TabPanel>
-        <TabPanel Name="users">   
-            <div style="margin: 5px">
-                @if (project is null)
-                {
-                    <div>Loading...</div>
-                }
-                else
-                {
+            <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged" Style="mt-3">
+                <Items>
+                    <Tab Name="reports">Reports</Tab>
+                    <Tab Name="dashboards">Dashboards</Tab>
+                    <Tab Name="users">Users</Tab>
                     @if (myRole <= ProjectRoleDTO.Editor)
                     {
-                        <Button Color="Color.Primary" Clicked="@ShowAddModal">Add user to project</Button>
+                        <Tab Name="settings">Settings</Tab>
                     }
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Username</TableHeaderCell>
-                                <TableHeaderCell>Email</TableHeaderCell>
-                                <TableHeaderCell>Role</TableHeaderCell>
+                </Items>
+                <Content>
+                    <TabPanel Name="reports">
+                        <div style="margin: 5px">
+
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHeaderCell>Report name</TableHeaderCell>
+                                            <TableHeaderCell></TableHeaderCell>
+                                                @if (myRole <= ProjectRoleDTO.Editor)
+                                                {
+                                                    <TableHeaderCell></TableHeaderCell>
+                                                    <TableHeaderCell></TableHeaderCell>
+                                                    <TableHeaderCell></TableHeaderCell>
+                                                }
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        @for (int i = 0; i < project.Reports.Count; i++)
+                                        {
+                                            var report = project.Reports.ElementAt(i);
+                                            string reportId = project.Reports.ElementAt(i).Id.ToString();
+                                            Guid reportIdGuid = project.Reports.ElementAt(i).Id;
+                                            var j = i;
+                                            <TableRow>
+                                                <TableRowCell>@report.Name</TableRowCell>
+                                                <TableRowCell>
+                                                    <Button Color="Color.Secondary" Clicked="() => ShowReport(reportId)">
+                                                        <Icon Name="IconName.ArrowRight" /> Show
+                                                    </Button>
+                                                </TableRowCell>
+                                                @if (myRole <= ProjectRoleDTO.Editor)
+                                                {
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Secondary" Clicked="async () => await CloneReport(reportIdGuid)">
+                                                            <Icon Name="IconName.PlusSquare" /> Clone
+                                                        </Button>
+                                                    </TableRowCell>
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Secondary" Clicked="async () => await ShowRebindModal(reportIdGuid)">
+                                                            <Icon Name="IconName.Book" /> Rebind
+                                                        </Button>
+                                                    </TableRowCell>
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Danger" Clicked="() => ShowRemoveReportModal(j)">
+                                                            <Icon Name="IconName.Delete" /> Remove
+                                                        </Button>
+                                                    </TableRowCell>
+                                                }
+                                            </TableRow>
+                                        }
+                                    </TableBody>
+                                </Table>
+                
+                        </div>
+
+                    </TabPanel>
+                    <TabPanel Name="dashboards">
+                        <div style="margin: 5px">
+
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHeaderCell>Dashboard name</TableHeaderCell>
+                                            <TableHeaderCell></TableHeaderCell>
+                                            @if (myRole <= ProjectRoleDTO.Editor)
+                                            {
+                                                <TableHeaderCell></TableHeaderCell>
+                                            }
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        @for (int i = 0; i < project.Dashboards.Count; i++)
+                                        {
+                                            var dashboard = project.Dashboards.ElementAt(i);
+                                            string dashboardId = project.Dashboards.ElementAt(i).Id.ToString();
+                                            int j = i;
+                                            <TableRow>
+                                                <TableRowCell>@dashboard.Name</TableRowCell>
+                                                <TableRowCell>
+                                                    <Button Color="Color.Secondary" Clicked="() => ShowDashboard(dashboardId)">
+                                                        <Icon Name="IconName.ArrowRight" /> Show
+                                                    </Button>
+                                                </TableRowCell>
+                                                @if (myRole <= ProjectRoleDTO.Editor)
+                                                {
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Danger" Clicked="() => ShowRemoveDashboardModal(j)">
+                                                            <Icon Name="IconName.Delete" /> Remove
+                                                        </Button>
+                                                    </TableRowCell>
+                                                }
+                                            </TableRow>
+                                        }
+                                    </TableBody>
+                                </Table>
+                
+                        </div>
+                    </TabPanel>
+                    <TabPanel Name="users">   
+                        <div style="margin: 5px">
+
                                 @if (myRole <= ProjectRoleDTO.Editor)
                                 {
-                                    <TableHeaderCell></TableHeaderCell>
-                                    <TableHeaderCell></TableHeaderCell>
+                                    <Button Color="Color.Primary" Clicked="@ShowAddModal">
+                                        <Icon Name="IconName.UserPlus" /> Add user
+                                    </Button>
                                 }
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            @for (int i = 0; i < project.Users.Count; i++)
-                            {
-                                var user = project.Users.ElementAt(i);
-                                int j = i;
-                                <TableRow>
-                                    <TableRowCell>@user.Username</TableRowCell>
-                                    <TableRowCell>@user.Email</TableRowCell>
-                                    <TableRowCell>@user.Role</TableRowCell>
-                                    @if (myRole <= ProjectRoleDTO.Editor)
-                                    {
-                                        <TableRowCell>
-                                            <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">Edit</Button>
-                                        </TableRowCell>
-                                        <TableRowCell>
-                                            <Button Color="Color.Danger" Clicked="() => ShowRemoveModal(j)">Remove</Button>
-                                        </TableRowCell>
-                                    }
-                                </TableRow>
-                            }
-                        </TableBody>
-                    </Table>
-                }
-            </div>
-        </TabPanel>
-        <TabPanel Name="settings">
-            Content for settings.
-        </TabPanel>
-    </Content>
-</Tabs>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHeaderCell>Username</TableHeaderCell>
+                                            <TableHeaderCell>Email</TableHeaderCell>
+                                            <TableHeaderCell>Role</TableHeaderCell>
+                                            @if (myRole <= ProjectRoleDTO.Editor)
+                                            {
+                                                <TableHeaderCell></TableHeaderCell>
+                                                <TableHeaderCell></TableHeaderCell>
+                                            }
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        @for (int i = 0; i < project.Users.Count; i++)
+                                        {
+                                            var user = project.Users.ElementAt(i);
+                                            int j = i;
+                                            <TableRow>
+                                                <TableRowCell>@user.Username</TableRowCell>
+                                                <TableRowCell>@user.Email</TableRowCell>
+                                                <TableRowCell>@user.Role</TableRowCell>
+                                                @if (myRole <= ProjectRoleDTO.Editor)
+                                                {
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Secondary" Clicked="() => ShowEditModal(j)">
+                                                            <Icon Name="IconName.Edit" /> Edit
+                                                        </Button>
+                                                    </TableRowCell>
+                                                    <TableRowCell>
+                                                        <Button Color="Color.Danger" Clicked="() => ShowRemoveUserModal(j)">
+                                                            <Icon Name="IconName.Delete" /> Remove
+                                                        </Button>
+                                                    </TableRowCell>
+                                                }
+                                            </TableRow>
+                                        }
+                                    </TableBody>
+                                </Table>
+                
+                        </div>
+                    </TabPanel>
+                    @if(myRole <= ProjectRoleDTO.Editor)
+                    {
+                        <TabPanel Name="settings">
 
+                                <div style="margin-top:25px">
+                                <EditForm Model="project" OnSubmit="ChangeProjectSettings">
+                                    <div class="form-group">
+                                        <label for="metricsId">Project name</label>
+                                        <InputText id="metricsId" class="form-control" @bind-Value="project.Name" />
+                                    </div>
+
+                                    <Button Color="Color.Primary" Type="ButtonType.Submit">
+                                        <Icon Name="IconName.Save" /> Save
+                                    </Button>
+                                </EditForm>
+                            </div>
+            
+                    </TabPanel>
+                    }
+                </Content>
+            </Tabs>
+        </CardBody>
+    </Card>
+}
+</LoadingIndicator>
 
 @*
     Modal add user window
@@ -200,19 +308,42 @@
     </ModalContent>
 </Modal>
 
-<Modal @ref="modalRemoveRef">
+<Modal @ref="modalRemoveUserRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Delete user</ModalTitle>
             <CloseButton />
         </ModalHeader>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideRemoveModal">Close</Button>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveUserModal">Close</Button>
             <Button Color="Color.Danger" Clicked="@RemoveUser">Remove</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
-
+<Modal @ref="modalRemoveReportRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete report</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveReportModal">Close</Button>
+            <Button Color="Color.Danger" Clicked="@RemoveReport">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+<Modal @ref="modalRemoveDashboardRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete dashboard</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideRemoveDashboardModal">Close</Button>
+            <Button Color="Color.Danger" Clicked="@RemoveDashboard">Remove</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 <Modal @ref="modalConfirmRef">
     <ModalContent Centered>
         <ModalHeader>
@@ -226,22 +357,101 @@
     </ModalContent>
 </Modal>
 
+<Modal @ref="modalAddPowerBiRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add Power BI content</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="metricsId">Content Power BI Id</label>
+                <InputText id="metricsId" class="form-control" @bind-Value="addContentId" />
+            </div>
+            <div class="form-group">
+                <label for="contentType">Type:</label>
+                <br/>
+                <InputRadioGroup id="contentType" @bind-Value="addReport">
+                    <InputRadio Value="true" />
+                    Report<br>
+                    <InputRadio Value="false" />
+                    Dashboard<br>
+                </InputRadioGroup>
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HideAddPowerBIModal">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@AddPowerBIContent">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>          
+
+ <Modal @ref="modalRebindReportRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Rebind report</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            @*
+
+            <div class="form-group">
+                <label>Dataset Id</label>
+                <InputText class="form-control" />
+            </div>
+            *@
+            @if (datasets is not null && datasets.Length > 0)
+            {
+                <Select TValue="Guid" @bind-SelectedValue="rebindDatasetId">
+                    @if (rebindDatasetId == Guid.Empty)
+                    {
+                        <SelectItem Value="Guid.Empty">UNKNOWN</SelectItem>
+                    }
+                    @for (int i = 0; i < datasets.Length; i++)
+                    {
+                        var dataset = datasets[i];
+                        <SelectItem Value="dataset.PowerBiId">@dataset.Name</SelectItem>
+                    }
+                </Select>
+            }
+        </ModalBody>
+      <ModalFooter>
+          <Button Color="Color.Secondary" Clicked="HideRebindModal">Cancel</Button>
+          <Button Color="Color.Primary" Clicked="async () => await RebindReport(rebindReportId, rebindDatasetId)">Rebind</Button>
+      </ModalFooter>
+  </ModalContent>
+</Modal>
+
 @code {
     [Parameter]
     public int Id { get; set; }
 
+    private CancellationTokenSource cts = new CancellationTokenSource();
+
     private ProjectDTO? project;
+    private DatasetDTO[]? datasets;
     private ProjectRoleDTO myRole;
     // reference to the modal component
     private Modal? modalAddRef;
     private Modal? modalEditRef;
-    private Modal? modalRemoveRef;
+    private Modal? modalRemoveUserRef;
+    private Modal? modalRemoveReportRef;
+    private int removeReportIndex = -1;
+    private Modal? modalRemoveDashboardRef;
+    private int removeDashboardIndex = -1;
     private Modal? modalConfirmRef;
+    private Modal? modalAddPowerBiRef;
+    private Modal? modalRebindReportRef;
     private string addEmail = string.Empty;
     private int addRole = 2;
     private int editRole;
-    private string editEmail;
-    private int deleteIndex;
+    private string editEmail = string.Empty;
+    private int deleteIndex = -1;
+    private Guid rebindReportId = Guid.Empty;
+    private Guid rebindDatasetId = Guid.Empty;
+
+    private bool loading;
+
+    private bool addReport = true; //false = is dashboard; true = is report
+    private string addContentId = string.Empty;
 
     string selectedTab = "reports";
 
@@ -267,28 +477,77 @@
         SetEditModalForm(index);
         return modalEditRef!.Show();
     }
-    private Task ShowRemoveModal(int index)
+    private Task ShowRemoveUserModal(int index)
     {
         deleteIndex = index;
-        return modalRemoveRef!.Show();
+        return modalRemoveUserRef!.Show();
     }
     private Task HideEditModal()
     {
         return modalEditRef!.Hide();
     }
-    private Task HideRemoveModal()
+    private Task HideRemoveUserModal()
     {
-        return modalRemoveRef!.Hide();
+        deleteIndex = -1;
+        return modalRemoveUserRef!.Hide();
     }
     private void ClearAddModalForm()
     {
         addEmail = string.Empty;
         addRole = 2;
     }
+    private Task ShowAddPowerBIModal()
+    {
+        addReport = true;
+        addContentId = string.Empty;
+        return modalAddPowerBiRef!.Show();
+    }
+    private Task HideAddPowerBIModal()
+    {
+        addReport = true;
+        addContentId = string.Empty;
+        return modalAddPowerBiRef!.Hide();
+    }
+    private Task ShowRemoveReportModal(int index)
+    {
+        removeReportIndex = index;
+        return modalRemoveReportRef!.Show();
+    }
+    private Task HideRemoveReportModal()
+    {
+        removeReportIndex = -1;
+        return modalRemoveReportRef!.Hide();
+    }
+    private Task ShowRemoveDashboardModal(int index)
+    {
+        removeDashboardIndex = index;
+        return modalRemoveDashboardRef!.Show();
+    }
+    private Task HideRemoveDashboardModal()
+    {
+        removeDashboardIndex = -1;
+        return modalRemoveDashboardRef!.Hide();
+    }
     private void SetEditModalForm(int index)
     {
         editRole = (int) project!.Users.ElementAt(index).Role;
         editEmail = project!.Users.ElementAt(index).Email;
+    }
+    private async Task ShowRebindModal(Guid reportId)
+    {
+        rebindReportId = reportId;
+        rebindDatasetId = Guid.Empty;
+        var reportDataset = project!.Reports.SingleOrDefault(r => r.Id == reportId)!.Dataset;
+        if (reportDataset is not null)
+        {
+            rebindDatasetId = reportDataset.PowerBiId;
+        }
+        await modalRebindReportRef!.Show();
+    }
+    private async Task HideRebindModal()
+    {
+        rebindReportId = Guid.Empty;
+        await modalRebindReportRef!.Hide();
     }
     protected override async Task OnInitializedAsync()
     {
@@ -296,9 +555,10 @@
     }
     private async Task LoadData()
     {
+        loading = true;
         var response = await _projectService.GetProjectDetailAsync(Id);
 
-        if (response.Success)
+        if (response.IsSuccess)
         {
             project = response.Value;
 
@@ -307,14 +567,35 @@
             var username = state.User.Identity!.Name;
 
             myRole = project!.Users.Single(u => u.Username == username).Role;
+
+            await LoadDatasets();
+
+            toastService.ShowSuccess("Data loaded");
+        }
+        else
+        {
+            Navigation.NavigateTo("/projects");
+            toastService.ShowError(response.ErrorMessage);
+        }
+
+        loading = false;
+    }
+    private async Task LoadDatasets()
+    {
+        var response = await _datasetService.GetAllAsync();
+
+        if (response.IsSuccess)
+        {
+            datasets = response.Value!.ToArray();
         }
         else
         {
             toastService.ShowError(response.ErrorMessage);
-        }
+        } 
     }
     private async Task AddUserToProject()
     {
+        loading = true;
         var dto = new UserToProjectDTO
         {
             ProjectId = Id,
@@ -322,32 +603,31 @@
             UserEmail = addEmail,
         };
 
-        var response = await httpClient.PostAsJsonAsync($"api/projects/user", dto);
-
-        if (response.IsSuccessStatusCode)
+        var response = await _projectService.AddUserToProject(dto);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User added");
             ClearAddModalForm();
+            await HideAddModal();
+            await LoadData();
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task EditUser()
     {
+        loading = true;
         var dto = new UserToProjectDTO
             {
                 ProjectId = Id,
                 UserEmail = editEmail,
                 Role = (ProjectRoleDTO)editRole,
             };
-
-        var response = await httpClient.PutAsJsonAsync($"api/projects/user", dto);
-
-        if (response.IsSuccessStatusCode)
+        var response = await _projectService.EditUserInProject(dto);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User role changed");
             await HideEditModal();
@@ -355,64 +635,242 @@
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task RemoveUser()
     {
         int userId = project!.Users.ElementAt(deleteIndex).Id;
-
-        var response = await httpClient.DeleteAsync($"api/projects/{Id}/{userId}");
-
-        if (response.IsSuccessStatusCode)
+        loading = true;
+        var response = await _projectService.RemoveUserFromProject(Id, userId);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("User was removed");
-            await HideRemoveModal();
-            await LoadData();
+            await HideRemoveUserModal();
+            var state = await AuthState.GetAuthenticationStateAsync();
+
+            if (userId.ToString() == state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value)
+            {
+                Navigation.NavigateTo("/projects");
+                toastService.ShowSuccess("Project leaved");
+            }
+            else
+            {
+                await LoadData();
+            }
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
     }
     private async Task DeleteProject()
     {
-        var response = await httpClient.DeleteAsync($"api/projects/{Id}");
-
-        if (response.IsSuccessStatusCode)
+        loading = true;
+        var response = await _projectService.DeleteProject(Id);
+        if (response.IsSuccess)
         {
             Navigation.NavigateTo("/projects");
             toastService.ShowSuccess("Project was deleted");
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
         }
+        loading = false;
+    }
+    private async Task UpdateContent()
+    {
+        loading = true;
+        await UpdateReports();
+        await UpdateDashboards();
+        loading = false;
     }
     private async Task UpdateReports()
     {
-        var response = await httpClient.GetAsync($"api/reports/{Id}/update");
-
-        if (response.IsSuccessStatusCode)
+        var response = await _projectService.UpdateReportsForProject(Id);
+        if (response.IsSuccess)
         {
             toastService.ShowSuccess("Reports updated");
             await LoadData();
         }
         else
         {
-            var message = await response.Content.ReadAsStringAsync();
-
-            toastService.ShowError(message);
+            toastService.ShowError(response.ErrorMessage);
+        }
+    }
+    private async Task UpdateDashboards()
+    {
+        var response = await _projectService.UpdateDashboardsForProject(Id);
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dashboards updated");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
         }
     }
     private void ShowReport(string reportId)
     {
         Navigation.NavigateTo($"/projects/{Id}/reports/{reportId}");
+    }
+    private void ShowDashboard(string dashboardId)
+    {
+        Navigation.NavigateTo($"/projects/{Id}/dashboards/{dashboardId}");
+    }
+    private async Task ChangeProjectSettings()
+    {
+        if (project is null) return;
+
+        loading = true;
+        HttpResponse respose = await _projectService.EditProjectSettings(project);
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Changes saved");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
+        }
+        loading = false;
+
+    }
+    private async Task AddPowerBIContent()
+    {
+        HttpResponse respose;
+        DashboardDTO content = new();
+
+        if (!Guid.TryParse(addContentId, out var id))
+        {
+            toastService.ShowError("Wrong Id format");
+            return;
+        }
+        content.Id = id;
+
+        loading = true;
+        if (addReport)
+        {
+            respose = await _projectService.AddPowerBiReport(Id, content);
+
+            if (respose.IsSuccess)
+            {
+                toastService.ShowSuccess("Report added");
+                addContentId = string.Empty;
+                await LoadData();
+            }
+            else
+            {
+                toastService.ShowError(respose.ErrorMessage);
+            }
+        }
+        else
+        {
+            respose = await _projectService.AddPowerBiDashboard(Id, content);
+
+            if (respose.IsSuccess)
+            {
+                toastService.ShowSuccess("Dashboard added");
+                addContentId = string.Empty;
+                await LoadData();
+            }
+            else
+            {
+                toastService.ShowError(respose.ErrorMessage);
+            }
+        }
+        loading = false;
+    }
+    private async Task RemoveReport()
+    {
+        loading = true;
+        HttpResponse respose = await _projectService.RemoveReportFromProject(Id, project!.Reports.ElementAt(removeReportIndex).Id);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report removed");
+            await HideRemoveReportModal();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task RemoveDashboard()
+    {
+        loading = true;
+        HttpResponse respose = await _projectService.RemoveDashboardFromProject(Id, project!.Dashboards.ElementAt(removeDashboardIndex).Id);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Dashboard removed");
+            await HideRemoveDashboardModal();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError("Changes could not been saved: " + respose.ErrorMessage);
+        }
+        loading = false;
+    }
+    private void GoToProjects()
+    {
+        Navigation.NavigateTo("/projects");
+    }
+    private async Task CloneReport(Guid reportId)
+    {
+        loading = true;
+        HttpResponse respose = await _reportService.CloneReportAsync(Id, reportId, cts.Token);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report cloned");
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(respose.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task RebindReport(Guid reportId, Guid datasetId)
+    {
+        if (datasetId == Guid.Empty)
+        {   
+            toastService.ShowError("Select value");
+            return;
+        }
+
+        var reportDataset = project!.Reports.SingleOrDefault(r => r.Id == reportId)!.Dataset;
+        if (reportDataset is not null && datasetId == reportDataset.PowerBiId)
+        {
+            toastService.ShowError("Already binded");
+            return;
+        }
+        loading = true;
+        HttpResponse respose = await _reportService.RebindReportAsync(Id, reportId, datasetId, cts.Token);
+
+        if (respose.IsSuccess)
+        {
+            toastService.ShowSuccess("Report rebind complete");
+            await HideRebindModal();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(respose.ErrorMessage);
+        }
+        loading = false;
+    }
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }

@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Shared;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
+using System.Data;
+using System.IO;
 
 namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ReportsController : ControllerBase
     {
         private readonly IReportService _reportService;
@@ -17,31 +21,98 @@ namespace PowerBiWeb.Server.Controllers
             _reportService = reportService;
             _authService = authService;
         }
-
-        [HttpGet("{projectId:int}")]
-        public async Task<ActionResult<EmbedParams>> GetAsync(int projectId)
-        {
-            //var result = await _reportService.GetAsync(projectId);
-
-            return Ok();
-
-        }
         [HttpGet("{projectId:int}/{reportId:Guid}")]
-        public async Task<ActionResult<EmbedReportDTO>> GetByIdAsync(int projectId, Guid reportId)
+        public async Task<ActionResult<DashboardDTO>> GetByIdAsync(int projectId, Guid reportId)
         {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
             var embed = await _reportService.GetByIdAsync(projectId, reportId);
+
+            if (embed is null) return NotFound("Report was not found");
 
             return Ok(embed);
         }
         [HttpGet("{projectId}/update")]
         public async Task<ActionResult<string>> UpdateReportsAsync(int projectId)
         {
-            if (await _authService.GetProjectRole(projectId) > ProjectRoles.Viewer) return Forbid();
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
 
             var result = await _reportService.UpdateReportsAsync(projectId);
 
             return Ok(result);
+        }
+        [HttpPost("clone/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> CloneReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
 
+            var result = await _reportService.CloneReportAsync(projectId, reportId);
+
+            return Ok(result);
+        }
+        [HttpPost("rebind/{projectId}/{reportId}/{datasetId}")]
+        public async Task<ActionResult<string>> RebindReportAsync(int projectId, Guid reportId, Guid datasetId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
+
+            var result = await _reportService.RebindReportAsync(projectId, reportId, datasetId);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+            
+            return BadRequest(result);
+        }
+        [HttpPut]
+        public async Task<ActionResult<string>> UpdateReportSettingsAsync([FromBody] ReportDTO report)
+        {
+            var projectId = report.Projects[0].Id;
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Editor) return Forbid();
+
+            var result = await _reportService.UpdateReportSettingsAsync(report);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+            
+            return BadRequest(result);
+        }
+        [HttpGet("export/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> ExportReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.ExportReportAsync(projectId, reportId);
+
+            if (result is null) return NotFound();
+
+            var s = new MemoryStream();
+
+            await result.CopyToAsync(s);
+
+            s.Seek(0, SeekOrigin.Begin);
+
+            return new FileStreamResult(s, "application/octet-stream");
+        }
+        [HttpGet("download/{projectId}/{reportId}")]
+        public async Task<ActionResult<string>> DownloadReportAsync(int projectId, Guid reportId)
+        {
+            var role = await _authService.GetProjectRole(projectId);
+            if (role is null || role > ProjectRoles.Viewer) return Forbid();
+
+            var result = await _reportService.DownloadReportAsync(projectId, reportId);
+
+            if (result is null) return NotFound();
+
+            var s = new MemoryStream();
+
+            await result.CopyToAsync(s);
+
+            s.Seek(0, SeekOrigin.Begin);
+
+            return new FileStreamResult(s, "application/octet-stream");
         }
     }
 }

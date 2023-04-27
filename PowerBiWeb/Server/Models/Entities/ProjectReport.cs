@@ -9,6 +9,9 @@ namespace PowerBiWeb.Server.Models.Entities
         public Guid PowerBiId { get; set; }
         public Guid WorkspaceId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public Project Project { get; set; } = new();
+        public string PowerBIName { get; set; } = string.Empty;
+        public ICollection<Project> Projects { get; set; } = new HashSet<Project>();
+        public int? DatasetId { get; set; }
+        public PBIDataset? Dataset { get; set; }
     }
 }

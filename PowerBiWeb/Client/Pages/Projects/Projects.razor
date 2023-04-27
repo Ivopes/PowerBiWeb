@@ -1,83 +1,116 @@
 ﻿@page "/projects"
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project;
-@using System.Text.Json;
-@inject HttpClient httpClient
+@using PowerBiWeb.Shared.Projects
 @inject IJSRuntime JS
 @inject ILogger<Projects> _logger;
 @inject IToastService toastService;
 @inject IProjectService _projectService
+@inject NavigationManager navigation
+@implements IAsyncDisposable
+@implements IDisposable
 
-<h3 id="p">Projects</h3>
+<h3>Projects</h3>
 
-<button type="button" class="btn btn-primary" @onclick="@ModalShow">Create new</button>
+<div class="d-flex flex-row mt-2 mb-3">
+    <Button Color="Color.Primary" class="mr-2" @onclick="@ModalShow">Create new</Button>
+    @if (_projects is not null)
+    {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadProjects()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
+    }
+</div>
 
-@if(_projects is null)
+<LoadingIndicator @bind-Visible="loading">
+@if (_projects is not null)
 {
-    <div>Loading...</div>  
-}
-else
-{
-    <div>
-        @foreach (var p in _projects)
-        {
-            string link = $"/projects/{p.Id}"; 
     
-            <NavLink href=@link>
-                <span>@p.Name</span>
-            </NavLink>
-            <br/>
-    
-        }
-    </div>
+        <Card Background="Background.Light">
+        <CardBody>
+            <Table>
+                <TableHeader ThemeContrast="ThemeContrast.Light">
+                    <TableRow>
+                        <TableHeaderCell>Project name</TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @for (int i = 0; i < _projects.Count; i++)
+                    {
+                        int j = i;
+                        ProjectDTO project = _projects.ElementAt(j);
+                        <TableRow>
+                            <TableRowHeader>@project.Name</TableRowHeader>
+                            <TableRowCell>
+                                <Button Color="Color.Secondary" Clicked="() => GoToDetail(project.Id)">
+                                    <Icon Name="IconName.ArrowRight" /> Show detail
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+        </CardBody>
+    </Card>
+   
 }
-
+ </LoadingIndicator>
 @if (showModal)
 {
     <AddProject OnClose="@ModalOk"></AddProject>
 }
 
 
-@*
-
-<div @ref="@PowerBIElement" style="width:100%;height:600px;max-width: 2000px" />
-*@
-
 @code {
+
     private IJSObjectReference? module;
-    private ElementReference PowerBIElement;
-    private AddProject ModalWindow { get; set; }
+    private AddProject? ModalWindow { get; set; }
+    private CancellationTokenSource cts = new CancellationTokenSource();
     private bool showModal;
     void ModalShow() => showModal = true;
     private List<ProjectDTO>? _projects = null;
+    private bool loading;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+    
     private async Task LoadProjects()
     {
         _projects = null;
-
+        loading = true;
         var response = await _projectService.GetProjectsAsync();
-        if (response.Success)
+        if (response.IsSuccess)
         {
             _projects = response.Value!.ToList();
+            toastService.ShowSuccess("Projects loaded");
         }
         else
         {
             _logger.LogError(response.ErrorMessage);
+            toastService.ShowError(response.ErrorMessage);
             _projects = Array.Empty<ProjectDTO>().ToList();
         }
+        loading = false;
     }
     private async Task ModalOk(ProjectDTO? project)
     {
         showModal = false;
         if (project is not null)
         {
-            var response = await httpClient.PostAsJsonAsync("api/projects", project);
-            if (response.IsSuccessStatusCode)
+            loading = true;
+            var response = await _projectService.CreateProject(project);
+            await Task.Delay(2000);
+            if (response.IsSuccess)
             {
-                var p = await response.Content.ReadFromJsonAsync<ProjectDTO>();
+                var p = response.Value;
                 toastService.ShowSuccess("Project added");
                 await LoadProjects();
             }
+            else
+            {
+                toastService.ShowError("Could not create project");
+            }
+            loading = false;
         }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -94,17 +127,29 @@ else
             _logger.LogInformation("Js loaded");
         }
     }
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await LoadProjects();
-        /*
-        var response = await httpClient.GetAsync("api/report");
-        if (response.IsSuccessStatusCode)
-        {
-            var text = await response.Content.ReadFromJsonAsync<EmbedParams>();
-
-            await module.InvokeVoidAsync("showReport", PowerBIElement, text.EmbedToken.Token, text.EmbedReport[0].EmbedUrl, text.EmbedReport[0].ReportId);
-        }
-        */
     }
+    private void GoToDetail(int projectId)
+    {
+        navigation.NavigateTo($"/projects/{projectId}");
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+
 }

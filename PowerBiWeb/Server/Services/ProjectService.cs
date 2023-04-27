@@ -1,8 +1,9 @@
-﻿using PowerBiWeb.Server.Interfaces.Repositories;
+﻿using Microsoft.PowerBI.Api.Models;
+using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities.Extentions;
-using PowerBiWeb.Shared.Project;
+using PowerBiWeb.Shared.Projects;
 using System.Security.Claims;
 
 namespace PowerBiWeb.Server.Services
@@ -10,18 +11,26 @@ namespace PowerBiWeb.Server.Services
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IDatasetRepository _datasetRepository;
         private readonly IAppUserRepository _appUserRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
+        private readonly IMetricsContentRepository _metricsContentRepository;
         private readonly IMetricsApiLoaderRepository _metricsApiLoaderRepository;
+        private readonly IReportRepository _reportRepository;
+        private readonly IDashboardRepository _dashboardRepository;
+        private readonly ILogger<ProjectService> _logger;
 
-        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsSaverRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository)
+        public ProjectService(IProjectRepository projectRepository, IHttpContextAccessor httpContext, IAppUserRepository appUserRepository, IMetricsContentRepository metricsSaverRepository, IMetricsApiLoaderRepository metricsApiLoaderRepository, IReportRepository reportRepository, IDashboardRepository dashboardRepository, IDatasetRepository datasetRepository, ILogger<ProjectService> logger)
         {
             _projectRepository = projectRepository;
             _httpContextAccessor = httpContext;
             _appUserRepository = appUserRepository;
-            _metricsSaverRepository = metricsSaverRepository;
+            _metricsContentRepository = metricsSaverRepository;
             _metricsApiLoaderRepository = metricsApiLoaderRepository;
+            _reportRepository = reportRepository;
+            _dashboardRepository = dashboardRepository;
+            _datasetRepository = datasetRepository;
+            _logger = logger;
         }
 
         public async Task<List<ProjectDTO>> GetAllAsync()
@@ -51,7 +60,6 @@ namespace PowerBiWeb.Server.Services
 
             return newP;
         }
-
         public async Task<ProjectDTO> PostAsync(ProjectDTO project)
         {
             var p = project.ToBO();
@@ -62,13 +70,10 @@ namespace PowerBiWeb.Server.Services
 
             project.Id = created.Id;
 
-            //Update metrics
-            var metrics = await _metricsApiLoaderRepository.GetMetricAllAsync(created.MetricFilesName, true);
-            if (metrics is not null && metrics.Count > 0)
-            {
-                await _metricsSaverRepository.UploadMetric(created, metrics);
-            }
-
+            //Download content from Power BI
+            await _reportRepository.UpdateReportsAsync(created.Id);
+            await _dashboardRepository.UpdateDashboardsAsync(created.Id);
+            
             return project;
         }
         public async Task<string> AddToUserAsync(UserToProjectDTO dto)
@@ -87,23 +92,34 @@ namespace PowerBiWeb.Server.Services
 
             return await _projectRepository.EditUserAsync(dto.UserEmail, dto.ProjectId, role);
         }
-        public async Task<bool> IsMinEditor(int projectId)
+        public async Task<string> EditProject(int projectId, ProjectDTO dto)
         {
-            var userId = GetUserId();
+            var p = dto.ToBO();
 
-            var project = await _projectRepository.GetAsync(projectId);
-            if (project is null) return false;
-            if (!project.AppUserProjects.Any(aup => aup.AppUserId == userId)) return false;
-
-            var join = project.AppUserProjects.Single(aup => aup.AppUserId == userId);
-
-            return join.Role <= ProjectRoles.Editor;
+            return await _projectRepository.EditProject(projectId, p);
         }
         public async Task<string> RemoveUserAsync(int userId, int projectId)
         {
-            return await _projectRepository.RemoveUserAsync(userId, projectId);
-        }
+            var project = await _projectRepository.GetAsync(projectId);
 
+            if (project is null) return "Project not found";
+
+            if (project.AppUserProjects.Count == 1) return "Cant leave project when alone. Delete it instead";
+
+            string result = await _projectRepository.RemoveUserAsync(userId, projectId);
+
+            if (!string.IsNullOrEmpty(result)) return result;
+
+            project = await _projectRepository.GetAsync(projectId);
+            
+            // Set last user to creator, so he is not locked in project
+            if (project!.AppUserProjects.Count == 1)
+            {
+                var lastUser = project.AppUserProjects.First();
+                result = await _projectRepository.EditUserAsync(lastUser.AppUser.Email, projectId, ProjectRoles.Creator);
+            }
+            return result;
+        }
         public async Task<ProjectRoles?> GetProjectRole(int projectId)
         {
             var userId = GetUserId();
@@ -122,8 +138,34 @@ namespace PowerBiWeb.Server.Services
         {
             return await _projectRepository.RemoveProject(projectId);
         }
+        public async Task<string> AddReportAsync(int projectId, DashboardDTO report)
+        {
+            ProjectReport r = new()
+            {
+                PowerBiId = report.Id
+            };
 
+            return await _metricsContentRepository.AddReportsAsync(projectId, r);
+        }
+        public async Task<string> RemoveReportAsync(int projectId, Guid reportId)
+        {
+            return await _projectRepository.RemoveReportsAsync(projectId, reportId);
+        }
+        public async Task<string> AddDashboardAsync(int projectId, DashboardDTO dashboard)
+        {
+            ProjectDashboard d = new()
+            {
+                PowerBiId = dashboard.Id
+            };
+
+            return await _metricsContentRepository.AddDashboardsAsync(projectId, d);
+        }
+        public async Task<string> RemoveDashboardAsync(int projectId, Guid dashboardId)
+        {
+            return await _projectRepository.RemoveDashboardsAsync(projectId, dashboardId);
+        }
         #region Private Methods
+        
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);

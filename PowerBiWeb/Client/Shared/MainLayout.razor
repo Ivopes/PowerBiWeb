@@ -12,7 +12,14 @@
         <div class="top-row">
             @if (username is not null)
             {
-                <h3>@username</h3>
+                @if(!string.IsNullOrEmpty(role))
+                {
+                    <h3>Admin - @username</h3>
+                }
+                else
+                {
+                    <h3>@username</h3>
+                }
             }
         </div>
 
@@ -32,11 +39,12 @@
 
 @code {
     private string? username;
-
+    private string? role;
     protected override async Task OnInitializedAsync()
     {
         var state = await authProvider.GetAuthenticationStateAsync();
 
         username = state.User.Identity?.Name;
+        role = state.User.IsInRole("Admin") ? "Admin" : null;
     }
 }

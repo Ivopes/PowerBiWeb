@@ -1,4 +1,4 @@
-﻿using MetricsAPI.Models;
+﻿using PowerBiWeb.Server.Models.Metrics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

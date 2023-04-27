@@ -1,4 +1,4 @@
-﻿using MetricsAPI.Models;
+﻿using PowerBiWeb.Server.Models.Metrics;
 
 namespace PowerBiWeb.Server.Interfaces.Repositories
 {
@@ -7,15 +7,11 @@ namespace PowerBiWeb.Server.Interfaces.Repositories
     /// </summary>
     public interface IMetricsApiLoaderRepository
     {
-        Task<MetricPortion?> GetMetric(string projectName, string metricName, bool isTotal);
-        Task<List<MetricPortion>> GetMetricAllAsync(string projectName, bool isTotal);
-        /// <summary>
-        /// Download all latest increment metric for specific project
-        /// </summary>
-        Task<List<MetricPortion>> GetMetricLatestAll(string projectName);
+        Task<MetricDefinition?> GetMetricDefinition(string datasetId);
+        Task<MetricData?> GetMetricTotal(string datasetId);
         /// <summary>
         /// Download specific latest increment metric for specific project
         /// </summary>
-        Task<MetricPortion?> GetMetricLatest(string projectName, string metricName);
+        Task<MetricData?> GetMetricIncrement(string datasetId);
     }
 }

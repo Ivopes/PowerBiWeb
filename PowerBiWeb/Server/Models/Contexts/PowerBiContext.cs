@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json;
 using PowerBiWeb.Server.Models.Entities;
+using System.Diagnostics;
 
 namespace PowerBiWeb.Server.Models.Contexts
 {
@@ -9,7 +12,8 @@ namespace PowerBiWeb.Server.Models.Contexts
         public DbSet<Project> Projects { get; set; }
         public DbSet<AppUserProject> AppUserProjects { get; set; }
         public DbSet<ProjectReport> ProjectReports { get; set; }
-
+        public DbSet<ProjectDashboard> ProjectDashboards { get; set; }
+        public DbSet<PBIDataset> Datasets { get; set; }
         public PowerBiContext(DbContextOptions<PowerBiContext> options) : base(options)
         {
 
@@ -20,6 +24,44 @@ namespace PowerBiWeb.Server.Models.Contexts
 
             modelBuilder.Entity<AppUserProject>()
                 .HasKey(a => new { a.AppUserId, a.ProjectId });
+
+            modelBuilder.Entity<PBIDataset>()
+                .Property(d => d.ColumnNames)
+                .HasConversion<string>(
+                   v => JsonConvert.SerializeObject(v),
+                   v => JsonConvert.DeserializeObject<List<string>>(v)!
+                );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.ColumnTypes)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.Measures)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
+
+            modelBuilder.Entity<PBIDataset>()
+               .Property(d => d.MeasureDefinitions)
+               .HasConversion<string>(
+                  v => JsonConvert.SerializeObject(v),
+                  v => JsonConvert.DeserializeObject<List<string>>(v)!
+               );
+
+            modelBuilder.Entity<ProjectReport>()
+               .HasOne(r => r.Dataset)
+               .WithMany(d => d.Reports)
+               .HasForeignKey(r => r.DatasetId)
+               .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ProjectDashboard>()
+               .HasMany(d => d.Projects)
+               .WithMany(p => p.ProjectDashboards);
         }
     }
 }

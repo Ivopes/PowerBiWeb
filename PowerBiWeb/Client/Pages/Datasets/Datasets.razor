@@ -1,0 +1,301 @@
+﻿@page "/datasets"
+@using PowerBiWeb.Client.Utilities.Http;
+@using PowerBiWeb.Client.Utilities.Interfaces;
+@using PowerBiWeb.Shared.Datasets;
+@inject IDatasetService _datasetService
+@inject IToastService toastService
+@inject NavigationManager navigation
+@attribute [Authorize(Roles = "Admin")]
+
+<h3 class="mb-3">Datasets</h3>
+
+<div class="mb-3">
+
+    <Button Color="Color.Primary" class="mr-2" @onclick="async () => await ShowAddModal()">Add new</Button>
+
+    <Button Color="Color.Primary" class="mx-2" @onclick="async () => await ShowAddExistingModal()">Add existing</Button>
+
+    @if (_datasets is not null)
+    {
+        <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+            <Icon Name="IconName.Sync" /> Reload
+        </Button>
+        
+        @if (_datasets.Count > 0)
+        {
+            <Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateAll()">
+                <Icon Name="IconName.CloudDownloadAlt" /> Update all
+            </Button>
+        }
+    }
+
+</div>
+
+<LoadingIndicator @bind-Visible="loading">
+@if (_datasets is not null)
+{
+    <Card Background="Background.Light">
+        <CardBody>
+            <Table>
+                <TableHeader ThemeContrast="ThemeContrast.Light">
+                    <TableRow>
+                        <TableHeaderCell>Dataset name</TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @for (int i = 0; i < _datasets.Count; i++)
+                    {
+                        int j = i;
+                        DatasetDTO dataset = _datasets.ElementAt(j);
+                        <TableRow>
+                            <TableRowHeader>@dataset.Name</TableRowHeader>
+                            <TableRowCell>
+                                <Button Color="Color.Secondary" Clicked="() => GoToDetail(dataset.Id)">
+                                    <Icon Name="IconName.ArrowRight" /> Show detail
+                                </Button>
+                            </TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Secondary" Clicked="async () => await UpdateById(dataset.Id)">
+                                        <Icon Name="IconName.CloudDownloadAlt" /> Update
+                                </Button>
+                            </TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Danger" Clicked="() => ShowDeleteDataset(dataset.Id)">
+                                    <Icon Name="IconName.Delete" /> Delete
+                                </Button>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+        </CardBody>
+    </Card>
+}
+</LoadingIndicator>
+
+<Modal @ref="modalAddNewRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add dataset</ModalTitle>
+            <CloseButton />
+    </ModalHeader>
+    <ModalBody>
+            <div class="form-group">
+                <label for="newDatasetId">Dataset Id</label>
+                <InputText id="newDatasetId" class="form-control" @bind-Value="addDataset.MetricFilesId" />
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideAddModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@AddDataset">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+<Modal @ref="modalAddExistingRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add dataset</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="ExistingPowerId">Power BI Guid</label>
+                <InputText id="ExistingPowerId" class="form-control" @bind-Value="existingGuid" />
+            </div>
+            <div class="form-group">
+                <label for="ExistingDatasetId">Dataset Id</label>
+                <InputText id="ExistingDatasetId" class="form-control" @bind-Value="addDataset.MetricFilesId" />
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideAddExistingModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@AddExistingDataset">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="modalConfirmRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Confirm delete</ModalTitle>
+        </ModalHeader>
+        <ModalBody>This is destructive operation.</ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HideDeleteDataset">Cancel</Button>
+            <Button Color="Color.Danger" Clicked="async () => await DeleteDataset(deleteId)">Confirm</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<DatasetDTO>? _datasets = null;
+    private Modal? modalAddNewRef;
+    private Modal? modalAddExistingRef;
+    private Modal? modalConfirmRef;
+    private DatasetDTO addDataset = new();
+    private bool loading;
+    private string existingGuid = string.Empty;
+    private int deleteId = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        loading = true;
+        HttpResponse<List<DatasetDTO>> response = await _datasetService.GetAllAsync();
+
+        if (response.IsSuccess)
+        {
+            _datasets = response.Value;
+
+            toastService.ShowSuccess("Datasets loaded");
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task AddDataset()
+    {
+        if (string.IsNullOrWhiteSpace(addDataset.MetricFilesId))
+        {
+            toastService.ShowError("Please fill the form");
+            return;
+        }
+        loading = true;
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, true);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset added");
+
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task AddExistingDataset()
+    {
+        if (string.IsNullOrWhiteSpace(existingGuid) || !Guid.TryParse(existingGuid, out var guid))
+        {
+            toastService.ShowError("Please fill the form in correct format");
+            return;
+        }
+
+        addDataset.PowerBiId = guid;
+        loading = true;
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, false);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset added");
+
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task HideAddModal()
+    {
+        addDataset = new();
+        await modalAddNewRef!.Hide();
+    }
+    private async Task ShowAddModal()
+    {
+        await modalAddNewRef!.Show();
+    }
+    private async Task HideAddExistingModal()
+    {
+        existingGuid = string.Empty;
+        addDataset = new();
+        await modalAddExistingRef!.Hide();
+    }
+    private async Task ShowAddExistingModal()
+    {
+        existingGuid = string.Empty;
+        addDataset = new();
+        await modalAddExistingRef!.Show();
+    }
+    private void GoToDetail(int datasetId)
+    {
+        navigation.NavigateTo($"/datasets/{datasetId}");
+    }
+    private async Task DeleteDataset(int datasetId)
+    {
+        if (datasetId < 0) return;
+        loading = true;
+        HttpResponse response = await _datasetService.DeleteDatasetAsync(datasetId);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset deleted");
+            await HideDeleteDataset();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task ShowDeleteDataset(int datasetId)
+    {
+        deleteId = datasetId;
+        await modalConfirmRef!.Show();
+    }
+    private async Task HideDeleteDataset()
+    {
+        deleteId = -1;
+        await modalConfirmRef!.Hide();
+    }
+
+    private async Task UpdateById(int datasetId)
+    {
+        if (datasetId < 0) return;
+        loading = true;
+        HttpResponse response = await _datasetService.UpdateByIdAsync(datasetId);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset updated");
+            await HideDeleteDataset();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task UpdateAll()
+    {
+        if (_datasets is null || _datasets.Count == 0) return;
+        
+        loading = true;
+        HttpResponse response = await _datasetService.UpdateAllAsync();
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Datasets updated");
+            await HideDeleteDataset();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+}

@@ -3,10 +3,10 @@ using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Repositories;
-using PowerBiWeb.Shared.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Server.Services
 {
@@ -16,13 +16,14 @@ namespace PowerBiWeb.Server.Services
         private readonly IConfiguration _config;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IProjectRepository _projectRepository;
-
-        public AuthService(IAuthRepository authRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository)
+        private readonly IAppUserRepository _appUserRepository;
+        public AuthService(IAuthRepository authRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository, IAppUserRepository appUserRepository)
         {
             _authRepository = authRepository;
             _config = config;
             _httpContextAccessor = httpContextAccessor;
             _projectRepository = projectRepository;
+            _appUserRepository = appUserRepository;
         }
 
         public async Task<string> LoginAsync(UserLoginInformation user)
@@ -58,6 +59,10 @@ namespace PowerBiWeb.Server.Services
         {
             var userId = GetUserId();
 
+            return await GetProjectRole(projectId, userId);
+        }
+        public async Task<ProjectRoles?> GetProjectRole(int projectId, int userId)
+        {
             var project = await _projectRepository.GetAsync(projectId);
 
             if (project is null) return null;
@@ -67,6 +72,16 @@ namespace PowerBiWeb.Server.Services
 
             return join.Role;
         }
+        public async Task<ProjectRoles?> GetProjectRole(int projectId, string userEmail)
+        {
+            var project = await _projectRepository.GetAsync(projectId);
+            var user = await _appUserRepository.GetByEmailAsync(userEmail);
+
+            if (user is null) return null;
+
+            return await GetProjectRole(projectId, user.Id);
+        }
+        #region Private Methods
         private List<Claim> CreateRoleClaims(AppRoles role)
         {
             var roleClaims = new List<Claim>();
@@ -86,7 +101,6 @@ namespace PowerBiWeb.Server.Services
 
             return roleClaims;
         }
-        #region Private Methods
         private int GetUserId()
         {
             return int.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);

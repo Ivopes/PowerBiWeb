@@ -23,7 +23,7 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IAuthRepository, AuthRepository>();
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
-builder.Services.AddTransient(typeof(AadService));
+builder.Services.AddSingleton(typeof(AadService));
 builder.Services.Configure<PowerBiOptions>(builder.Configuration.GetSection("PowerBiOptions"));
 builder.Services.AddTransient<IProjectService, ProjectService>();
 builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
@@ -31,8 +31,15 @@ builder.Services.AddTransient<IAppUserService, AppUserService>();
 builder.Services.AddTransient<IAppUserRepository, AppUserRepository>();
 builder.Services.AddHttpClient(HttpClientTypes.MetricsApi, c => c.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PowerBiMetricsUrl")!));
 builder.Services.AddTransient<IMetricsApiLoaderRepository, MetricsApiRepository>();
-builder.Services.AddTransient<IMetricsSaverRepository, PowerBiRepository>();
+builder.Services.AddTransient<IMetricsContentRepository, PowerBiRepository>();
+builder.Services.AddTransient<IDashboardService, DashboardService>();
+builder.Services.AddTransient<IDashboardRepository, DashboardRepository>();
+builder.Services.AddTransient<IDatasetRepository, DatasetRepository>();
+builder.Services.AddTransient<IDatasetService, DatasetService>();
 
+builder.Services.Configure<DatasetUpdateOptions>(builder.Configuration.GetSection("DatasetsUpdate"));
+builder.Services.Configure<ContentUpdateOptions>(builder.Configuration.GetSection("ContentUpdate"));
+builder.Services.Configure<DownloadPbixOptions>(builder.Configuration.GetSection("DownloadPbix"));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -53,12 +60,14 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSecretKey"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder!.Configuration["JwtSecretKey"]!))
     };
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHostedService<BackgroundUpdateMetricsAPIService>();
+builder.Services.AddHostedService<BackgroundUpdateMetricsApiService>();
+builder.Services.AddHostedService<BackgroundUpdateContentService>();
+builder.Services.AddHostedService<BackgroundDownloadMetricsService>();
 
 var app = builder.Build();
 

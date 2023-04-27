@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PowerBiWeb.Server.Interfaces.Services;
-using PowerBiWeb.Shared.User;
+using PowerBiWeb.Shared.Users;
 
 namespace PowerBiWeb.Server.Controllers
 {

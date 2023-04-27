@@ -7,7 +7,6 @@ using PowerBiWeb.Server.Models.Entities;
 using PowerBiWeb.Server.Utilities;
 using PowerBiWeb.Server.Utilities.PowerBI;
 using PowerBiWeb.Shared;
-using PowerBiWeb.Shared.Project;
 using System.Runtime.InteropServices;
 
 namespace PowerBiWeb.Server.Repositories
@@ -15,19 +14,38 @@ namespace PowerBiWeb.Server.Repositories
     public class ReportRepository : IReportRepository
     {
         private readonly PowerBiContext _dbContext;
-        private readonly IMetricsSaverRepository _metricsSaverRepository;
-        public ReportRepository(PowerBiContext dbContext, IMetricsSaverRepository metricsSaverRepository)
+        private readonly IMetricsContentRepository _metricsSaverRepository;
+        public ReportRepository(PowerBiContext dbContext, IMetricsContentRepository metricsSaverRepository)
         {
             _dbContext = dbContext;
             _metricsSaverRepository = metricsSaverRepository;
         }
-        public Task<EmbedParams> GetAsync(int projectId)
+
+        public async Task<ProjectReport?> AddReportAsync(ProjectReport report)
         {
-            throw new NotImplementedException();
+            var result = await _dbContext.ProjectReports.AddAsync(report);
+
+            await _dbContext.SaveChangesAsync();
+
+            return result.Entity;
         }
-        public async Task<ProjectReport?> GetByIdAsync(int projectId, Guid reportId)
+
+        public async Task<string> EditReport(ProjectReport report)
         {
-            var entity = await _dbContext.ProjectReports.Include(r => r.Project).SingleAsync(r => r.PowerBiId == reportId && r.Project.Id == projectId);
+            var entity = await _dbContext.ProjectReports.FindAsync(report.PowerBiId);
+
+            if (entity is null) return "Report not found";
+            
+            entity.Name = report.Name;
+
+            await _dbContext.SaveChangesAsync();
+            
+            return string.Empty;
+        }
+
+        public async Task<ProjectReport?> GetByGuidAsync(Guid reportGuid)
+        {
+            var entity = await _dbContext.ProjectReports.Include(r => r.Projects).Include(r => r.Dataset).SingleOrDefaultAsync(r => r.PowerBiId == reportGuid);
 
             return entity;
         }

@@ -85,7 +85,7 @@ namespace PowerBiWeb.Server.Migrations
                     b.ToTable("AppUsers");
                 });
 
-            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.Project", b =>
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.PBIDataset", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -93,12 +93,52 @@ namespace PowerBiWeb.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ColumnNames")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ColumnTypes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("MetricFilesName")
+                    b.Property<string>("LastUpdateName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MeasureDefinitions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Measures")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MetricFilesId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PowerBiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Datasets");
+                });
+
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -109,7 +149,7 @@ namespace PowerBiWeb.Server.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectReport", b =>
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectDashboard", b =>
                 {
                     b.Property<Guid>("PowerBiId")
                         .ValueGeneratedOnAdd()
@@ -119,17 +159,73 @@ namespace PowerBiWeb.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
+                    b.Property<string>("PowerBiName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("PowerBiId");
 
-                    b.HasIndex("ProjectId");
+                    b.ToTable("ProjectDashboards");
+                });
+
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectReport", b =>
+                {
+                    b.Property<Guid>("PowerBiId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("DatasetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PowerBIName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PowerBiId");
+
+                    b.HasIndex("DatasetId");
 
                     b.ToTable("ProjectReports");
+                });
+
+            modelBuilder.Entity("ProjectProjectDashboard", b =>
+                {
+                    b.Property<Guid>("ProjectDashboardsPowerBiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ProjectsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectDashboardsPowerBiId", "ProjectsId");
+
+                    b.HasIndex("ProjectsId");
+
+                    b.ToTable("ProjectProjectDashboard");
+                });
+
+            modelBuilder.Entity("ProjectProjectReport", b =>
+                {
+                    b.Property<Guid>("ProjectReportsPowerBiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ProjectsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectReportsPowerBiId", "ProjectsId");
+
+                    b.HasIndex("ProjectsId");
+
+                    b.ToTable("ProjectProjectReport");
                 });
 
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.AppUserProject", b =>
@@ -153,13 +249,42 @@ namespace PowerBiWeb.Server.Migrations
 
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ProjectReport", b =>
                 {
-                    b.HasOne("PowerBiWeb.Server.Models.Entities.Project", "Project")
-                        .WithMany("ProjectReports")
-                        .HasForeignKey("ProjectId")
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.PBIDataset", "Dataset")
+                        .WithMany("Reports")
+                        .HasForeignKey("DatasetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Dataset");
+                });
+
+            modelBuilder.Entity("ProjectProjectDashboard", b =>
+                {
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.ProjectDashboard", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectDashboardsPowerBiId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Project");
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProjectProjectReport", b =>
+                {
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.ProjectReport", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectReportsPowerBiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PowerBiWeb.Server.Models.Entities.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.ApplUser", b =>
@@ -167,11 +292,14 @@ namespace PowerBiWeb.Server.Migrations
                     b.Navigation("AppUserProjects");
                 });
 
+            modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.PBIDataset", b =>
+                {
+                    b.Navigation("Reports");
+                });
+
             modelBuilder.Entity("PowerBiWeb.Server.Models.Entities.Project", b =>
                 {
                     b.Navigation("AppUserProjects");
-
-                    b.Navigation("ProjectReports");
                 });
 #pragma warning restore 612, 618
         }

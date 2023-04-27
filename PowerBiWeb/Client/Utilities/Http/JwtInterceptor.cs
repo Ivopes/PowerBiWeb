@@ -1,4 +1,6 @@
-﻿using Blazored.LocalStorage;
+﻿using System.Net;
+using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
 using PowerBiWeb.Client.Utilities.Auth;
 
 namespace PowerBiWeb.Client.Utilities.Http
@@ -6,10 +8,12 @@ namespace PowerBiWeb.Client.Utilities.Http
     public class JwtInterceptor : DelegatingHandler
     {
         private readonly ILocalStorageService _localStorage;
+        private readonly NavigationManager _navigation;
 
-        public JwtInterceptor(ILocalStorageService localStorage)
+        public JwtInterceptor(ILocalStorageService localStorage, NavigationManager navigation)
         {
             _localStorage = localStorage;
+            _navigation = navigation;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -19,7 +23,18 @@ namespace PowerBiWeb.Client.Utilities.Http
             if (!string.IsNullOrEmpty(accessToken))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-            return await base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
+            
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _navigation.NavigateTo("/login");
+                //return null;
+                var content = new StringContent("You are not authenticated. Try re-login");
+
+                response.Content = content;
+            }
+
+            return response;
         }
     }
 }

@@ -1,28 +1,115 @@
 ﻿@page "/projects/{projectId:int}/reports/{reportId:guid}"
 @using PowerBiWeb.Client.Utilities.Interfaces;
-@using PowerBiWeb.Shared.Project
+@using System.Security.Claims
+@using PowerBiWeb.Shared.Projects
 @inject IReportService _reportService 
 @inject IToastService toastService
 @inject IJSRuntime JS
 @inject ILogger<ReportDetail> _logger
+@inject NavigationManager navigation
+@inject AuthenticationStateProvider AuthState
 @implements IDisposable
+@implements IAsyncDisposable
 
- @if (report is not null)
-{
-    <h3>@report.ReportName</h3>
-}
-
+<div class="d-flex flex-row mt-2 mb-3">
 <NavLink href=@($"/projects/{projectId}")>
-    <button type="button" class="btn btn-primary">Back</button>
+    <button type="button" class="btn btn-primary mr-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
 </NavLink>
-<br />
 
-@if (report is null)
-{
-    <div>Loading...</div>
+
+@if (report is not null)
+{ 
+    <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
+      <Icon Name="IconName.Sync" /> Reload
+    </Button>
+    <Button Color="Color.Primary" class="mx-2" Clicked="DownloadReport">Download PBIX</Button>
+    <Tooltip Text="Requires different Power BI licence">
+        <Button Color="Color.Primary" Disabled="@true" class="mx-2" Clicked="ExportReport">Export to PDF</Button>
+    </Tooltip>
 }
 
-<div @ref="@PowerBIElement" style="width:100%;height:75vh;" />
+</div>
+
+<LoadingIndicator @bind-Visible="loading">
+</LoadingIndicator>
+
+@{
+    string divStyle = "";
+    if (loading)
+    {
+        divStyle = "display:none";
+    }
+}
+
+    
+<div style="@divStyle">
+    
+    <Card Background="Background.Light">
+        <CardBody>
+          @if (report is not null)
+          {
+              <CardTitle>
+                  <h3 class="mt-1 mb-3">@report.Name</h3>
+              </CardTitle>
+          }
+            <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged">
+                <Items>
+                    <Tab Name="report">Report</Tab>
+                    @if (myRole <= ProjectRoleDTO.Editor)
+                    {
+                        <Tab Name="settings">Settings</Tab>
+                    }
+                </Items>
+                <Content>
+                    <TabPanel Name="report">
+                        <div @ref="@PowerBIElement" style="width:100%;height:67vh;" class="mt-3"/>
+                    </TabPanel>
+                    <TabPanel Name="settings">
+                        @if (myRole <= ProjectRoleDTO.Editor)
+                        {
+                            <TabPanel Name="settings">
+
+                                <div style="margin-top:25px">
+                                    <EditForm Model="report" OnValidSubmit="ChangeReportSettings">
+                                        @if (report is not null)
+                                        {
+                            
+                                            <Field Horizontal>
+                                                <FieldLabel ColumnSize="ColumnSize.Is2">Report name</FieldLabel>
+                                                <FieldBody ColumnSize="ColumnSize.Is10">
+                                                    <TextEdit @bind-Text="report.Name"/>
+                                                </FieldBody>
+                                            </Field>
+                                            <Field Horizontal>
+                                                <FieldLabel ColumnSize="ColumnSize.Is2">Report power BI name</FieldLabel>
+                                                <FieldBody ColumnSize="ColumnSize.Is10">
+                                            <Tooltip Text="This can be changed in Power BI">
+                                                    <TextEdit ReadOnly @bind-Text="report.PowerBiName"/>
+                                            </Tooltip>
+                                                </FieldBody>
+                                            </Field>
+                                        }
+
+                                        <Button Color="Color.Primary" Type="ButtonType.Submit">
+                                            <Icon Name="IconName.Save"/> Save
+                                        </Button>
+                                    </EditForm>
+                                </div>
+
+                            </TabPanel>
+                        }
+
+                    </TabPanel>
+                </Content>
+            </Tabs>
+
+        </CardBody>
+    </Card>
+    
+</div>
+    
+
+
 
 @code {
     [Parameter]
@@ -30,11 +117,20 @@
     [Parameter]
     public int projectId { get; set; }
 
-    EmbedReportDTO? report;
+    ReportDTO? report;
     private ElementReference PowerBIElement;
     private IJSObjectReference? module;
     private CancellationTokenSource cts = new CancellationTokenSource();
+    private bool loading;
+    string selectedTab = "report";
+    private ProjectRoleDTO myRole = ProjectRoleDTO.Viewer;
+    
+    private Task OnSelectedTabChanged(string name)
+    {
+        selectedTab = name;
 
+        return Task.CompletedTask;
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -51,21 +147,104 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        var respose = await _reportService.GetReportAsync(projectId, reportId, cts.Token);
+        await LoadData();
+    }
 
-        if (respose.Success)
+    private async Task LoadData()
+    {
+        loading = true;
+        var response = await _reportService.GetReportAsync(projectId, reportId, cts.Token);
+
+        if (response.IsSuccess)
         {
-            report = respose.Value;
+            report = response.Value;
+            if (report!.Projects.Count > 0)
+            {
+                var state = await AuthState.GetAuthenticationStateAsync();
+
+                var id = int.Parse(state.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+                myRole = report.Projects[0].Users.Single(u => u.Id == id).Role;
+            }
+
             await EmbedView();
         }
         else
         {
-            toastService.ShowError(respose.ErrorMessage);
+            navigation.NavigateTo($"/projects/{projectId}");
+            toastService.ShowError(response.ErrorMessage);
         }
+
+        loading = false;
     }
+
     private async Task EmbedView()
     {
-        await module.InvokeVoidAsync("showReport", PowerBIElement, report.EmbedToken, report.EmbedUrl, report.ReportId);
+        if (module is null) return;
+        await module.InvokeVoidAsync("showReport", PowerBIElement, report!.EmbedToken, report.EmbedUrl, report.Id);
+    }
+    
+    private async Task ExportReport()
+    {
+        loading = true;
+        var response = await _reportService.ExportReportAsync(projectId, reportId, cts.Token);
+
+        if (response.IsSuccess)
+        {
+            Stream stream = response.Value!;
+            stream.Seek(0, SeekOrigin.Begin);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pdf", streamRef);
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task DownloadReport()
+    {
+        loading = true;
+        var response = await _reportService.DownloadReportAsync(projectId, reportId, cts.Token);
+
+        if (response.IsSuccess)
+        {
+            Stream stream = response.Value!;
+            stream.Seek(0, SeekOrigin.Begin);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", cts.Token, report!.Name + ".pbix", streamRef);
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task ChangeReportSettings()
+    {
+        loading = true;
+        var response = await _reportService.UpdateReportSettingsAsync(report!);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Changes saved");
+            //await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
     }
     public void Dispose()
     {

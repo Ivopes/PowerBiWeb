@@ -1,0 +1,121 @@
+﻿@page "/datasets/{Id:int}"
+@using PowerBiWeb.Client.Utilities.Http;
+@using PowerBiWeb.Client.Utilities.Interfaces;
+@using PowerBiWeb.Shared.Datasets;
+@inject IDatasetService _datasetService
+@inject IToastService toastService
+@inject NavigationManager navigation
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="d-flex flex-row mt-2 mb-3">
+    <NavLink href="/datasets">
+        <button type="button" class="btn btn-primary mr-2"><Icon Name="IconName.ArrowLeft" /> Back</button>
+    </NavLink><br />
+
+    @if (false)
+    {
+        /*
+        <Button Color="Color.Danger" class="mx-2" Clicked="async () => await modalConfirmRef!.Show()">
+            <Icon Name="IconName.Delete" /> Delete dataset
+        </Button>
+        */
+    }
+
+</div>
+
+<LoadingIndicator @bind-Visible="loading">
+@if (dataset is not null)
+{
+    <Card Background="Background.Light" Class="mb-2">
+        <CardBody>
+            <CardTitle>
+                <h3 class="mt-1 mb-3">@dataset.Name</h3>
+            </CardTitle>
+    <Field>
+        <FieldLabel>Dataset identificator</FieldLabel>
+        <TextEdit ReadOnly Text="@dataset.MetricFilesId" />
+    </Field>
+    <Field >
+        <FieldLabel>Dataset Power BI Id</FieldLabel>
+        <TextEdit ReadOnly Text="@dataset.PowerBiId.ToString()" />
+    </Field>
+    <Field>
+    <FieldLabel>Last update</FieldLabel>
+        <TextEdit ReadOnly Text="@dataset.LastUpdate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" />
+    </Field>
+
+    <Table Background="Background.Light">
+        <TableHeader>
+            <TableRow>
+                <TableHeaderCell>Column name</TableHeaderCell>
+                <TableHeaderCell>Column type</TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @for (int i = 0; i < dataset.ColumnNames.Length; i++)
+            {
+                int j = i;
+                
+                <TableRow>
+                    <TableRowHeader>@dataset.ColumnNames[j]</TableRowHeader>
+                    <TableRowCell>@dataset.ColumnTypes[j]</TableRowCell>
+                </TableRow>
+            }
+        </TableBody>
+    </Table>
+
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHeaderCell>Measure name</TableHeaderCell>
+                <TableHeaderCell>Measure definition</TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @for (int i = 0; i < dataset.Measures.Length; i++)
+            {
+                int j = i;
+
+                <TableRow>
+                    <TableRowHeader>@dataset.Measures[j]</TableRowHeader>
+                    <TableRowCell>@dataset.MeasureDefinitions[j]</TableRowCell>
+                </TableRow>
+            }
+        </TableBody>
+    </Table>
+
+    </CardBody>
+    </Card>
+}
+</LoadingIndicator>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private DatasetDTO? dataset;
+    private bool loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        loading = true;
+        HttpResponse<DatasetDTO> response = await _datasetService.GetDatasetDetailAsync(Id);
+
+        if (response.IsSuccess)
+        {
+            dataset = response.Value;
+
+            toastService.ShowSuccess("Dataset loaded");
+        }
+        else
+        {
+            navigation.NavigateTo("/datasets");
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+}
