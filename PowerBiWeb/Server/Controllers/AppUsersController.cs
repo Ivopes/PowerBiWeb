@@ -20,11 +20,6 @@ namespace PowerBiWeb.Server.Controllers
         {
             _appUserService = appUserService;
         }
-        //[HttpGet]
-        public async Task<ActionResult<IEnumerable<ApplUser>>> GetAsync()
-        {
-            return Ok(await _appUserService.GetAsync());
-        }
         [HttpGet("{id}")]
         [Authorize]
         public async Task<ActionResult<UserDetail>> GetByIdAsync(int id)
@@ -56,6 +51,7 @@ namespace PowerBiWeb.Server.Controllers
             return BadRequest(response);
         }
         [HttpPost("username/{newUsername}")]
+        [Authorize]
         public async Task<ActionResult<UserDetail>> ChangeUsernameAsync([FromRoute] string newUsername)
         {
             if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
@@ -72,6 +68,7 @@ namespace PowerBiWeb.Server.Controllers
             return Ok(newUser);
         }
         [HttpPost("password")]
+        [Authorize]
         public async Task<ActionResult<UserDetail>> ChangePasswordAsync([FromBody] ChangePasswordRequest request)
         {
             if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
