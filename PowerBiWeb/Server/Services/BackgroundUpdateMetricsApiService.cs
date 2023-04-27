@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PowerBiWeb.Server.Interfaces.Repositories;
+using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Utilities.ConfigOptions;
 
@@ -74,36 +75,14 @@ namespace PowerBiWeb.Server.Services
             { 
                 await using var scope = _serviceProvider.CreateAsyncScope();
 
-                var metricApiRepository = scope.ServiceProvider.GetRequiredService<IMetricsApiLoaderRepository>();
+                var datasetService = scope.ServiceProvider.GetRequiredService<IDatasetService>();
 
-                var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
-
-                var datasets = await dbContext.Datasets.ToListAsync();
-                foreach (var dataset in datasets)
-                {
-                    try
-                    {
-                        var result = await metricApiRepository.GetMetricIncrement(dataset.MetricFilesId);
-
-                        if (result is not null)
-                        {
-                            var metricSaver = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
-                            await metricSaver.AddRowsToDataset(dataset, result);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Could not auto-update metrics for dataset: {0}, with id: {1}", dataset.MetricFilesId, dataset.Id);
-                    }
-                }
-
-                await dbContext.SaveChangesAsync();
-
+                await datasetService.UpdateAllAsync();
             }
             catch (Exception ex)
-            {
-                _logger.LogError(ex, "Could not auto-update metrics");
             }
+                _logger.LogError(ex, "Could not auto-update metrics");
+            {
         }
     }
 }

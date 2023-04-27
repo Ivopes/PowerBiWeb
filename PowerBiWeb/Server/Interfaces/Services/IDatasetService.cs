@@ -9,5 +9,7 @@ namespace PowerBiWeb.Server.Interfaces.Services
         Task<bool> DeleteByIdAsync(int id);
         Task<List<DatasetDTO>> GetAllAsync();
         Task<DatasetDTO?> GetByIdAsync(int id);
+        Task UpdateAllAsync();
+        Task<string> UpdateByIdAsync(int datasetId);
     }
 }

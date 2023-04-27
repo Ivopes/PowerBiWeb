@@ -20,6 +20,13 @@
         <Button Color="Color.Primary" class="mx-2" Clicked="async () => await LoadData()">
             <Icon Name="IconName.Sync" /> Reload
         </Button>
+        
+        @if (_datasets.Count > 0)
+        {
+            <Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateAll()">
+                <Icon Name="IconName.Sync" /> Update all
+            </Button>
+        }
     }
 
 </div>
@@ -35,6 +42,7 @@
                         <TableHeaderCell>Dataset name</TableHeaderCell>
                         <TableHeaderCell></TableHeaderCell>
                         <TableHeaderCell></TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -47,6 +55,11 @@
                             <TableRowCell>
                                 <Button Color="Color.Secondary" Clicked="() => GoToDetail(dataset.Id)">
                                     <Icon Name="IconName.ArrowRight" /> Show detail
+                                </Button>
+                            </TableRowCell>
+                            <TableRowCell>
+                                <Button Color="Color.Secondary" Clicked="async () => await UpdateById(dataset.Id)">
+                                    <Icon Name="IconName.ArrowRight" /> Update
                                 </Button>
                             </TableRowCell>
                             <TableRowCell>
@@ -246,5 +259,43 @@
     {
         deleteId = -1;
         await modalConfirmRef!.Hide();
+    }
+
+    private async Task UpdateById(int datasetId)
+    {
+        if (datasetId < 0) return;
+        loading = true;
+        HttpResponse response = await _datasetService.UpdateByIdAsync(datasetId);
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Dataset updated");
+            await HideDeleteDataset();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
+    }
+    private async Task UpdateAll()
+    {
+        if (_datasets is null || _datasets.Count == 0) return;
+        
+        loading = true;
+        HttpResponse response = await _datasetService.UpdateAllAsync();
+
+        if (response.IsSuccess)
+        {
+            toastService.ShowSuccess("Datasets updated");
+            await HideDeleteDataset();
+            await LoadData();
+        }
+        else
+        {
+            toastService.ShowError(response.ErrorMessage);
+        }
+        loading = false;
     }
 }

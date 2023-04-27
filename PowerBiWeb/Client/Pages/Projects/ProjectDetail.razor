@@ -608,7 +608,7 @@
         {
             toastService.ShowSuccess("User added");
             ClearAddModalForm();
-            HideAddModal();
+            await HideAddModal();
             await LoadData();
         }
         else

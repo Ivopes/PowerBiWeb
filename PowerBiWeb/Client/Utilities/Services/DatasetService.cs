@@ -71,6 +71,45 @@ namespace PowerBiWeb.Client.Utilities.Services
                 ErrorMessage = await response.Content.ReadAsStringAsync(),
             };
         }
+
+        public async Task<HttpResponse> UpdateByIdAsync(int datasetId)
+        {
+            var response = await _httpClient.PostAsync($"api/datasets/update/{datasetId}", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
+        public async Task<HttpResponse> UpdateAllAsync()
+        {
+            var response = await _httpClient.PostAsync($"api/datasets/update", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                return new()
+                {
+                    IsSuccess = true,
+                    ErrorMessage = string.Empty
+                };
+            }
+
+            return new()
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync(),
+            };
+        }
+
         public async Task<HttpResponse<List<DatasetDTO>>> GetAllAsync()
         {
             var response = await _httpClient.GetAsync($"api/datasets/");

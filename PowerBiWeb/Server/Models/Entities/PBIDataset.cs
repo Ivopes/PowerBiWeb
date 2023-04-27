@@ -10,11 +10,11 @@ namespace PowerBiWeb.Server.Models.Entities
         public string Name { get; set; } = string.Empty;
         public Guid PowerBiId { get; set; }
         public DateTime LastUpdate { get; set; }
+        public string LastUpdateName { get; set; } = string.Empty;
         public List<string> ColumnNames { get; set; } = Array.Empty<string>().ToList();
         public List<string> ColumnTypes { get; set; } = Array.Empty<string>().ToList();
         public List<string> Measures { get; set; } = Array.Empty<string>().ToList();
         public List<string> MeasureDefinitions { get; set; } = Array.Empty<string>().ToList();
         public ICollection<ProjectReport> Reports { get; set; } = new HashSet<ProjectReport>();
-
     }
 }

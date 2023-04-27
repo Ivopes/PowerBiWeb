@@ -9,5 +9,7 @@ namespace PowerBiWeb.Client.Utilities.Interfaces
         Task<HttpResponse<DatasetDTO>> GetDatasetDetailAsync(int id);
         Task<HttpResponse<DatasetDTO>>  AddDatasetAsync(DatasetDTO dataset, bool addNew);
         Task<HttpResponse>  DeleteDatasetAsync(int datasetId);
+        Task<HttpResponse> UpdateByIdAsync(int datasetId);
+        Task<HttpResponse> UpdateAllAsync();
     }
 }

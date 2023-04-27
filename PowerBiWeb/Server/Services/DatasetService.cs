@@ -137,5 +137,55 @@ namespace PowerBiWeb.Server.Services
 
             return dto;
         }
+
+        public async Task UpdateAllAsync()
+        {
+            var datasets = await _datasetRepository.GetAllAsync();
+            foreach (var dataset in datasets)
+            {
+                try
+                {
+                    var result = await _metricsApiLoaderRepository.GetMetricIncrement(dataset.MetricFilesId);
+
+                    if (result is not null)
+                    {
+                        if (result.Name == dataset.LastUpdateName) continue;
+                        
+                        await _metricsSaverRepository.AddRowsToDataset(dataset, result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not auto-update metrics for dataset: {0}, with id: {1}", dataset.MetricFilesId, dataset.Id);
+                }
+            }
+        }
+        public async Task<string> UpdateByIdAsync(int datasetId)
+        {
+            var dataset = await _datasetRepository.GetByIdAsync(datasetId);
+            if (dataset is null) return "Dataset not found";
+            try
+            {
+                var result = await _metricsApiLoaderRepository.GetMetricIncrement(dataset.MetricFilesId);
+
+                if (result is not null)
+                {
+                    if (result.Name != dataset.LastUpdateName)
+                    {
+                        bool success = await _metricsSaverRepository.AddRowsToDataset(dataset, result);
+                        if (!success)
+                        {
+                            return "Dataset could not been updated";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not update metrics for dataset: {0}, with id: {1}", dataset.MetricFilesId, dataset.Id);
+            }
+
+            return string.Empty;
+        }
     }
 }

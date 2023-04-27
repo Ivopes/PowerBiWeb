@@ -8,7 +8,7 @@ namespace PowerBiWeb.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class DatasetsController : ControllerBase
     {
         private readonly IDatasetService _datasetService;
@@ -22,6 +22,23 @@ namespace PowerBiWeb.Server.Controllers
         public async Task<ActionResult<List<DatasetDTO>>> GetAll()
         {
             return Ok(await _datasetService.GetAllAsync());
+        }
+
+        [HttpPost("update")]
+        public async Task<ActionResult> UpdateAll()
+        {
+            await _datasetService.UpdateAllAsync();
+
+            return Ok();
+        }
+        [HttpPost("update/{id}")]
+        public async Task<ActionResult<string>> UpdateById([FromRoute] int id)
+        {
+            var result = await _datasetService.UpdateByIdAsync(id);
+
+            if (string.IsNullOrEmpty(result)) return Ok();
+
+            return BadRequest(result);
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<DatasetDTO>> GetById(int id)

@@ -360,6 +360,7 @@ namespace PowerBiWeb.Server.Repositories
 
                 var entityDataset = await _dbContext.Datasets.FindAsync(dataset.Id);
                 entityDataset!.LastUpdate = DateTime.UtcNow;
+                entityDataset.LastUpdateName = data.Name;
                 await _dbContext.SaveChangesAsync();
 
                 return true;
