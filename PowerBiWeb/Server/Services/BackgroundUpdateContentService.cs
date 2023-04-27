@@ -20,13 +20,7 @@ public class BackgroundUpdateContentService : BackgroundService
 
         if (opt.Value is not null)
         {
-            _updateOptions = new()
-            {
-                DayOfWeek = opt.Value.DayOfWeek,
-                Hour = opt.Value.Hour,
-                UpdateFrequency = opt.Value.UpdateFrequency,
-                Enabled = opt.Value.Enabled
-            };
+            _updateOptions = opt.Value;
         }
         else
         {
@@ -43,7 +37,7 @@ public class BackgroundUpdateContentService : BackgroundService
 
         _logger.LogInformation($"Starting executing {nameof(BackgroundUpdateContentService)}...");
         
-        var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
+        var diffToZeroMinutes = (_updateOptions.Minute - DateTime.UtcNow.Minute + 60) % 60;
         await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 
         if (ShouldUpdate()) 
@@ -77,26 +71,33 @@ public class BackgroundUpdateContentService : BackgroundService
     {
         _logger.LogInformation($"Starting {nameof(BackgroundUpdateContentService)} update...");
 
-        await using var scope = _serviceProvider.CreateAsyncScope();
-
-        var powerBiRepository = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
-
-        var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
-
-        var projects = await dbContext.Projects.ToListAsync();
-        foreach (var project in projects)
+        try
         {
-            try
-            {
-                await powerBiRepository.UpdateReportsAsync(project.Id);
-                await powerBiRepository.UpdateDashboardsAsync(project.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Could not auto-update content for project {0}", project.Id);
-            }
-        }
+            await using var scope = _serviceProvider.CreateAsyncScope();
 
-        await dbContext.SaveChangesAsync();
+            var powerBiRepository = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
+
+            var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
+
+            var projects = await dbContext.Projects.ToListAsync();
+            foreach (var project in projects)
+            {
+                try
+                {
+                    await powerBiRepository.UpdateReportsAsync(project.Id);
+                    await powerBiRepository.UpdateDashboardsAsync(project.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not auto-update content for project {0}", project.Id);
+                }
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
+        catch(Exception ex) 
+        {
+            _logger.LogError(ex, "Could not auto-update content");
+        }
     }
 }

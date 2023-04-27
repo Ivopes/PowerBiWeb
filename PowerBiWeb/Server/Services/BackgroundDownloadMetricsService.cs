@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.PowerBI.Api.Models;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Models.Contexts;
 using PowerBiWeb.Server.Utilities.ConfigOptions;
@@ -20,14 +21,7 @@ public class BackgroundDownloadMetricsService : BackgroundService
         
         if (opt.Value is not null)
         {
-            _updateOptions = new()
-            {
-                DayOfWeek = opt.Value.DayOfWeek,
-                Hour = opt.Value.Hour,
-                UpdateFrequency = opt.Value.UpdateFrequency,
-                Enabled = opt.Value.Enabled,
-                SavePath = opt.Value.SavePath
-            };
+            _updateOptions = opt.Value;
         }
         else
         {
@@ -53,8 +47,8 @@ public class BackgroundDownloadMetricsService : BackgroundService
         {
             path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, _updateOptions.SavePath);
         }
-        
-        var diffToZeroMinutes = (60 - DateTime.UtcNow.Minute) % 60;
+
+        var diffToZeroMinutes = (_updateOptions.Minute - DateTime.UtcNow.Minute + 60) % 60;
         await Task.Delay(TimeSpan.FromMinutes(diffToZeroMinutes), stoppingToken);
 
         if (ShouldUpdate()) 
@@ -74,36 +68,42 @@ public class BackgroundDownloadMetricsService : BackgroundService
     {
         _logger.LogInformation($"Starting {nameof(BackgroundDownloadMetricsService)} update...");
 
-        await using var scope = _serviceProvider.CreateAsyncScope();
-
-        var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
-
-        var powerBiRepository = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
-        
-        var reports = await dbContext.ProjectReports.ToListAsync();
-        path = Path.Combine(path, DateTime.UtcNow.ToString("dd_MM_yyyy_HH"));
-        Directory.CreateDirectory(path);
-        foreach (var report in reports)
+        try
         {
-            try
-            {
-                var stream = (await powerBiRepository.GetDownloadedReportAsync(report.PowerBiId))!;
+            await using var scope = _serviceProvider.CreateAsyncScope();
 
-                var filePath = Path.Combine(path, report.Name + ".pbix");
-                
-                await using var filestream = new FileStream(filePath, FileMode.Create);
+            var dbContext = scope.ServiceProvider.GetRequiredService<PowerBiContext>();
 
-                await stream.CopyToAsync(filestream);
-                
-                filestream.Close();
-            }
-            catch (Exception ex)
+            var powerBiRepository = scope.ServiceProvider.GetRequiredService<IMetricsContentRepository>();
+
+            var reports = await dbContext.ProjectReports.ToListAsync();
+            path = Path.Combine(path, DateTime.UtcNow.ToString("dd_MM_yyyy_HH"));
+            Directory.CreateDirectory(path);
+            foreach (var report in reports)
             {
-                _logger.LogError(ex, "Could not download pbix file for report: {0}", report.PowerBiId);
+                try
+                {
+                    var stream = (await powerBiRepository.GetDownloadedReportAsync(report.PowerBiId))!;
+
+                    var filePath = Path.Combine(path, report.Name + ".pbix");
+
+                    await using var filestream = new FileStream(filePath, FileMode.Create);
+
+                    await stream.CopyToAsync(filestream);
+
+                    filestream.Close();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not download pbix file for report: {0}", report.PowerBiId);
+                }
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Could not download pbix file");
+        }
     }
-
     private bool ShouldUpdate()
     {
         var now = DateTime.UtcNow;

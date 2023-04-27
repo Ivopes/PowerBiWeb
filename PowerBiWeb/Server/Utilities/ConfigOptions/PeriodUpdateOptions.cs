@@ -11,6 +11,12 @@
             get => _hour;
             set => _hour = Math.Clamp(value, 0, 23);
         }
+        private int _minute;
+        public int Minute 
+        {
+            get => _minute;
+            set => _minute = Math.Clamp(value, 0, 59);
+        }
     }
     public enum UpdateFrequency
     {

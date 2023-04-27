@@ -70,7 +70,7 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<string> UpdateReportsAsync(int projectId)
         {
-            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+            var projectEntity = await _dbContext.Projects.Include(p => p.ProjectReports).Include(p => p.ProjectDashboards).SingleOrDefaultAsync(p => p.Id == projectId);
 
             if (projectEntity is null)
             {
@@ -209,7 +209,7 @@ namespace PowerBiWeb.Server.Repositories
         }
         public async Task<string> UpdateDashboardsAsync(int projectId)
         {
-            var projectEntity = await _dbContext.Projects.FindAsync(projectId);
+            var projectEntity = await _dbContext.Projects.Include(p => p.ProjectReports).Include(p => p.ProjectDashboards).SingleOrDefaultAsync(p => p.Id == projectId);
 
             if (projectEntity is null)
             {
