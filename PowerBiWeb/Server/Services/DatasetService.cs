@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.PowerBI.Api.Models;
+using NuGet.Packaging;
 using PowerBiWeb.Server.Interfaces.Repositories;
 using PowerBiWeb.Server.Interfaces.Services;
 using PowerBiWeb.Server.Models.Entities;
@@ -56,6 +57,14 @@ namespace PowerBiWeb.Server.Services
                 throw new MessageException { ExcptMessage = "Dataset could not been created - cant load data from metric server" };
             }
 
+            // Nacist metric data z metric serveru
+            MetricData? inc = await _metricsApiLoaderRepository.GetMetricIncrement(datasetId);
+
+            if (inc is not null)
+            {
+                data.Rows.AddRange(inc.Rows);
+                data.Name = inc.Name;
+            }
             // Vytvorit dataset v power BI
             Dataset? createdD = await _metricsSaverRepository.CreateDatasetFromDefinition(definition);
             if (createdD is null)

@@ -41,7 +41,7 @@
     </Field>
     <Field>
     <FieldLabel>Last update</FieldLabel>
-        <TextEdit ReadOnly Text="@dataset.LastUpdate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" />
+        <TextEdit ReadOnly Text="@(dataset.LastUpdate > DateTime.MinValue ? dataset.LastUpdate.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Unknown")" />
     </Field>
 
     <Table Background="Background.Light">

@@ -169,7 +169,12 @@
             return;
         }
         loading = true;
-        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, true);
+        var copy = new DatasetDTO()
+        {
+            MetricFilesId = addDataset.MetricFilesId,
+        };
+        await HideAddModal();
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(copy, true);
 
         if (response.IsSuccess)
         {
@@ -193,7 +198,13 @@
 
         addDataset.PowerBiId = guid;
         loading = true;
-        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(addDataset, false);
+        var copy = new DatasetDTO()
+        {
+            MetricFilesId = addDataset.MetricFilesId,
+            PowerBiId = addDataset.PowerBiId
+        };
+        await HideAddModal();
+        HttpResponse<DatasetDTO> response = await _datasetService.AddDatasetAsync(copy, false);
 
         if (response.IsSuccess)
         {
