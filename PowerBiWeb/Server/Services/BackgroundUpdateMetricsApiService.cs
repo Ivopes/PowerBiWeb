@@ -71,8 +71,8 @@ namespace PowerBiWeb.Server.Services
         {
             _logger.LogInformation($"Starting {nameof(BackgroundUpdateMetricsApiService)} update...");
 
-            try 
-            { 
+            try
+            {
                 await using var scope = _serviceProvider.CreateAsyncScope();
 
                 var datasetService = scope.ServiceProvider.GetRequiredService<IDatasetService>();
@@ -80,9 +80,9 @@ namespace PowerBiWeb.Server.Services
                 await datasetService.UpdateAllAsync();
             }
             catch (Exception ex)
-            }
+            { 
                 _logger.LogError(ex, "Could not auto-update metrics");
-            {
+            }
         }
     }
 }

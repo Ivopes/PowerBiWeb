@@ -39,7 +39,10 @@
         <FieldLabel>Dataset Power BI Id</FieldLabel>
         <TextEdit ReadOnly Text="@dataset.PowerBiId.ToString()" />
     </Field>
-
+    <Field>
+    <FieldLabel>Last update</FieldLabel>
+        <TextEdit ReadOnly Text="@dataset.LastUpdate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" />
+    </Field>
 
     <Table Background="Background.Light">
         <TableHeader>

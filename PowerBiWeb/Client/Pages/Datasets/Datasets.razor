@@ -24,7 +24,7 @@
         @if (_datasets.Count > 0)
         {
             <Button Color="Color.Primary" class="mx-2" Clicked="async () => await UpdateAll()">
-                <Icon Name="IconName.Sync" /> Update all
+                <Icon Name="IconName.CloudDownloadAlt" /> Update all
             </Button>
         }
     }
@@ -59,7 +59,7 @@
                             </TableRowCell>
                             <TableRowCell>
                                 <Button Color="Color.Secondary" Clicked="async () => await UpdateById(dataset.Id)">
-                                    <Icon Name="IconName.ArrowRight" /> Update
+                                        <Icon Name="IconName.CloudDownloadAlt" /> Update
                                 </Button>
                             </TableRowCell>
                             <TableRowCell>

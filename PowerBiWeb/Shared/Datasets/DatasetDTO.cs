@@ -12,6 +12,7 @@ namespace PowerBiWeb.Shared.Datasets
         public string MetricFilesId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public Guid PowerBiId { get; set; }
+        public DateTime LastUpdate { get; set; }
         public string[] ColumnNames { get; set; } = Array.Empty<string>();
         public string[] ColumnTypes { get; set; } = Array.Empty<string>();
         public string[] Measures { get; set; } = Array.Empty<string>(); 
