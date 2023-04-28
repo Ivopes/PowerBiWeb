@@ -568,7 +568,10 @@
 
             myRole = project!.Users.Single(u => u.Username == username).Role;
 
-            await LoadDatasets();
+            if (myRole < ProjectRoleDTO.Viewer)
+            {
+                await LoadDatasets();
+            }
 
             toastService.ShowSuccess("Data loaded");
         }
